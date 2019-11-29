@@ -1,0 +1,38 @@
+{
+  "name": "api",
+  "version": "1.0.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "server": "babel-node -r node_modules/dotenv/config src/server.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon --exec babel-node -r node_modules/dotenv/config src/server.js",
+    "build": "babel src --out-dir dist --extensions '.ts'",
+    "serve": "yarn build && node -r ../node_modules/dotenv/config dist/server.js",
+    "serve-az-tmp": "yarn build && node -r ../node_modules/dotenv/config dist/server.js dotenv_config_path=.az.tmp.env",
+    "docker-build": "docker build --force-rm -t phile-starter-api:latest .",
+    "docker-run": "docker run -p 3000:8090 --name ps-api -d phile-starter-api:latest .",
+    "check-types": "tsc"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@graphile-contrib/pgdbi": "^1.0.9-alpha.50",
+    "apollo-engine": "^1.1.2",
+    "dotenv": "^8.0.0",
+    "express": "^4.17.1",
+    "graphile-utils": "^4.4.0",
+    "postgraphile": "^4.4.0",
+    "postgraphile-plugin-connection-filter": "^1.1.0"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.4.4",
+    "@babel/core": "^7.4.5",
+    "@babel/node": "^7.4.5",
+    "@babel/preset-env": "^7.4.5",
+    "@babel/preset-typescript": "^7.3.3",
+    "nodemon": "^1.19.1",
+    "typescript": "^3.5.2"
+  }
+}

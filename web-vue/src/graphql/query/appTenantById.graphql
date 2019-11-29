@@ -1,0 +1,74 @@
+query AppTenantById($id: BigInt!) {
+  appTenantById(id: $id) {
+    id
+    name
+    identifier
+    licenses: licensesByAppTenantId {
+      nodes {
+        id
+        name
+        organization: organizationByOrganizationId {
+          id
+          name
+        }
+        licenseType: licenseTypeByLicenseTypeId {
+          id
+          name
+          key
+          application: applicationByApplicationId {
+            id
+            name
+            key
+          }
+        }
+        assignedToAppUserContact: contactAppUserByAssignedToAppUserId {
+          contact: contactByContactId {
+            id
+            firstName
+            lastName
+            email
+          }
+        }
+      }
+    }
+    organization: organizationByActualAppTenantId {
+      id
+      name
+      externalId
+      primaryContact: contactByPrimaryContactId {
+        id
+        firstName
+        lastName
+        email
+        title
+        cellPhone
+        officePhone
+        externalId
+     }
+      contacts: contactsByOrganizationId {
+        nodes {
+          id
+          firstName
+          lastName
+          email
+          title
+          cellPhone
+          officePhone
+          externalId
+        }
+      }
+      location: locationByLocationId {
+        id
+        name
+        address1
+        address2
+        city
+        state
+        zip
+        lat
+        lon
+        externalId
+      }
+    }
+  }
+}

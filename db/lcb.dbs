@@ -1,0 +1,844 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<project name="lcb" id="Project_5e8ccf1" template="Default" database="PostgreSQL" >
+	<schema name="app" catalogname="lcb" >
+		<table name="application" >
+			<column name="id" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>shard_1.id_generator()</defo>
+			</column>
+			<column name="created_at" type="timestamptz" length="35" decimal="6" jt="93" mandatory="y" >
+				<defo>CURRENT_TIMESTAMP</defo>
+			</column>
+			<column name="updated_at" type="timestamptz" length="35" decimal="6" jt="93" mandatory="y" />
+			<column name="external_id" type="text" decimal="0" jt="12" />
+			<column name="name" type="text" decimal="0" jt="12" />
+			<column name="key" type="text" decimal="0" jt="12" mandatory="y" />
+			<index name="pk_application" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+			<index name="application_key_key" unique="UNIQUE" >
+				<column name="key" options="ASC" />
+			</index>
+		</table>
+		<table name="license" >
+			<comment><![CDATA[@foreignKey (assigned_to_app_user_id) references org.contact_app_user(app_user_id)]]></comment>
+			<column name="id" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>shard_1.id_generator()</defo>
+			</column>
+			<column name="app_tenant_id" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
+			<column name="organization_id" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
+			<column name="created_at" type="timestamptz" length="35" decimal="6" jt="93" mandatory="y" >
+				<defo>CURRENT_TIMESTAMP</defo>
+			</column>
+			<column name="updated_at" type="timestamptz" length="35" decimal="6" jt="93" mandatory="y" />
+			<column name="external_id" type="text" decimal="0" jt="12" />
+			<column name="name" type="text" decimal="0" jt="12" />
+			<column name="license_type_id" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
+			<column name="assigned_to_app_user_id" type="bigint" length="19" decimal="0" jt="-5" />
+			<index name="pk_license" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+			<index name="uq_license_type_assigned_to" unique="UNIQUE" >
+				<column name="assigned_to_app_user_id" options="ASC" />
+				<column name="license_type_id" options="ASC" />
+			</index>
+			<fk name="fk_license_permission_app_tenant" to_schema="lcb.auth" to_table="app_tenant" >
+				<fk_column name="app_tenant_id" pk="id" />
+			</fk>
+			<fk name="fk_license_assigned_to_app_user" to_schema="lcb.auth" to_table="app_user" >
+				<fk_column name="assigned_to_app_user_id" pk="id" />
+			</fk>
+			<fk name="fk_license_license_type" to_schema="lcb.app" to_table="license_type" >
+				<fk_column name="license_type_id" pk="id" />
+			</fk>
+			<fk name="fk_license_organization_id" to_schema="lcb.org" to_table="organization" >
+				<fk_column name="organization_id" pk="id" />
+			</fk>
+		</table>
+		<table name="license_permission" >
+			<column name="id" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>shard_1.id_generator()</defo>
+			</column>
+			<column name="app_tenant_id" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
+			<column name="created_at" type="timestamptz" length="35" decimal="6" jt="93" mandatory="y" >
+				<defo>CURRENT_TIMESTAMP</defo>
+			</column>
+			<column name="updated_at" type="timestamptz" length="35" decimal="6" jt="93" mandatory="y" />
+			<column name="license_id" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
+			<column name="permission_id" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
+			<index name="pk_license_permission" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+			<fk name="fk_license_permission_license" to_schema="lcb.app" to_table="license" >
+				<fk_column name="license_id" pk="id" />
+			</fk>
+			<fk name="fk_license_permission_permission" to_schema="lcb.auth" to_table="permission" >
+				<fk_column name="permission_id" pk="id" />
+			</fk>
+		</table>
+		<table name="license_type" >
+			<column name="id" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>shard_1.id_generator()</defo>
+			</column>
+			<column name="created_at" type="timestamptz" length="35" decimal="6" jt="93" mandatory="y" >
+				<defo>CURRENT_TIMESTAMP</defo>
+			</column>
+			<column name="updated_at" type="timestamptz" length="35" decimal="6" jt="93" mandatory="y" />
+			<column name="external_id" type="text" decimal="0" jt="12" />
+			<column name="name" type="text" decimal="0" jt="12" />
+			<column name="key" type="text" decimal="0" jt="12" mandatory="y" />
+			<column name="application_id" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
+			<index name="pk_license_type" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+			<index name="license_type_key_key" unique="UNIQUE" >
+				<column name="key" options="ASC" />
+			</index>
+			<fk name="fk_license_type_application" to_schema="lcb.app" to_table="application" >
+				<fk_column name="application_id" pk="id" />
+			</fk>
+		</table>
+		<table name="license_type_permission" >
+			<column name="id" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>shard_1.id_generator()</defo>
+			</column>
+			<column name="created_at" type="timestamptz" length="35" decimal="6" jt="93" mandatory="y" >
+				<defo>CURRENT_TIMESTAMP</defo>
+			</column>
+			<column name="updated_at" type="timestamptz" length="35" decimal="6" jt="93" mandatory="y" />
+			<column name="license_type_id" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
+			<column name="permission_id" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
+			<column name="key" type="text" decimal="0" jt="12" mandatory="y" />
+			<index name="pk_license_type_permission" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+			<index name="license_type_permission_key_key" unique="UNIQUE" >
+				<column name="key" options="ASC" />
+			</index>
+			<fk name="fk_license_type_permission_license_type" to_schema="lcb.app" to_table="license_type" >
+				<fk_column name="license_type_id" pk="id" />
+			</fk>
+			<fk name="fk_license_type_permission_permission" to_schema="lcb.auth" to_table="permission" >
+				<fk_column name="permission_id" pk="id" />
+			</fk>
+		</table>
+		<procedure name="fn_timestamp_update_application" id="Procedure_1d6b5fa" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION app.fn_timestamp_update_application()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+  BEGIN
+    NEW.updated_at = current_timestamp;
+    RETURN NEW;
+  END; $function$
+;]]></string>
+			<result_param name="returnValue" jt="1111" type="trigger" />
+		</procedure>
+		<procedure name="fn_timestamp_update_license" id="Procedure_35b4411" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION app.fn_timestamp_update_license()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+  BEGIN
+    NEW.updated_at = current_timestamp;
+    if NEW.app_tenant_id is null then 
+      -- only users with 'SuperAdmin' permission_key will be able to arbitrarily set this value
+      -- rls policy (below) will prevent users from specifying an alternate app_tenant_id
+      NEW.app_tenant_id := auth_fn.current_app_tenant_id();
+    end if;
+    NEW.organization_id = (select id from org.organization where actual_app_tenant_id = NEW.app_tenant_id);
+    RETURN NEW;
+  END; $function$
+;]]></string>
+			<result_param name="returnValue" jt="1111" type="trigger" />
+		</procedure>
+		<procedure name="fn_timestamp_update_license_permission" id="Procedure_459d908" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION app.fn_timestamp_update_license_permission()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+  BEGIN
+    NEW.updated_at = current_timestamp;
+    if NEW.app_tenant_id is null then 
+      -- only users with 'SuperAdmin' permission_key will be able to arbitrarily set this value
+      -- rls policy (below) will prevent users from specifying an alternate app_tenant_id
+      NEW.app_tenant_id := auth_fn.current_app_tenant_id();
+    end if;
+    RETURN NEW;
+  END; $function$
+;]]></string>
+			<result_param name="returnValue" jt="1111" type="trigger" />
+		</procedure>
+		<procedure name="fn_timestamp_update_license_type" id="Procedure_57470aa" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION app.fn_timestamp_update_license_type()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+  BEGIN
+    NEW.updated_at = current_timestamp;
+    RETURN NEW;
+  END; $function$
+;]]></string>
+			<result_param name="returnValue" jt="1111" type="trigger" />
+		</procedure>
+		<procedure name="fn_timestamp_update_license_type_permission" id="Procedure_1a8869b" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION app.fn_timestamp_update_license_type_permission()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+  BEGIN
+    NEW.updated_at = current_timestamp;
+    RETURN NEW;
+  END; $function$
+;]]></string>
+			<result_param name="returnValue" jt="1111" type="trigger" />
+		</procedure>
+		<trigger name="tg_timestamp_update_application" table="application" id="Trigger_4314608" isSystem="false" >
+			<string><![CDATA[CREATE TRIGGER tg_timestamp_update_application BEFORE INSERT OR UPDATE ON app.application FOR EACH ROW EXECUTE PROCEDURE app.fn_timestamp_update_application()]]></string>
+		</trigger>
+		<trigger name="tg_timestamp_update_license" table="license" id="Trigger_29a9592" isSystem="false" >
+			<string><![CDATA[CREATE TRIGGER tg_timestamp_update_license BEFORE INSERT OR UPDATE ON app.license FOR EACH ROW EXECUTE PROCEDURE app.fn_timestamp_update_license()]]></string>
+		</trigger>
+		<trigger name="tg_timestamp_update_license_permission" table="license_permission" id="Trigger_87d5a5" isSystem="false" >
+			<string><![CDATA[CREATE TRIGGER tg_timestamp_update_license_permission BEFORE INSERT OR UPDATE ON app.license_permission FOR EACH ROW EXECUTE PROCEDURE app.fn_timestamp_update_license_permission()]]></string>
+		</trigger>
+		<trigger name="tg_timestamp_update_license_type" table="license_type" id="Trigger_1c19623" isSystem="false" >
+			<string><![CDATA[CREATE TRIGGER tg_timestamp_update_license_type BEFORE INSERT OR UPDATE ON app.license_type FOR EACH ROW EXECUTE PROCEDURE app.fn_timestamp_update_license_type()]]></string>
+		</trigger>
+		<trigger name="tg_timestamp_update_license_type_permission" table="license_type_permission" id="Trigger_536b2ed" isSystem="false" >
+			<string><![CDATA[CREATE TRIGGER tg_timestamp_update_license_type_permission BEFORE INSERT OR UPDATE ON app.license_type_permission FOR EACH ROW EXECUTE PROCEDURE app.fn_timestamp_update_license_type_permission()]]></string>
+		</trigger>
+	</schema>
+	<schema name="auth" catalogname="lcb" >
+		<table name="app_tenant" >
+			<comment><![CDATA[@omit create,update,delete]]></comment>
+			<column name="id" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>shard_1.id_generator()</defo>
+				<comment><![CDATA[@omit create]]></comment>
+			</column>
+			<column name="created_at" type="timestamptz" length="35" decimal="6" jt="93" mandatory="y" >
+				<defo>CURRENT_TIMESTAMP</defo>
+				<comment><![CDATA[@omit create,update]]></comment>
+			</column>
+			<column name="updated_at" type="timestamptz" length="35" decimal="6" jt="93" mandatory="y" >
+				<comment><![CDATA[@omit create,update]]></comment>
+			</column>
+			<column name="name" type="text" decimal="0" jt="12" mandatory="y" />
+			<column name="identifier" type="text" decimal="0" jt="12" mandatory="y" />
+			<index name="pk_app_tenant" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+			<index name="app_tenant_identifier_key" unique="UNIQUE" >
+				<column name="identifier" options="ASC" />
+			</index>
+			<constraint name="app_tenant_identifier_check" >
+				<string>identifier &lt;&gt; &#039;&#039;::text</string>
+			</constraint>
+		</table>
+		<table name="app_user" >
+			<comment><![CDATA[@omit create,update,delete]]></comment>
+			<column name="id" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>shard_1.id_generator()</defo>
+				<comment><![CDATA[@omit create]]></comment>
+			</column>
+			<column name="app_tenant_id" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
+			<column name="created_at" type="timestamptz" length="35" decimal="6" jt="93" mandatory="y" >
+				<defo>CURRENT_TIMESTAMP</defo>
+				<comment><![CDATA[@omit create,update]]></comment>
+			</column>
+			<column name="updated_at" type="timestamptz" length="35" decimal="6" jt="93" mandatory="y" >
+				<comment><![CDATA[@omit create,update]]></comment>
+			</column>
+			<column name="username" type="text" decimal="0" jt="12" mandatory="y" />
+			<column name="recovery_email" type="text" decimal="0" jt="12" mandatory="y" />
+			<column name="password_hash" type="text" decimal="0" jt="12" mandatory="y" >
+				<comment><![CDATA[@omit]]></comment>
+			</column>
+			<column name="inactive" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+				<defo>false</defo>
+			</column>
+			<column name="password_reset_required" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+				<defo>false</defo>
+			</column>
+			<column name="permission_key" type="&quot;permission_key&quot;" decimal="0" jt="12" mandatory="y" />
+			<index name="pk_app_user" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+			<index name="app_user_recovery_email_key" unique="UNIQUE" >
+				<column name="recovery_email" options="ASC" />
+			</index>
+			<index name="app_user_username_key" unique="UNIQUE" >
+				<column name="username" options="ASC" />
+			</index>
+			<fk name="fk_app_user_app_tenant" to_schema="lcb.auth" to_table="app_tenant" >
+				<fk_column name="app_tenant_id" pk="id" />
+			</fk>
+		</table>
+		<table name="config_auth" >
+			<comment><![CDATA[@omit create,update,delete]]></comment>
+			<column name="id" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>shard_1.id_generator()</defo>
+			</column>
+			<column name="key" type="text" decimal="0" jt="12" />
+			<column name="value" type="text" decimal="0" jt="12" />
+			<index name="pk_config_auth" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+		</table>
+		<table name="permission" >
+			<column name="id" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>shard_1.id_generator()</defo>
+			</column>
+			<column name="created_at" type="timestamptz" length="35" decimal="6" jt="93" mandatory="y" >
+				<defo>CURRENT_TIMESTAMP</defo>
+			</column>
+			<column name="key" type="text" decimal="0" jt="12" />
+			<index name="pk_permission" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+			<constraint name="permission_key_check" >
+				<string>char_length(key) &gt;= 4</string>
+			</constraint>
+		</table>
+		<table name="token" >
+			<comment><![CDATA[@omit create,update,delete]]></comment>
+			<column name="id" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>shard_1.id_generator()</defo>
+			</column>
+			<column name="app_user_id" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
+			<column name="created_at" type="timestamptz" length="35" decimal="6" jt="93" mandatory="y" >
+				<defo>CURRENT_TIMESTAMP</defo>
+				<comment><![CDATA[@omit create,update]]></comment>
+			</column>
+			<column name="expires_at" type="timestamptz" length="35" decimal="6" jt="93" mandatory="y" >
+				<defo>(CURRENT_TIMESTAMP + &#039;00:20:00&#039;::interval)</defo>
+				<comment><![CDATA[@omit create,update]]></comment>
+			</column>
+			<index name="pk_token" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+			<index name="token_app_user_id_key" unique="UNIQUE" >
+				<column name="app_user_id" options="ASC" />
+			</index>
+			<fk name="fk_token_user" to_schema="lcb.auth" to_table="app_user" >
+				<fk_column name="app_user_id" pk="id" />
+			</fk>
+		</table>
+		<procedure name="fn_timestamp_update_app_tenant" id="Procedure_2823cf7" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION auth.fn_timestamp_update_app_tenant()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+  BEGIN
+    NEW.updated_at = current_timestamp;
+    RETURN NEW;
+  END; $function$
+;]]></string>
+			<result_param name="returnValue" jt="1111" type="trigger" />
+		</procedure>
+		<procedure name="fn_timestamp_update_app_user" id="Procedure_16ef73" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION auth.fn_timestamp_update_app_user()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+  BEGIN
+    NEW.updated_at = current_timestamp;
+    RETURN NEW;
+  END; $function$
+;]]></string>
+			<result_param name="returnValue" jt="1111" type="trigger" />
+		</procedure>
+		<procedure name="fn_timestamp_update_permission" id="Procedure_2742161" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION auth.fn_timestamp_update_permission()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+  BEGIN
+    NEW.updated_at = current_timestamp;
+    RETURN NEW;
+  END; $function$
+;]]></string>
+			<result_param name="returnValue" jt="1111" type="trigger" />
+		</procedure>
+		<trigger name="tg_timestamp_update_app_tenant" table="app_tenant" id="Trigger_306aafa" isSystem="false" >
+			<string><![CDATA[CREATE TRIGGER tg_timestamp_update_app_tenant BEFORE INSERT OR UPDATE ON auth.app_tenant FOR EACH ROW EXECUTE PROCEDURE auth.fn_timestamp_update_app_tenant()]]></string>
+		</trigger>
+		<trigger name="tg_timestamp_update_app_user" table="app_user" id="Trigger_c7c99e" isSystem="false" >
+			<string><![CDATA[CREATE TRIGGER tg_timestamp_update_app_user BEFORE INSERT OR UPDATE ON auth.app_user FOR EACH ROW EXECUTE PROCEDURE auth.fn_timestamp_update_app_user()]]></string>
+		</trigger>
+		<trigger name="tg_timestamp_update_permission" table="permission" id="Trigger_baf28b" isSystem="false" >
+			<string><![CDATA[CREATE TRIGGER tg_timestamp_update_permission BEFORE INSERT OR UPDATE ON auth.permission FOR EACH ROW EXECUTE PROCEDURE auth.fn_timestamp_update_permission()]]></string>
+		</trigger>
+	</schema>
+	<schema name="lcb" catalogname="lcb" >
+		<table name="lcb_license" >
+			<column name="id" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>shard_1.id_generator()</defo>
+			</column>
+			<column name="created_at" type="timestamptz" length="35" decimal="6" jt="93" mandatory="y" >
+				<defo>CURRENT_TIMESTAMP</defo>
+			</column>
+			<column name="updated_at" type="timestamptz" length="35" decimal="6" jt="93" mandatory="y" />
+			<column name="code" type="text" decimal="0" jt="12" mandatory="y" />
+			<index name="pk_lcb_license" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+			<constraint name="ck_lcb_license_code" >
+				<string>code &lt;&gt; &#039;&#039;::text</string>
+			</constraint>
+			<constraint name="lcb_license_code_check" >
+				<string>code &lt;&gt; &#039;&#039;::text</string>
+			</constraint>
+		</table>
+		<table name="lcb_license_holder" >
+			<column name="id" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>shard_1.id_generator()</defo>
+			</column>
+			<column name="created_at" type="timestamptz" length="35" decimal="6" jt="93" mandatory="y" >
+				<defo>CURRENT_TIMESTAMP</defo>
+			</column>
+			<column name="updated_at" type="timestamptz" length="35" decimal="6" jt="93" mandatory="y" />
+			<column name="lcb_license_id" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
+			<column name="organization_id" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
+			<column name="acquisition_date" type="timestamptz" length="35" decimal="6" jt="93" mandatory="y" >
+				<defo>CURRENT_TIMESTAMP</defo>
+			</column>
+			<column name="relinquish_date" type="timestamptz" length="35" decimal="6" jt="93" />
+			<index name="pk_lcb_license_holder" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+			<fk name="fk_lcb_license_holder_license" to_schema="lcb.lcb" to_table="lcb_license" >
+				<fk_column name="lcb_license_id" pk="id" />
+			</fk>
+			<fk name="fk_lcb_license_holder_organization" to_schema="lcb.org" to_table="organization" >
+				<fk_column name="organization_id" pk="id" />
+			</fk>
+		</table>
+		<table name="reported_inventory" >
+			<column name="id" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>shard_1.id_generator()</defo>
+			</column>
+			<column name="created_at" type="timestamptz" length="35" decimal="6" jt="93" mandatory="y" >
+				<defo>CURRENT_TIMESTAMP</defo>
+			</column>
+			<column name="updated_at" type="timestamptz" length="35" decimal="6" jt="93" mandatory="y" />
+			<column name="lcb_license_holder_id" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
+			<column name="ulid" type="text" decimal="0" jt="12" mandatory="y" />
+			<column name="ulid_origin" type="text" decimal="0" jt="12" mandatory="y" />
+			<column name="inventory_type" type="text" decimal="0" jt="12" mandatory="y" />
+			<column name="description" type="text" decimal="0" jt="12" />
+			<column name="quantity" type="numeric" length="10" decimal="2" jt="2" />
+			<column name="units" type="text" decimal="0" jt="12" />
+			<column name="strain_name" type="text" decimal="0" jt="12" />
+			<column name="area_identifier" type="text" decimal="0" jt="12" />
+			<index name="pk_reported_inventory" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+			<constraint name="ck_reported_inventory_ulid" >
+				<string>ulid &lt;&gt; &#039;&#039;::text</string>
+			</constraint>
+			<constraint name="ck_reported_inventory_inventory_type" >
+				<string>inventory_type &lt;&gt; &#039;&#039;::text</string>
+			</constraint>
+			<constraint name="ck_reported_inventory_ulid_origin" >
+				<string>ulid_origin &lt;&gt; &#039;&#039;::text</string>
+			</constraint>
+			<fk name="fk_reported_inventory_lcb_license_holder" to_schema="lcb.lcb" to_table="lcb_license_holder" >
+				<fk_column name="lcb_license_holder_id" pk="id" />
+			</fk>
+		</table>
+		<procedure name="fn_timestamp_update_lcb_license" id="Procedure_2edc64" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION lcb.fn_timestamp_update_lcb_license()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+  BEGIN
+    NEW.updated_at = current_timestamp;
+    RETURN NEW;
+  END; $function$
+;]]></string>
+			<result_param name="returnValue" jt="1111" type="trigger" />
+		</procedure>
+		<procedure name="fn_timestamp_update_lcb_license_holder" id="Procedure_3951efc" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION lcb.fn_timestamp_update_lcb_license_holder()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+  BEGIN
+    NEW.updated_at = current_timestamp;
+    RETURN NEW;
+  END; $function$
+;]]></string>
+			<result_param name="returnValue" jt="1111" type="trigger" />
+		</procedure>
+		<procedure name="fn_timestamp_update_reported_inventory" id="Procedure_594b0cf" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION lcb.fn_timestamp_update_reported_inventory()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+  BEGIN
+    NEW.updated_at = current_timestamp;
+    RETURN NEW;
+  END; $function$
+;]]></string>
+			<result_param name="returnValue" jt="1111" type="trigger" />
+		</procedure>
+		<trigger name="tg_timestamp_update_lcb_license" table="lcb_license" id="Trigger_4009f1a" isSystem="false" >
+			<string><![CDATA[CREATE TRIGGER tg_timestamp_update_lcb_license BEFORE INSERT OR UPDATE ON lcb.lcb_license FOR EACH ROW EXECUTE PROCEDURE lcb.fn_timestamp_update_lcb_license()]]></string>
+		</trigger>
+		<trigger name="tg_timestamp_update_lcb_license_holder" table="lcb_license" id="Trigger_1781e10" isSystem="false" >
+			<string><![CDATA[CREATE TRIGGER tg_timestamp_update_lcb_license_holder BEFORE INSERT OR UPDATE ON lcb.lcb_license FOR EACH ROW EXECUTE PROCEDURE lcb.fn_timestamp_update_lcb_license_holder()]]></string>
+		</trigger>
+		<trigger name="tg_timestamp_update_reported_inventory" table="reported_inventory" id="Trigger_50ef1e" isSystem="false" >
+			<string><![CDATA[CREATE TRIGGER tg_timestamp_update_reported_inventory BEFORE INSERT OR UPDATE ON lcb.reported_inventory FOR EACH ROW EXECUTE PROCEDURE lcb.fn_timestamp_update_reported_inventory()]]></string>
+		</trigger>
+	</schema>
+	<schema name="org" catalogname="lcb" >
+		<table name="config_org" >
+			<comment><![CDATA[@omit create,update,delete]]></comment>
+			<column name="id" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>shard_1.id_generator()</defo>
+			</column>
+			<column name="key" type="text" decimal="0" jt="12" />
+			<column name="value" type="text" decimal="0" jt="12" />
+			<index name="pk_config_org" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+		</table>
+		<table name="contact" >
+			<column name="id" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>shard_1.id_generator()</defo>
+				<comment><![CDATA[@omit create]]></comment>
+			</column>
+			<column name="app_tenant_id" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<comment><![CDATA[@omit create, update]]></comment>
+			</column>
+			<column name="created_at" type="timestamptz" length="35" decimal="6" jt="93" mandatory="y" >
+				<defo>CURRENT_TIMESTAMP</defo>
+				<comment><![CDATA[@omit create,update]]></comment>
+			</column>
+			<column name="updated_at" type="timestamptz" length="35" decimal="6" jt="93" mandatory="y" >
+				<comment><![CDATA[@omit create,update]]></comment>
+			</column>
+			<column name="organization_id" type="bigint" length="19" decimal="0" jt="-5" >
+				<comment><![CDATA[@omit create,update]]></comment>
+			</column>
+			<column name="location_id" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="external_id" type="text" decimal="0" jt="12" />
+			<column name="first_name" type="text" decimal="0" jt="12" />
+			<column name="last_name" type="text" decimal="0" jt="12" />
+			<column name="email" type="text" decimal="0" jt="12" />
+			<column name="cell_phone" type="text" decimal="0" jt="12" />
+			<column name="office_phone" type="text" decimal="0" jt="12" />
+			<column name="title" type="text" decimal="0" jt="12" />
+			<column name="nickname" type="text" decimal="0" jt="12" />
+			<index name="pk_contact" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+			<index name="uq_contact_app_tenant_and_email" unique="UNIQUE" >
+				<column name="app_tenant_id" options="ASC" />
+				<column name="email" options="ASC" />
+			</index>
+			<index name="uq_contact_app_tenant_and_external_id" unique="UNIQUE" >
+				<column name="app_tenant_id" options="ASC" />
+				<column name="external_id" options="ASC" />
+			</index>
+			<fk name="fk_contact_app_tenant" to_schema="lcb.auth" to_table="app_tenant" >
+				<fk_column name="app_tenant_id" pk="id" />
+			</fk>
+			<fk name="fk_contact_location" to_schema="lcb.org" to_table="location" >
+				<fk_column name="location_id" pk="id" />
+			</fk>
+			<fk name="fk_contact_organization" to_schema="lcb.org" to_table="organization" >
+				<fk_column name="organization_id" pk="id" />
+			</fk>
+		</table>
+		<table name="contact_app_user" >
+			<column name="id" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>shard_1.id_generator()</defo>
+				<comment><![CDATA[@omit create]]></comment>
+			</column>
+			<column name="app_tenant_id" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<comment><![CDATA[@omit create]]></comment>
+			</column>
+			<column name="created_at" type="timestamptz" length="35" decimal="6" jt="93" mandatory="y" >
+				<defo>CURRENT_TIMESTAMP</defo>
+				<comment><![CDATA[@omit create,update]]></comment>
+			</column>
+			<column name="updated_at" type="timestamptz" length="35" decimal="6" jt="93" mandatory="y" >
+				<comment><![CDATA[@omit create,update]]></comment>
+			</column>
+			<column name="contact_id" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
+			<column name="app_user_id" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
+			<column name="username" type="text" decimal="0" jt="12" mandatory="y" />
+			<index name="pk_contact_app_user" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+			<index name="contact_app_user_app_user_id_key" unique="UNIQUE" >
+				<column name="app_user_id" options="ASC" />
+			</index>
+			<index name="contact_app_user_contact_id_key" unique="UNIQUE" >
+				<column name="contact_id" options="ASC" />
+			</index>
+			<index name="contact_app_user_username_key" unique="UNIQUE" >
+				<column name="username" options="ASC" />
+			</index>
+			<constraint name="contact_app_user_username_check" >
+				<string>username &lt;&gt; &#039;&#039;::text</string>
+			</constraint>
+			<fk name="fk_contact_app_user_app_tenant" to_schema="lcb.auth" to_table="app_tenant" >
+				<fk_column name="app_tenant_id" pk="id" />
+			</fk>
+			<fk name="fk_contact_app_user_app_user" to_schema="lcb.auth" to_table="app_user" >
+				<fk_column name="app_user_id" pk="id" />
+			</fk>
+			<fk name="fk_contact_app_user_contact" to_schema="lcb.org" to_table="contact" >
+				<fk_column name="contact_id" pk="id" />
+			</fk>
+		</table>
+		<table name="facility" >
+			<column name="id" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>shard_1.id_generator()</defo>
+				<comment><![CDATA[@omit create]]></comment>
+			</column>
+			<column name="app_tenant_id" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<comment><![CDATA[@omit create]]></comment>
+			</column>
+			<column name="created_at" type="timestamptz" length="35" decimal="6" jt="93" mandatory="y" >
+				<defo>CURRENT_TIMESTAMP</defo>
+				<comment><![CDATA[@omit create,update]]></comment>
+			</column>
+			<column name="updated_at" type="timestamptz" length="35" decimal="6" jt="93" mandatory="y" >
+				<comment><![CDATA[@omit create,update]]></comment>
+			</column>
+			<column name="organization_id" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="location_id" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="name" type="text" decimal="0" jt="12" />
+			<column name="external_id" type="text" decimal="0" jt="12" />
+			<index name="pk_facility" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+			<index name="uq_facility_app_tenant_and_organization_and_name" unique="UNIQUE" >
+				<column name="organization_id" options="ASC" />
+				<column name="name" options="ASC" />
+			</index>
+			<fk name="fk_facility_app_tenant" to_schema="lcb.auth" to_table="app_tenant" >
+				<fk_column name="app_tenant_id" pk="id" />
+			</fk>
+			<fk name="fk_facility_location" to_schema="lcb.org" to_table="location" >
+				<fk_column name="location_id" pk="id" />
+			</fk>
+			<fk name="fk_facility_organization" to_schema="lcb.org" to_table="organization" >
+				<fk_column name="organization_id" pk="id" />
+			</fk>
+		</table>
+		<table name="location" >
+			<column name="id" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>shard_1.id_generator()</defo>
+				<comment><![CDATA[@omit create]]></comment>
+			</column>
+			<column name="app_tenant_id" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<comment><![CDATA[@omit create]]></comment>
+			</column>
+			<column name="created_at" type="timestamptz" length="35" decimal="6" jt="93" mandatory="y" >
+				<defo>CURRENT_TIMESTAMP</defo>
+				<comment><![CDATA[@omit create,update]]></comment>
+			</column>
+			<column name="updated_at" type="timestamptz" length="35" decimal="6" jt="93" mandatory="y" >
+				<comment><![CDATA[@omit create,update]]></comment>
+			</column>
+			<column name="external_id" type="text" decimal="0" jt="12" />
+			<column name="name" type="text" decimal="0" jt="12" />
+			<column name="address1" type="text" decimal="0" jt="12" />
+			<column name="address2" type="text" decimal="0" jt="12" />
+			<column name="city" type="text" decimal="0" jt="12" />
+			<column name="state" type="text" decimal="0" jt="12" />
+			<column name="zip" type="text" decimal="0" jt="12" />
+			<column name="lat" type="text" decimal="0" jt="12" />
+			<column name="lon" type="text" decimal="0" jt="12" />
+			<index name="pk_location" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+			<index name="uq_location_app_tenant_and_external_id" unique="UNIQUE" >
+				<column name="app_tenant_id" options="ASC" />
+				<column name="external_id" options="ASC" />
+			</index>
+			<fk name="fk_location_app_tenant" to_schema="lcb.auth" to_table="app_tenant" >
+				<fk_column name="app_tenant_id" pk="id" />
+			</fk>
+		</table>
+		<table name="organization" >
+			<column name="id" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>shard_1.id_generator()</defo>
+				<comment><![CDATA[@omit create]]></comment>
+			</column>
+			<column name="app_tenant_id" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<comment><![CDATA[@omit create]]></comment>
+			</column>
+			<column name="actual_app_tenant_id" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="created_at" type="timestamptz" length="35" decimal="6" jt="93" mandatory="y" >
+				<defo>CURRENT_TIMESTAMP</defo>
+				<comment><![CDATA[@omit create,update]]></comment>
+			</column>
+			<column name="updated_at" type="timestamptz" length="35" decimal="6" jt="93" mandatory="y" >
+				<comment><![CDATA[@omit create,update]]></comment>
+			</column>
+			<column name="external_id" type="text" decimal="0" jt="12" />
+			<column name="name" type="text" decimal="0" jt="12" mandatory="y" />
+			<column name="location_id" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="primary_contact_id" type="bigint" length="19" decimal="0" jt="-5" />
+			<index name="pk_organization" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+			<index name="organization_actual_app_tenant_id_key" unique="UNIQUE" >
+				<column name="actual_app_tenant_id" options="ASC" />
+			</index>
+			<index name="uq_app_tenant_external_id" unique="UNIQUE" >
+				<column name="app_tenant_id" options="ASC" />
+				<column name="external_id" options="ASC" />
+			</index>
+			<constraint name="organization_name_check" >
+				<string>name &lt;&gt; &#039;&#039;::text</string>
+			</constraint>
+			<fk name="fk_organization_actual_app_tenant" to_schema="lcb.auth" to_table="app_tenant" >
+				<fk_column name="actual_app_tenant_id" pk="id" />
+			</fk>
+			<fk name="fk_organization_app_tenant" to_schema="lcb.auth" to_table="app_tenant" >
+				<fk_column name="app_tenant_id" pk="id" />
+			</fk>
+			<fk name="fk_organization_primary_contact" to_schema="lcb.org" to_table="contact" >
+				<fk_column name="primary_contact_id" pk="id" />
+			</fk>
+			<fk name="fk_organization_location" to_schema="lcb.org" to_table="location" >
+				<fk_column name="location_id" pk="id" />
+			</fk>
+		</table>
+		<procedure name="fn_timestamp_update_contact" id="Procedure_58301e3" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION org.fn_timestamp_update_contact()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+  BEGIN
+    NEW.updated_at = current_timestamp;
+    if NEW.app_tenant_id is null then 
+      -- only users with 'SuperAdmin' permission_key will be able to arbitrarily set this value
+      -- rls policy (below) will prevent users from specifying an alternate app_tenant_id
+      NEW.app_tenant_id := auth_fn.current_app_tenant_id();
+    end if;
+    RETURN NEW;
+  END; $function$
+;]]></string>
+			<result_param name="returnValue" jt="1111" type="trigger" />
+		</procedure>
+		<procedure name="fn_timestamp_update_contact_app_user" id="Procedure_f8100c" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION org.fn_timestamp_update_contact_app_user()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+  BEGIN
+    NEW.updated_at = current_timestamp;
+    if NEW.app_tenant_id is null then 
+      -- only users with 'SuperAdmin' permission_key will be able to arbitrarily set this value
+      -- rls policy (below) will prevent users from specifying an alternate app_tenant_id
+      NEW.app_tenant_id := auth_fn.current_app_tenant_id();
+    end if;
+    RETURN NEW;
+  END; $function$
+;]]></string>
+			<result_param name="returnValue" jt="1111" type="trigger" />
+		</procedure>
+		<procedure name="fn_timestamp_update_facility" id="Procedure_55787cf" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION org.fn_timestamp_update_facility()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+  BEGIN
+    NEW.updated_at = current_timestamp;
+    if NEW.app_tenant_id is null then 
+      -- only users with 'SuperAdmin' permission_key will be able to arbitrarily set this value
+      -- rls policy (below) will prevent users from specifying an alternate app_tenant_id
+      NEW.app_tenant_id := auth_fn.current_app_tenant_id();
+    end if;
+    RETURN NEW;
+  END; $function$
+;]]></string>
+			<result_param name="returnValue" jt="1111" type="trigger" />
+		</procedure>
+		<procedure name="fn_timestamp_update_location" id="Procedure_213a8b8" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION org.fn_timestamp_update_location()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+  BEGIN
+    NEW.updated_at = current_timestamp;
+    if NEW.app_tenant_id is null then 
+      -- only users with 'SuperAdmin' permission_key will be able to arbitrarily set this value
+      -- rls policy (below) will prevent users from specifying an alternate app_tenant_id
+      NEW.app_tenant_id := auth_fn.current_app_tenant_id();
+    end if;
+    RETURN NEW;
+  END; $function$
+;]]></string>
+			<result_param name="returnValue" jt="1111" type="trigger" />
+		</procedure>
+		<procedure name="fn_timestamp_update_organization" id="Procedure_2194d34" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION org.fn_timestamp_update_organization()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+  begin
+    if NEW.app_tenant_id is null then 
+      -- only users with 'SuperAdmin' permission_key will be able to arbitrarily set this value
+      -- rls policy (below) will prevent users from specifying an alternate app_tenant_id
+      NEW.app_tenant_id := auth_fn.current_app_tenant_id();
+    end if;
+    NEW.updated_at = current_timestamp;
+    return NEW;
+  end; $function$
+;]]></string>
+			<result_param name="returnValue" jt="1111" type="trigger" />
+		</procedure>
+		<trigger name="tg_timestamp_update_contact" table="contact" id="Trigger_32e9048" isSystem="false" >
+			<string><![CDATA[CREATE TRIGGER tg_timestamp_update_contact BEFORE INSERT OR UPDATE ON org.contact FOR EACH ROW EXECUTE PROCEDURE org.fn_timestamp_update_contact()]]></string>
+		</trigger>
+		<trigger name="tg_timestamp_update_contact_app_user" table="contact_app_user" id="Trigger_5cd4d77" isSystem="false" >
+			<string><![CDATA[CREATE TRIGGER tg_timestamp_update_contact_app_user BEFORE INSERT OR UPDATE ON org.contact_app_user FOR EACH ROW EXECUTE PROCEDURE org.fn_timestamp_update_contact_app_user()]]></string>
+		</trigger>
+		<trigger name="tg_timestamp_update_facility" table="facility" id="Trigger_1c9c8ff" isSystem="false" >
+			<string><![CDATA[CREATE TRIGGER tg_timestamp_update_facility BEFORE INSERT OR UPDATE ON org.facility FOR EACH ROW EXECUTE PROCEDURE org.fn_timestamp_update_facility()]]></string>
+		</trigger>
+		<trigger name="tg_timestamp_update_location" table="location" id="Trigger_389760b" isSystem="false" >
+			<string><![CDATA[CREATE TRIGGER tg_timestamp_update_location BEFORE INSERT OR UPDATE ON org.location FOR EACH ROW EXECUTE PROCEDURE org.fn_timestamp_update_location()]]></string>
+		</trigger>
+		<trigger name="tg_timestamp_update_organization" table="organization" id="Trigger_4f65837" isSystem="false" >
+			<string><![CDATA[CREATE TRIGGER tg_timestamp_update_organization BEFORE INSERT OR UPDATE ON org.organization FOR EACH ROW EXECUTE PROCEDURE org.fn_timestamp_update_organization()]]></string>
+		</trigger>
+	</schema>
+	<connector name="lcb" database="PostgreSQL" driver_class="org.postgresql.Driver" driver_jar="postgresql-42.2.8.jar" driver_desc="Standard" host="0.0.0.0" port="5432" instance="lcb" user="postgres" passwd="MTIzNA==" />
+	<layout name="app" id="Layout_1f07839" show_relation="columns" >
+		<entity schema="lcb.app" name="application" color="BED3F4" x="560" y="304" />
+		<entity schema="lcb.app" name="license" color="BED3F4" x="48" y="48" />
+		<entity schema="lcb.app" name="license_permission" color="BED3F4" x="336" y="336" />
+		<entity schema="lcb.app" name="license_type" color="BED3F4" x="336" y="48" />
+		<entity schema="lcb.app" name="license_type_permission" color="BED3F4" x="560" y="48" />
+	</layout>
+	<layout name="auth" id="Layout_14aa035" show_relation="columns" >
+		<entity schema="lcb.auth" name="app_tenant" color="BED3F4" x="48" y="48" />
+		<entity schema="lcb.auth" name="app_user" color="BED3F4" x="288" y="48" />
+		<entity schema="lcb.auth" name="config_auth" color="3986C1" x="816" y="368" />
+		<entity schema="lcb.auth" name="permission" color="C7F4BE" x="816" y="48" />
+		<entity schema="lcb.auth" name="token" color="BED3F4" x="608" y="48" />
+	</layout>
+	<layout name="lcb" id="Layout_387048f" show_relation="columns" >
+		<entity schema="lcb.lcb" name="lcb_license" color="BED3F4" x="256" y="48" />
+		<entity schema="lcb.lcb" name="lcb_license_holder" color="BED3F4" x="48" y="48" />
+		<entity schema="lcb.lcb" name="reported_inventory" color="BED3F4" x="256" y="272" />
+	</layout>
+	<layout name="org" id="Layout_16ad517" show_relation="columns" >
+		<entity schema="lcb.org" name="config_org" color="3986C1" x="1072" y="48" />
+		<entity schema="lcb.org" name="contact" color="BED3F4" x="592" y="48" />
+		<entity schema="lcb.org" name="contact_app_user" color="BED3F4" x="848" y="48" />
+		<entity schema="lcb.org" name="facility" color="BED3F4" x="48" y="368" />
+		<entity schema="lcb.org" name="location" color="BED3F4" x="304" y="368" />
+		<entity schema="lcb.org" name="organization" color="BED3F4" x="304" y="48" />
+	</layout>
+</project>

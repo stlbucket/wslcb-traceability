@@ -1,0 +1,14 @@
+**/node_modules
+**/**/sqitch.conf
+**/.env
+cmd.config
+.idea/
+
+sqitch
+docker-run-pg-10.sh
+ansible/config.yml
+
+*.crt
+*.pem
+
+config.yml
