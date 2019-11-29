@@ -32,6 +32,7 @@ const schema = (0, _postgraphile.postgraphile)(process.env.POSTGRES_CONNECTION, 
   extendedErrors: ["detail", "errcode"],
   graphiql: process.env.GRAPHIQL === "true",
   enhanceGraphiql: process.env.ENHANCE_GRAPHIQL === "true",
+  allowExplain: process.env.ALLOW_EXPLAIN === "true",
   graphileBuildOptions: {
     showErrorStack: true,
     connectionFilterComputedColumns: false,
@@ -62,17 +63,12 @@ const schema = (0, _postgraphile.postgraphile)(process.env.POSTGRES_CONNECTION, 
       notLike: "nlike",
       likeInsensitive: "ilike",
       notLikeInsensitive: "nilike"
-    } // exportGqlSchemaPath: './schema/soro.schema',
-    // exportJsonSchemaPath: './schema/soro_schema.json'
+    }
+  } // exportGqlSchemaPath: './schema/soro.schema',
+  // exportJsonSchemaPath: './schema/soro_schema.json'
 
-  }
 });
-app.use(schema); // app.use('/api', api)
-// app.use(function (err, req, res, next) {
-//   clog.error('WE GOT US A SERVER SIDE ERROR', err.stack)
-//   res.status(500).send('Something broke!')
-// })
-
+app.use(schema);
 const server = app.listen(process.env.PORT);
 /*
  * When being used in nodemon, SIGUSR2 is issued to restart the process. We

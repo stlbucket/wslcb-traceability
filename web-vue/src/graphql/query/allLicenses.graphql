@@ -3,9 +3,13 @@ query AllLicenses{
     nodes {
       id
       name
-      organization: organizationByOrganizationId {
+      appTenant: appTenantByAppTenantId {
         id
         name
+        organization: organizationByActualAppTenantId {
+          id
+          name
+        }
       }
       licenseType: licenseTypeByLicenseTypeId {
         id

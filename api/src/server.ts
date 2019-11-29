@@ -31,6 +31,7 @@ const schema = postgraphile(
     extendedErrors: ["detail", "errcode"],
     graphiql: process.env.GRAPHIQL === "true",
     enhanceGraphiql: process.env.ENHANCE_GRAPHIQL === "true",
+    allowExplain: process.env.ALLOW_EXPLAIN === "true",
     graphileBuildOptions: {
       showErrorStack: true,
       connectionFilterComputedColumns: false,
@@ -69,12 +70,6 @@ const schema = postgraphile(
 );
 
 app.use(schema);
-
-// app.use('/api', api)
-// app.use(function (err, req, res, next) {
-//   clog.error('WE GOT US A SERVER SIDE ERROR', err.stack)
-//   res.status(500).send('Something broke!')
-// })
 
 const server = app.listen(process.env.PORT);
 

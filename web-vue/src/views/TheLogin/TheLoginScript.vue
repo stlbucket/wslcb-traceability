@@ -46,7 +46,7 @@ export default {
   },
   data () {
     return {
-      username: 'testAdmin001',
+      username: 'lcb_producer_admin',
       password: 'badpassword'
     }
   },

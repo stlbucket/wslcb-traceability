@@ -24,7 +24,7 @@ export default {
           return {
             id: license.id,
             name: license.name,
-            appTenantName: license.organization.name,
+            appTenantName: license.appTenant.name,
             licenseTypeKey: license.licenseType.key,
             applicationName: license.licenseType.application.name,
             assignedTo: `${assignedToContact.firstName} ${assignedToContact.lastName}`

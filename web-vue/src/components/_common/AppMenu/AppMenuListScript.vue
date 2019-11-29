@@ -48,9 +48,9 @@ export default {
           iconKey: 'people'
         },
         {
-          key: 'project-manager',
-          name: 'Project Manager',
-          routeName: 'project-manager',
+          key: 'lcb-traceability',
+          name: 'LCB Traceability',
+          routeName: 'lcb-traceability',
           iconKey: 'hot_tub'
         }
       ]
