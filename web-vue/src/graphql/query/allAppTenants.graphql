@@ -1,0 +1,36 @@
+query {
+  allAppTenants {
+    nodes {
+      id
+      name
+      identifier
+      organization: organizationByActualAppTenantId {
+        id
+        name
+        externalId
+        primaryContact: contactByPrimaryContactId {
+          id
+          firstName
+          lastName
+          email
+          title
+          cellPhone
+          officePhone
+          externalId
+        }
+        location: locationByLocationId {
+          id
+          name
+          address1
+          address2
+          city
+          state
+          zip
+          lat
+          lon
+          externalId
+        }
+      }
+    }
+  }
+}
