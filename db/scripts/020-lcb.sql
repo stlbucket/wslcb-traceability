@@ -173,7 +173,7 @@ CREATE FUNCTION lcb_hist.fn_capture_hist_inventory_lot() RETURNS trigger
     RETURN NEW;
   END; $$;
 ALTER FUNCTION lcb_hist.fn_capture_hist_inventory_lot() OWNER TO app;
-CREATE TRIGGER tg_capture_hist_inventory_lot AFTER INSERT OR UPDATE ON lcb.inventory_lot FOR EACH ROW EXECUTE PROCEDURE lcb_hist.fn_capture_hist_inventory_lot();
+CREATE TRIGGER tg_capture_hist_inventory_lot AFTER UPDATE ON lcb.inventory_lot FOR EACH ROW EXECUTE PROCEDURE lcb_hist.fn_capture_hist_inventory_lot();
 
 
 
