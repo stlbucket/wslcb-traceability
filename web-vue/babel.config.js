@@ -1,8 +1,5 @@
 module.exports = {
   presets: [
-    '@vue/app'
-  ],
-  "plugins": [
-    "graphql-tag"
+    '@vue/cli-plugin-babel/preset'
   ]
 }
