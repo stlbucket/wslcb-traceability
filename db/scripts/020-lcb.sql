@@ -1,13 +1,10 @@
 drop schema if exists lcb_hist cascade;
 drop schema if exists lcb cascade;
-drop schema if exists lcb_fn cascade;
 
 create schema lcb;
-create schema lcb_fn;
 create schema lcb_hist;
 
 grant usage on schema lcb to app_user;
-grant usage on schema lcb_fn to app_user;
 grant usage on schema lcb_hist to app_user;
 
 CREATE TABLE lcb.lcb_license (
@@ -46,9 +43,11 @@ ALTER TABLE ONLY lcb.lcb_license_holder
 
 
 CREATE TABLE lcb.inventory_lot (
-    id text DEFAULT util_fn.generate_ulid() NOT NULL,
+    id text DEFAULT util_fn.generate_ulid() NOT NULL unique,
+    licensee_identifier text null,
     app_tenant_id text NOT NULL,
     lcb_license_holder_id text not null,
+    reporting_status text not null,
     created_at timestamptz DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at timestamptz NOT NULL,
     deleted_at timestamptz NULL,
@@ -71,6 +70,10 @@ ALTER TABLE ONLY lcb.inventory_lot
     ADD CONSTRAINT fk_inventory_lot_app_tenant_id FOREIGN KEY (app_tenant_id) REFERENCES auth.app_tenant (id);
 ALTER TABLE ONLY lcb.inventory_lot
     ADD CONSTRAINT fk_inventory_lot_lcb_license_holder FOREIGN KEY (lcb_license_holder_id) REFERENCES lcb.lcb_license_holder (id);
+ALTER TABLE ONLY lcb.inventory_lot
+    ADD CONSTRAINT fk_inventory_lot_inventory_type FOREIGN KEY (inventory_type) REFERENCES lcb_ref.inventory_type (id);
+ALTER TABLE ONLY lcb.inventory_lot
+    ADD CONSTRAINT fk_inventory_lot_reporting_status FOREIGN KEY (reporting_status) REFERENCES lcb_ref.reporting_status (id);
 
 CREATE FUNCTION lcb.fn_timestamp_update_lcb_license() RETURNS trigger
     LANGUAGE plpgsql
@@ -101,6 +104,79 @@ CREATE FUNCTION lcb.fn_timestamp_update_inventory_lot() RETURNS trigger
   END; $$;
 ALTER FUNCTION lcb.fn_timestamp_update_inventory_lot() OWNER TO app;
 CREATE TRIGGER tg_timestamp_update_inventory_lot BEFORE INSERT OR UPDATE ON lcb.inventory_lot FOR EACH ROW EXECUTE PROCEDURE lcb.fn_timestamp_update_inventory_lot();
+
+
+------------------------------------------------------------------------------------------------  lcb_hist
+CREATE TABLE lcb_hist.hist_inventory_lot (
+    id text DEFAULT util_fn.generate_ulid() NOT NULL unique,
+    licensee_identifier text null,
+    inventory_lot_id text not null,
+    app_tenant_id text NOT NULL,
+    lcb_license_holder_id text not null,
+    created_at timestamptz NOT NULL,
+    updated_at timestamptz NOT NULL,
+    deleted_at timestamptz NULL,
+    id_origin text not null,
+    reporting_status text not null,
+    inventory_type text not null,
+    description text,
+    quantity numeric(10,2),
+    units text,
+    strain_name text,
+    area_identifier text
+);
+ALTER TABLE ONLY lcb_hist.hist_inventory_lot
+    ADD CONSTRAINT fk_hist_inventory_lot_inventory_lot FOREIGN KEY (inventory_lot_id) REFERENCES lcb.inventory_lot (id);
+ALTER TABLE ONLY lcb_hist.hist_inventory_lot
+    ADD CONSTRAINT fk_hist_inventory_lot_app_tenant_id FOREIGN KEY (app_tenant_id) REFERENCES auth.app_tenant (id);
+
+CREATE FUNCTION lcb_hist.fn_capture_hist_inventory_lot() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+  BEGIN
+    insert into lcb_hist.hist_inventory_lot(
+        inventory_lot_id,
+        licensee_identifier,
+        app_tenant_id,
+        lcb_license_holder_id,
+        created_at,
+        updated_at,
+        deleted_at,
+        id_origin,
+        reporting_status,
+        inventory_type,
+        description,
+        quantity,
+        units,
+        strain_name,
+        area_identifier
+    )
+    values (
+        NEW.id,
+        NEW.licensee_identifier,
+        NEW.app_tenant_id,
+        NEW.lcb_license_holder_id,
+        NEW.created_at,
+        NEW.updated_at,
+        NEW.deleted_at,
+        NEW.id_origin,
+        NEW.reporting_status,
+        NEW.inventory_type,
+        NEW.description,
+        NEW.quantity,
+        NEW.units,
+        NEW.strain_name,
+        NEW.area_identifier
+    )
+    ;
+
+    RETURN NEW;
+  END; $$;
+ALTER FUNCTION lcb_hist.fn_capture_hist_inventory_lot() OWNER TO app;
+CREATE TRIGGER tg_capture_hist_inventory_lot AFTER INSERT OR UPDATE ON lcb.inventory_lot FOR EACH ROW EXECUTE PROCEDURE lcb_hist.fn_capture_hist_inventory_lot();
+
+
+
 
 
 

@@ -43,31 +43,40 @@ CREATE SCHEMA auth_fn;
 ALTER SCHEMA auth_fn OWNER TO app;
 
 --
--- Name: lcb; Type: SCHEMA; Schema: -; Owner: postgres
+-- Name: lcb; Type: SCHEMA; Schema: -; Owner: app
 --
 
 CREATE SCHEMA lcb;
 
 
-ALTER SCHEMA lcb OWNER TO postgres;
+ALTER SCHEMA lcb OWNER TO app;
 
 --
--- Name: lcb_fn; Type: SCHEMA; Schema: -; Owner: postgres
+-- Name: lcb_fn; Type: SCHEMA; Schema: -; Owner: app
 --
 
 CREATE SCHEMA lcb_fn;
 
 
-ALTER SCHEMA lcb_fn OWNER TO postgres;
+ALTER SCHEMA lcb_fn OWNER TO app;
 
 --
--- Name: lcb_hist; Type: SCHEMA; Schema: -; Owner: postgres
+-- Name: lcb_hist; Type: SCHEMA; Schema: -; Owner: app
 --
 
 CREATE SCHEMA lcb_hist;
 
 
-ALTER SCHEMA lcb_hist OWNER TO postgres;
+ALTER SCHEMA lcb_hist OWNER TO app;
+
+--
+-- Name: lcb_ref; Type: SCHEMA; Schema: -; Owner: app
+--
+
+CREATE SCHEMA lcb_ref;
+
+
+ALTER SCHEMA lcb_ref OWNER TO app;
 
 --
 -- Name: org; Type: SCHEMA; Schema: -; Owner: app
@@ -146,6 +155,24 @@ CREATE TYPE auth.permission_key AS ENUM (
 
 
 ALTER TYPE auth.permission_key OWNER TO app;
+
+--
+-- Name: report_inventory_lot_input; Type: TYPE; Schema: lcb_fn; Owner: app
+--
+
+CREATE TYPE lcb_fn.report_inventory_lot_input AS (
+	id text,
+	licensee_identifier text,
+	inventory_type text,
+	description text,
+	quantity numeric(10,2),
+	units text,
+	strain_name text,
+	area_identifier text
+);
+
+
+ALTER TYPE lcb_fn.report_inventory_lot_input OWNER TO app;
 
 --
 -- Name: fn_timestamp_update_application(); Type: FUNCTION; Schema: app; Owner: app
@@ -758,8 +785,10 @@ ALTER FUNCTION lcb.fn_timestamp_update_lcb_license_holder() OWNER TO app;
 
 CREATE TABLE lcb.inventory_lot (
     id text DEFAULT util_fn.generate_ulid() NOT NULL,
+    licensee_identifier text,
     app_tenant_id text NOT NULL,
     lcb_license_holder_id text NOT NULL,
+    reporting_status text NOT NULL,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at timestamp with time zone NOT NULL,
     deleted_at timestamp with time zone,
@@ -779,7 +808,35 @@ CREATE TABLE lcb.inventory_lot (
 ALTER TABLE lcb.inventory_lot OWNER TO app;
 
 --
--- Name: obtain_ids(text, integer); Type: FUNCTION; Schema: lcb_fn; Owner: postgres
+-- Name: invalidate_inventory_lot_ids(text[]); Type: FUNCTION; Schema: lcb_fn; Owner: app
+--
+
+CREATE FUNCTION lcb_fn.invalidate_inventory_lot_ids(_ids text[]) RETURNS SETOF lcb.inventory_lot
+    LANGUAGE plpgsql STRICT
+    AS $$
+  DECLARE
+    _current_app_user auth.app_user;
+    _lcb_license_holder_id text;
+    _inventory_lot_input lcb_fn.report_inventory_lot_input;
+    _inventory_lot lcb.inventory_lot;
+    _inventory_lot_id text;
+  BEGIN
+    _current_app_user := auth_fn.current_app_user();
+
+    update lcb.inventory_lot set
+      reporting_status = 'INVALIDATED'
+    where id = ANY(_ids);
+
+
+    RETURN QUERY SELECT * FROM lcb.inventory_lot WHERE id = ANY(_ids);
+  END;
+  $$;
+
+
+ALTER FUNCTION lcb_fn.invalidate_inventory_lot_ids(_ids text[]) OWNER TO app;
+
+--
+-- Name: obtain_ids(text, integer); Type: FUNCTION; Schema: lcb_fn; Owner: app
 --
 
 CREATE FUNCTION lcb_fn.obtain_ids(_inventory_type text, _number_requested integer) RETURNS SETOF lcb.inventory_lot
@@ -789,12 +846,10 @@ CREATE FUNCTION lcb_fn.obtain_ids(_inventory_type text, _number_requested intege
     _current_app_user auth.app_user;
     _lcb_license_holder_id text;
     _inventory_lot lcb.inventory_lot;
-    _created_count integer;
   BEGIN
-    _created_count := 0;
     _current_app_user := auth_fn.current_app_user();
 
-    -- this is not reall correct.  need mechanism to switch between licenses
+    -- this is not really correct.  need mechanism to switch between licenses
     select id
     into _lcb_license_holder_id
     from lcb.lcb_license_holder
@@ -806,12 +861,14 @@ CREATE FUNCTION lcb_fn.obtain_ids(_inventory_type text, _number_requested intege
       app_tenant_id,
       lcb_license_holder_id,
       id_origin,
+      reporting_status,
       inventory_type
     )
     SELECT
       _current_app_user.app_tenant_id,
       _lcb_license_holder_id,
       'WSLCB',
+      'PROVISIONED',
       _inventory_type
     FROM
       generate_series(1, _number_requested)
@@ -821,7 +878,166 @@ CREATE FUNCTION lcb_fn.obtain_ids(_inventory_type text, _number_requested intege
   $$;
 
 
-ALTER FUNCTION lcb_fn.obtain_ids(_inventory_type text, _number_requested integer) OWNER TO postgres;
+ALTER FUNCTION lcb_fn.obtain_ids(_inventory_type text, _number_requested integer) OWNER TO app;
+
+--
+-- Name: report_inventory_lot(lcb_fn.report_inventory_lot_input[]); Type: FUNCTION; Schema: lcb_fn; Owner: app
+--
+
+CREATE FUNCTION lcb_fn.report_inventory_lot(_input lcb_fn.report_inventory_lot_input[]) RETURNS SETOF lcb.inventory_lot
+    LANGUAGE plpgsql STRICT
+    AS $$
+  DECLARE
+    _current_app_user auth.app_user;
+    _lcb_license_holder_id text;
+    _inventory_lot_input lcb_fn.report_inventory_lot_input;
+    _inventory_lot lcb.inventory_lot;
+    _inventory_lot_id text;
+  BEGIN
+    _current_app_user := auth_fn.current_app_user();
+
+    -- this is not really correct.  need mechanism to switch between licenses
+    select id
+    into _lcb_license_holder_id
+    from lcb.lcb_license_holder
+    where app_tenant_id = _current_app_user.app_tenant_id;
+
+    foreach _inventory_lot_input in ARRAY _input
+    loop
+
+      -- make sure this lot can be identified later
+      if _inventory_lot_input.id is null or _inventory_lot_input.id = '' then
+        if _inventory_lot_input.licensee_identifier is null or _inventory_lot_input.licensee_identifier = '' then
+          raise exception 'illegal operation - batch cancelled:  all inventory lots must have id OR licensee_identifier defined.';
+        end if;
+        _inventory_lot_id := util_fn.generate_ulid();
+      else
+        -- _inventory_lot_input.id should be verified as a valid ulid here
+        _inventory_lot_id := _inventory_lot_input.id;
+      end if;
+
+      -- find existing lot if it's there
+      select *
+      into _inventory_lot
+      from lcb.inventory_lot
+      where id = _inventory_lot_id;
+
+      if _inventory_lot.id is null then
+        insert into lcb.inventory_lot(
+          id,
+          licensee_identifier,
+          app_tenant_id,
+          lcb_license_holder_id,
+          id_origin,
+          reporting_status,
+          inventory_type,
+          description,
+          quantity,
+          units,
+          strain_name,
+          area_identifier
+        )
+        SELECT
+          COALESCE(_inventory_lot_input.id, util_fn.generate_ulid()),
+          _inventory_lot_input.licensee_identifier,
+          _current_app_user.app_tenant_id,
+          _lcb_license_holder_id,
+          case when _inventory_lot_input.id is null then 'WSLCB' else 'LICENSEE' end,
+          'REPORTED',
+          _inventory_lot_input.inventory_type,
+          _inventory_lot_input.description,
+          _inventory_lot_input.quantity,
+          _inventory_lot_input.units,
+          _inventory_lot_input.strain_name,
+          _inventory_lot_input.area_identifier
+        RETURNING * INTO _inventory_lot;
+      else
+        if _inventory_lot_input.inventory_type != _inventory_lot.inventory_type then
+          raise exception 'illegal operation - batch cancelled:  cannot change inventory type of an existing inventory lot: %', _inventory_lot.id;
+        end if;
+
+        update lcb.inventory_lot set
+          licensee_identifier = _inventory_lot_input.licensee_identifier,
+          description = _inventory_lot_input.description,
+          quantity = _inventory_lot_input.quantity,
+          units = _inventory_lot_input.units,
+          strain_name = _inventory_lot_input.strain_name,
+          area_identifier = _inventory_lot_input.area_identifier,
+          reporting_status = 'REPORTED'
+        where id = _inventory_lot_id
+        and (
+          _inventory_lot_input.licensee_identifier != licensee_identifier
+          OR _inventory_lot_input.description != description
+          OR _inventory_lot_input.quantity != quantity
+          OR _inventory_lot_input.units != units
+          OR _inventory_lot_input.strain_name != strain_name
+          OR _inventory_lot_input.area_identifier != area_identifier
+        )
+        ;
+
+        SELECT * INTO _inventory_lot FROM lcb.inventory_lot WHERE id = _inventory_lot_id;
+      end if;
+
+      return next _inventory_lot;
+
+    end loop;
+
+    RETURN;
+  end;
+  $$;
+
+
+ALTER FUNCTION lcb_fn.report_inventory_lot(_input lcb_fn.report_inventory_lot_input[]) OWNER TO app;
+
+--
+-- Name: fn_capture_hist_inventory_lot(); Type: FUNCTION; Schema: lcb_hist; Owner: app
+--
+
+CREATE FUNCTION lcb_hist.fn_capture_hist_inventory_lot() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+  BEGIN
+    insert into lcb_hist.hist_inventory_lot(
+        inventory_lot_id,
+        licensee_identifier,
+        app_tenant_id,
+        lcb_license_holder_id,
+        created_at,
+        updated_at,
+        deleted_at,
+        id_origin,
+        reporting_status,
+        inventory_type,
+        description,
+        quantity,
+        units,
+        strain_name,
+        area_identifier
+    )
+    values (
+        NEW.id,
+        NEW.licensee_identifier,
+        NEW.app_tenant_id,
+        NEW.lcb_license_holder_id,
+        NEW.created_at,
+        NEW.updated_at,
+        NEW.deleted_at,
+        NEW.id_origin,
+        NEW.reporting_status,
+        NEW.inventory_type,
+        NEW.description,
+        NEW.quantity,
+        NEW.units,
+        NEW.strain_name,
+        NEW.area_identifier
+    )
+    ;
+
+    RETURN NEW;
+  END; $$;
+
+
+ALTER FUNCTION lcb_hist.fn_capture_hist_inventory_lot() OWNER TO app;
 
 --
 -- Name: fn_timestamp_update_contact(); Type: FUNCTION; Schema: org; Owner: app
@@ -1924,6 +2140,58 @@ CREATE TABLE lcb.lcb_license_holder (
 ALTER TABLE lcb.lcb_license_holder OWNER TO app;
 
 --
+-- Name: hist_inventory_lot; Type: TABLE; Schema: lcb_hist; Owner: app
+--
+
+CREATE TABLE lcb_hist.hist_inventory_lot (
+    id text DEFAULT util_fn.generate_ulid() NOT NULL,
+    licensee_identifier text,
+    inventory_lot_id text NOT NULL,
+    app_tenant_id text NOT NULL,
+    lcb_license_holder_id text NOT NULL,
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone NOT NULL,
+    deleted_at timestamp with time zone,
+    id_origin text NOT NULL,
+    reporting_status text NOT NULL,
+    inventory_type text NOT NULL,
+    description text,
+    quantity numeric(10,2),
+    units text,
+    strain_name text,
+    area_identifier text
+);
+
+
+ALTER TABLE lcb_hist.hist_inventory_lot OWNER TO app;
+
+--
+-- Name: inventory_type; Type: TABLE; Schema: lcb_ref; Owner: app
+--
+
+CREATE TABLE lcb_ref.inventory_type (
+    id text NOT NULL,
+    name text NOT NULL,
+    description text,
+    CONSTRAINT ck_inventory_type_id CHECK ((id <> ''::text))
+);
+
+
+ALTER TABLE lcb_ref.inventory_type OWNER TO app;
+
+--
+-- Name: reporting_status; Type: TABLE; Schema: lcb_ref; Owner: app
+--
+
+CREATE TABLE lcb_ref.reporting_status (
+    id text NOT NULL,
+    CONSTRAINT ck_reporting_status_id CHECK ((id <> ''::text))
+);
+
+
+ALTER TABLE lcb_ref.reporting_status OWNER TO app;
+
+--
 -- Name: config_org; Type: TABLE; Schema: org; Owner: app
 --
 
@@ -2008,10 +2276,10 @@ ALTER TABLE shard_1.global_id_sequence OWNER TO app;
 --
 
 COPY app.application (id, created_at, updated_at, external_id, name, key) FROM stdin;
-01DTX2SR7H1RP3S0FSAN9125MW	2019-11-30 02:38:53.680901+00	2019-11-30 02:38:53.680901+00	\N	Tenant Manager	tenant-manager
-01DTX2SR7H2APA9HFD96WBZ2JC	2019-11-30 02:38:53.680901+00	2019-11-30 02:38:53.680901+00	\N	License Manager	license-manager
-01DTX2SR7HTW1956MBHQVPPHPB	2019-11-30 02:38:53.680901+00	2019-11-30 02:38:53.680901+00	\N	address book	address-book
-01DTX2SR7HSF4962XQ741DWSQ9	2019-11-30 02:38:53.680901+00	2019-11-30 02:38:53.680901+00	\N	LCB Traceability	lcb-traceability
+01DTZ5847AJ3JNKN0H9WW46W49	2019-11-30 22:00:10.729994+00	2019-11-30 22:00:10.729994+00	\N	Tenant Manager	tenant-manager
+01DTZ5847AA8EH65JP3387AK2Y	2019-11-30 22:00:10.729994+00	2019-11-30 22:00:10.729994+00	\N	License Manager	license-manager
+01DTZ5847AP1J367K5EWE4ZAKJ	2019-11-30 22:00:10.729994+00	2019-11-30 22:00:10.729994+00	\N	address book	address-book
+01DTZ5847A825SGVN4TDHKRY6P	2019-11-30 22:00:10.729994+00	2019-11-30 22:00:10.729994+00	\N	LCB Traceability	lcb-traceability
 \.
 
 
@@ -2020,25 +2288,25 @@ COPY app.application (id, created_at, updated_at, external_id, name, key) FROM s
 --
 
 COPY app.license (id, app_tenant_id, created_at, updated_at, external_id, name, license_type_id, assigned_to_app_user_id) FROM stdin;
-01DTX2SR7HT4TF8KW5B9Q3QMXH	01DTWX2GRYZHFNB9XW2RNJHZKT	2019-11-30 02:38:53.680901+00	2019-11-30 02:38:53.680901+00	\N	appsuperadmin - Tenant Manager	01DTX2SR7HRPSGG8VRK68JCVBR	01DTWX2GRYN5BAAYRY78KEWDYD
-01DTX2SR7HZX3JQE8BBNT24F80	01DTWX2GRYZHFNB9XW2RNJHZKT	2019-11-30 02:38:53.680901+00	2019-11-30 02:38:53.680901+00	\N	appsuperadmin - License Manager	01DTX2SR7HAG4C46W2R8D0G9XR	01DTWX2GRYN5BAAYRY78KEWDYD
-01DTX2SR7HCWV16XZARPK3TXM8	01DTX2SQRP11641KWYCNEQKDN8	2019-11-30 02:38:53.680901+00	2019-11-30 02:38:53.680901+00	\N	lcb_producer_admin - License Manager	01DTX2SR7HAG4C46W2R8D0G9XR	01DTX2SQRPPGEVSNM9G4GZ5601
-01DTX2SR7HNS3NDNK2N8P74T1C	01DTX2SQRP260C2XENBACHEGJF	2019-11-30 02:38:53.680901+00	2019-11-30 02:38:53.680901+00	\N	lcb_processor_admin - License Manager	01DTX2SR7HAG4C46W2R8D0G9XR	01DTX2SQRP25V7MEN6RJF5CX1H
-01DTX2SR7HEY4PJQRKYM4NK702	01DTX2SQRP411HJJ8898S0RQNJ	2019-11-30 02:38:53.680901+00	2019-11-30 02:38:53.680901+00	\N	lcb_retail_admin - License Manager	01DTX2SR7HAG4C46W2R8D0G9XR	01DTX2SQRPQ8A9F57RQ7Z0HA3G
-01DTX2SR7HT9FHMEW6ZGGDA1NY	01DTWX2GRYZHFNB9XW2RNJHZKT	2019-11-30 02:38:53.680901+00	2019-11-30 02:38:53.680901+00	\N	appsuperadmin - Address Book	01DTX2SR7HWY7D157Q246KM5R3	01DTWX2GRYN5BAAYRY78KEWDYD
-01DTX2SR7H688APCWVZZ8W0SRG	01DTX2SQRP11641KWYCNEQKDN8	2019-11-30 02:38:53.680901+00	2019-11-30 02:38:53.680901+00	\N	lcb_producer_admin - Address Book	01DTX2SR7HWY7D157Q246KM5R3	01DTX2SQRPPGEVSNM9G4GZ5601
-01DTX2SR7HD5JHF2VT967TYX8S	01DTX2SQRP11641KWYCNEQKDN8	2019-11-30 02:38:53.680901+00	2019-11-30 02:38:53.680901+00	\N	lcb_producer_user - Address Book	01DTX2SR7HWY7D157Q246KM5R3	01DTX2SQRPRDSEAT78KBM3D460
-01DTX2SR7HM4Q7KVXCTRQX6DSZ	01DTX2SQRP260C2XENBACHEGJF	2019-11-30 02:38:53.680901+00	2019-11-30 02:38:53.680901+00	\N	lcb_processor_admin - Address Book	01DTX2SR7HWY7D157Q246KM5R3	01DTX2SQRP25V7MEN6RJF5CX1H
-01DTX2SR7H5JJKRNX3NPNZEWMF	01DTX2SQRP260C2XENBACHEGJF	2019-11-30 02:38:53.680901+00	2019-11-30 02:38:53.680901+00	\N	lcb_processor_user - Address Book	01DTX2SR7HWY7D157Q246KM5R3	01DTX2SQRPGC8E3HN8XXA3YNB6
-01DTX2SR7HQ9Z57BZ0RT43WKCH	01DTX2SQRP411HJJ8898S0RQNJ	2019-11-30 02:38:53.680901+00	2019-11-30 02:38:53.680901+00	\N	lcb_retail_admin - Address Book	01DTX2SR7HWY7D157Q246KM5R3	01DTX2SQRPQ8A9F57RQ7Z0HA3G
-01DTX2SR7HX6N0Y73M5FA6JB3P	01DTX2SQRP411HJJ8898S0RQNJ	2019-11-30 02:38:53.680901+00	2019-11-30 02:38:53.680901+00	\N	lcb_retail_user - Address Book	01DTX2SR7HWY7D157Q246KM5R3	01DTX2SQRP8X07EWZJ0861RFC9
-01DTX2SR7HJXVGSFP0W779BK8D	01DTWX2GRYZHFNB9XW2RNJHZKT	2019-11-30 02:38:53.680901+00	2019-11-30 02:38:53.680901+00	\N	appsuperadmin - LCB Traceability	01DTX2SR7H3H7CXS9QDPKE409C	01DTWX2GRYN5BAAYRY78KEWDYD
-01DTX2SR7HY41YDAJG4P95XS7S	01DTX2SQRP11641KWYCNEQKDN8	2019-11-30 02:38:53.680901+00	2019-11-30 02:38:53.680901+00	\N	lcb_producer_admin - LCB Traceability	01DTX2SR7H3H7CXS9QDPKE409C	01DTX2SQRPPGEVSNM9G4GZ5601
-01DTX2SR7H6F1RDQNJ5TQW4V0G	01DTX2SQRP11641KWYCNEQKDN8	2019-11-30 02:38:53.680901+00	2019-11-30 02:38:53.680901+00	\N	lcb_producer_user - LCB Traceability	01DTX2SR7H3H7CXS9QDPKE409C	01DTX2SQRPRDSEAT78KBM3D460
-01DTX2SR7H2S31AM5ZXE6SYPV4	01DTX2SQRP260C2XENBACHEGJF	2019-11-30 02:38:53.680901+00	2019-11-30 02:38:53.680901+00	\N	lcb_processor_admin - LCB Traceability	01DTX2SR7H3H7CXS9QDPKE409C	01DTX2SQRP25V7MEN6RJF5CX1H
-01DTX2SR7H4J23CRVVJSWNWS58	01DTX2SQRP260C2XENBACHEGJF	2019-11-30 02:38:53.680901+00	2019-11-30 02:38:53.680901+00	\N	lcb_processor_user - LCB Traceability	01DTX2SR7H3H7CXS9QDPKE409C	01DTX2SQRPGC8E3HN8XXA3YNB6
-01DTX2SR7H74FD87QE1CG5SN54	01DTX2SQRP411HJJ8898S0RQNJ	2019-11-30 02:38:53.680901+00	2019-11-30 02:38:53.680901+00	\N	lcb_retail_admin - LCB Traceability	01DTX2SR7H3H7CXS9QDPKE409C	01DTX2SQRPQ8A9F57RQ7Z0HA3G
-01DTX2SR7HZ3XXN2S4MWTYZZ3J	01DTX2SQRP411HJJ8898S0RQNJ	2019-11-30 02:38:53.680901+00	2019-11-30 02:38:53.680901+00	\N	lcb_retail_user - LCB Traceability	01DTX2SR7H3H7CXS9QDPKE409C	01DTX2SQRP8X07EWZJ0861RFC9
+01DTZ5847AZKD1NKQTEDJHR5T5	01DTWX2GRYZHFNB9XW2RNJHZKT	2019-11-30 22:00:10.729994+00	2019-11-30 22:00:10.729994+00	\N	appsuperadmin - Tenant Manager	01DTZ5847APBW5YZZHEP1JJ35P	01DTWX2GRYN5BAAYRY78KEWDYD
+01DTZ5847A2R6HA7TFG65Q8Q5H	01DTWX2GRYZHFNB9XW2RNJHZKT	2019-11-30 22:00:10.729994+00	2019-11-30 22:00:10.729994+00	\N	appsuperadmin - License Manager	01DTZ5847AZ4EQMSB23CEHEG4T	01DTWX2GRYN5BAAYRY78KEWDYD
+01DTZ5847ARKKK47E3DKQC7F69	01DTZ583PZJX3BCV9RH0YSB0HJ	2019-11-30 22:00:10.729994+00	2019-11-30 22:00:10.729994+00	\N	lcb_producer_admin - License Manager	01DTZ5847AZ4EQMSB23CEHEG4T	01DTZ583PZEHV8SCXNJXGEYREF
+01DTZ5847AWPSMCF3KFHFCJ504	01DTZ583PZPK820HXNDSRRZTDR	2019-11-30 22:00:10.729994+00	2019-11-30 22:00:10.729994+00	\N	lcb_processor_admin - License Manager	01DTZ5847AZ4EQMSB23CEHEG4T	01DTZ583PZ20K01GEY3BHVQT76
+01DTZ5847A63Q89ETJENF20FT9	01DTZ583PZ42VFVPVMFM4W025N	2019-11-30 22:00:10.729994+00	2019-11-30 22:00:10.729994+00	\N	lcb_retail_admin - License Manager	01DTZ5847AZ4EQMSB23CEHEG4T	01DTZ583PZ1FTP02PCMVCBZYQT
+01DTZ5847AGQ998AARCZMYWXFY	01DTWX2GRYZHFNB9XW2RNJHZKT	2019-11-30 22:00:10.729994+00	2019-11-30 22:00:10.729994+00	\N	appsuperadmin - Address Book	01DTZ5847AS39TY25CQHAXKQGP	01DTWX2GRYN5BAAYRY78KEWDYD
+01DTZ5847AVDA951FM9MP1Q7SE	01DTZ583PZJX3BCV9RH0YSB0HJ	2019-11-30 22:00:10.729994+00	2019-11-30 22:00:10.729994+00	\N	lcb_producer_admin - Address Book	01DTZ5847AS39TY25CQHAXKQGP	01DTZ583PZEHV8SCXNJXGEYREF
+01DTZ5847ASDDFBFAK52M4CRV8	01DTZ583PZJX3BCV9RH0YSB0HJ	2019-11-30 22:00:10.729994+00	2019-11-30 22:00:10.729994+00	\N	lcb_producer_user - Address Book	01DTZ5847AS39TY25CQHAXKQGP	01DTZ583PZ1VGCP95DXVH225SW
+01DTZ5847AV5P1VYA3VQF8CH5G	01DTZ583PZPK820HXNDSRRZTDR	2019-11-30 22:00:10.729994+00	2019-11-30 22:00:10.729994+00	\N	lcb_processor_admin - Address Book	01DTZ5847AS39TY25CQHAXKQGP	01DTZ583PZ20K01GEY3BHVQT76
+01DTZ5847A818T6RWKFCZR5VFQ	01DTZ583PZPK820HXNDSRRZTDR	2019-11-30 22:00:10.729994+00	2019-11-30 22:00:10.729994+00	\N	lcb_processor_user - Address Book	01DTZ5847AS39TY25CQHAXKQGP	01DTZ583PZ9AAFAK7Z394PGSX9
+01DTZ5847A0BSNTKYA6ER22MV8	01DTZ583PZ42VFVPVMFM4W025N	2019-11-30 22:00:10.729994+00	2019-11-30 22:00:10.729994+00	\N	lcb_retail_admin - Address Book	01DTZ5847AS39TY25CQHAXKQGP	01DTZ583PZ1FTP02PCMVCBZYQT
+01DTZ5847AQ5RP8TRTA48KNSAX	01DTZ583PZ42VFVPVMFM4W025N	2019-11-30 22:00:10.729994+00	2019-11-30 22:00:10.729994+00	\N	lcb_retail_user - Address Book	01DTZ5847AS39TY25CQHAXKQGP	01DTZ583PZPC40BCZKMXACT0CK
+01DTZ5847A3SJ4WRE13CNCMNX6	01DTWX2GRYZHFNB9XW2RNJHZKT	2019-11-30 22:00:10.729994+00	2019-11-30 22:00:10.729994+00	\N	appsuperadmin - LCB Traceability	01DTZ5847A99EN3G0P2X1Y67BD	01DTWX2GRYN5BAAYRY78KEWDYD
+01DTZ5847ADX1185Q55KQVAZFQ	01DTZ583PZJX3BCV9RH0YSB0HJ	2019-11-30 22:00:10.729994+00	2019-11-30 22:00:10.729994+00	\N	lcb_producer_admin - LCB Traceability	01DTZ5847A99EN3G0P2X1Y67BD	01DTZ583PZEHV8SCXNJXGEYREF
+01DTZ5847A4P8J6YQ6BJYR6VE7	01DTZ583PZJX3BCV9RH0YSB0HJ	2019-11-30 22:00:10.729994+00	2019-11-30 22:00:10.729994+00	\N	lcb_producer_user - LCB Traceability	01DTZ5847A99EN3G0P2X1Y67BD	01DTZ583PZ1VGCP95DXVH225SW
+01DTZ5847A9F2Q44RZ3MZBS8AD	01DTZ583PZPK820HXNDSRRZTDR	2019-11-30 22:00:10.729994+00	2019-11-30 22:00:10.729994+00	\N	lcb_processor_admin - LCB Traceability	01DTZ5847A99EN3G0P2X1Y67BD	01DTZ583PZ20K01GEY3BHVQT76
+01DTZ5847AZGRSATDWC5VG97RT	01DTZ583PZPK820HXNDSRRZTDR	2019-11-30 22:00:10.729994+00	2019-11-30 22:00:10.729994+00	\N	lcb_processor_user - LCB Traceability	01DTZ5847A99EN3G0P2X1Y67BD	01DTZ583PZ9AAFAK7Z394PGSX9
+01DTZ5847AXY3SXRNCZ2AYTQ7H	01DTZ583PZ42VFVPVMFM4W025N	2019-11-30 22:00:10.729994+00	2019-11-30 22:00:10.729994+00	\N	lcb_retail_admin - LCB Traceability	01DTZ5847A99EN3G0P2X1Y67BD	01DTZ583PZ1FTP02PCMVCBZYQT
+01DTZ5847AJ8CBGJ747WZDD2XA	01DTZ583PZ42VFVPVMFM4W025N	2019-11-30 22:00:10.729994+00	2019-11-30 22:00:10.729994+00	\N	lcb_retail_user - LCB Traceability	01DTZ5847A99EN3G0P2X1Y67BD	01DTZ583PZPC40BCZKMXACT0CK
 \.
 
 
@@ -2055,10 +2323,10 @@ COPY app.license_permission (id, app_tenant_id, created_at, updated_at, license_
 --
 
 COPY app.license_type (id, created_at, updated_at, external_id, name, key, application_id) FROM stdin;
-01DTX2SR7HRPSGG8VRK68JCVBR	2019-11-30 02:38:53.680901+00	2019-11-30 02:38:53.680901+00	\N	Tenant Manager	tenant-manager	01DTX2SR7H1RP3S0FSAN9125MW
-01DTX2SR7HAG4C46W2R8D0G9XR	2019-11-30 02:38:53.680901+00	2019-11-30 02:38:53.680901+00	\N	License Manager	license-manager	01DTX2SR7H2APA9HFD96WBZ2JC
-01DTX2SR7HWY7D157Q246KM5R3	2019-11-30 02:38:53.680901+00	2019-11-30 02:38:53.680901+00	\N	Address Book	address-book	01DTX2SR7HTW1956MBHQVPPHPB
-01DTX2SR7H3H7CXS9QDPKE409C	2019-11-30 02:38:53.680901+00	2019-11-30 02:38:53.680901+00	\N	LCB Traceability	lcb-traceability	01DTX2SR7HSF4962XQ741DWSQ9
+01DTZ5847APBW5YZZHEP1JJ35P	2019-11-30 22:00:10.729994+00	2019-11-30 22:00:10.729994+00	\N	Tenant Manager	tenant-manager	01DTZ5847AJ3JNKN0H9WW46W49
+01DTZ5847AZ4EQMSB23CEHEG4T	2019-11-30 22:00:10.729994+00	2019-11-30 22:00:10.729994+00	\N	License Manager	license-manager	01DTZ5847AA8EH65JP3387AK2Y
+01DTZ5847AS39TY25CQHAXKQGP	2019-11-30 22:00:10.729994+00	2019-11-30 22:00:10.729994+00	\N	Address Book	address-book	01DTZ5847AP1J367K5EWE4ZAKJ
+01DTZ5847A99EN3G0P2X1Y67BD	2019-11-30 22:00:10.729994+00	2019-11-30 22:00:10.729994+00	\N	LCB Traceability	lcb-traceability	01DTZ5847A825SGVN4TDHKRY6P
 \.
 
 
@@ -2076,9 +2344,9 @@ COPY app.license_type_permission (id, created_at, updated_at, license_type_id, p
 
 COPY auth.app_tenant (id, created_at, updated_at, name, identifier) FROM stdin;
 01DTWX2GRYZHFNB9XW2RNJHZKT	2019-11-30 00:58:49.502291+00	2019-11-30 00:58:49.502291+00	Anchor Tenant	anchor
-01DTX2SQRP11641KWYCNEQKDN8	2019-11-30 02:38:53.205998+00	2019-11-30 02:38:53.205998+00	Producer-1	G11111
-01DTX2SQRP260C2XENBACHEGJF	2019-11-30 02:38:53.205998+00	2019-11-30 02:38:53.205998+00	Processor-1	M11111
-01DTX2SQRP411HJJ8898S0RQNJ	2019-11-30 02:38:53.205998+00	2019-11-30 02:38:53.205998+00	Retail-1	R11111
+01DTZ583PZJX3BCV9RH0YSB0HJ	2019-11-30 22:00:10.206617+00	2019-11-30 22:00:10.206617+00	Producer-1	G11111
+01DTZ583PZPK820HXNDSRRZTDR	2019-11-30 22:00:10.206617+00	2019-11-30 22:00:10.206617+00	Processor-1	M11111
+01DTZ583PZ42VFVPVMFM4W025N	2019-11-30 22:00:10.206617+00	2019-11-30 22:00:10.206617+00	Retail-1	R11111
 \.
 
 
@@ -2088,12 +2356,12 @@ COPY auth.app_tenant (id, created_at, updated_at, name, identifier) FROM stdin;
 
 COPY auth.app_user (id, app_tenant_id, created_at, updated_at, username, recovery_email, password_hash, inactive, password_reset_required, permission_key) FROM stdin;
 01DTWX2GRYN5BAAYRY78KEWDYD	01DTWX2GRYZHFNB9XW2RNJHZKT	2019-11-30 00:58:49.502291+00	2019-11-30 00:58:49.502291+00	appsuperadmin	appsuperadmin@tst.tst	$2a$06$UFCeEuicGDM/b28Nz3w76OK3xtzDXg1L.s6zTTOVIzpoGsBfCz3f.	f	f	SuperAdmin
-01DTX2SQRPPGEVSNM9G4GZ5601	01DTX2SQRP11641KWYCNEQKDN8	2019-11-30 02:38:53.205998+00	2019-11-30 02:38:53.205998+00	lcb_producer_admin	lcb_producer_admin@blah.blah	$2a$06$MG4uhDQqF.Adfnlc98Kr4eFQ/0w45cyqH7XOmgHqUbWcxOJvJYr5C	f	f	Admin
-01DTX2SQRPRDSEAT78KBM3D460	01DTX2SQRP11641KWYCNEQKDN8	2019-11-30 02:38:53.205998+00	2019-11-30 02:38:53.205998+00	lcb_producer_user	lcb_producer_user@blah.blah	$2a$06$HH8yvAeW0iflSXQfeybSgeXVJ5MIAvZn0cHHmIP6rLCz/bcOLm5gK	f	f	User
-01DTX2SQRP25V7MEN6RJF5CX1H	01DTX2SQRP260C2XENBACHEGJF	2019-11-30 02:38:53.205998+00	2019-11-30 02:38:53.205998+00	lcb_processor_admin	lcb_processor_admin@blah.blah	$2a$06$aBzGiYD6VqSxrnDiqyGkPuK.1IOAIhEM1Z1sHHl1dtCE5aKE3cbda	f	f	Admin
-01DTX2SQRPGC8E3HN8XXA3YNB6	01DTX2SQRP260C2XENBACHEGJF	2019-11-30 02:38:53.205998+00	2019-11-30 02:38:53.205998+00	lcb_processor_user	lcb_processor_user@blah.blah	$2a$06$PYO1t386rDkyckWxyYC4b.phMQ5qjSteHjVfUzBBaO.Y4Q2lLnnLu	f	f	User
-01DTX2SQRPQ8A9F57RQ7Z0HA3G	01DTX2SQRP411HJJ8898S0RQNJ	2019-11-30 02:38:53.205998+00	2019-11-30 02:38:53.205998+00	lcb_retail_admin	lcb_retail_admin003@blah.blah	$2a$06$p/4le.EHoc0zsq8aUUIro.fl0kDEsTjvUNC7IFm6rLLu3CI0eBomG	f	f	Admin
-01DTX2SQRP8X07EWZJ0861RFC9	01DTX2SQRP411HJJ8898S0RQNJ	2019-11-30 02:38:53.205998+00	2019-11-30 02:38:53.205998+00	lcb_retail_user	lcb_retail_user@blah.blah	$2a$06$ultnmj8LhX2LLRLRlOI7AuvbVLxDRH1rJVkFBLasCoNTr0Dzs1sIu	f	f	User
+01DTZ583PZEHV8SCXNJXGEYREF	01DTZ583PZJX3BCV9RH0YSB0HJ	2019-11-30 22:00:10.206617+00	2019-11-30 22:00:10.206617+00	lcb_producer_admin	lcb_producer_admin@blah.blah	$2a$06$9pynXTZ3QRidsxcnRmQMCOc451U8JcOjQXOvnZyrWR0RBhw4BqiSm	f	f	Admin
+01DTZ583PZ1VGCP95DXVH225SW	01DTZ583PZJX3BCV9RH0YSB0HJ	2019-11-30 22:00:10.206617+00	2019-11-30 22:00:10.206617+00	lcb_producer_user	lcb_producer_user@blah.blah	$2a$06$r2UZxFWUyaeVvycwFm7PHuR/J09ZKXm/Mk31fOvTHRCPjsW5RuBRO	f	f	User
+01DTZ583PZ20K01GEY3BHVQT76	01DTZ583PZPK820HXNDSRRZTDR	2019-11-30 22:00:10.206617+00	2019-11-30 22:00:10.206617+00	lcb_processor_admin	lcb_processor_admin@blah.blah	$2a$06$bJjYfrXcSIF74wXUTnY4Ge9/jcTEfa.0X6Aaxiq0sAHDnFD34O1pC	f	f	Admin
+01DTZ583PZ9AAFAK7Z394PGSX9	01DTZ583PZPK820HXNDSRRZTDR	2019-11-30 22:00:10.206617+00	2019-11-30 22:00:10.206617+00	lcb_processor_user	lcb_processor_user@blah.blah	$2a$06$AKpCfcP1YKEsClDSK452feSD/mfSTiFxx5aVp/CCDHykYvjPWISDy	f	f	User
+01DTZ583PZ1FTP02PCMVCBZYQT	01DTZ583PZ42VFVPVMFM4W025N	2019-11-30 22:00:10.206617+00	2019-11-30 22:00:10.206617+00	lcb_retail_admin	lcb_retail_admin003@blah.blah	$2a$06$5WK2KUOpk.Nw5Sx3oHLlQuM4N42xfsckSbQ7szJrRCov.mcQGUcPa	f	f	Admin
+01DTZ583PZPC40BCZKMXACT0CK	01DTZ583PZ42VFVPVMFM4W025N	2019-11-30 22:00:10.206617+00	2019-11-30 22:00:10.206617+00	lcb_retail_user	lcb_retail_user@blah.blah	$2a$06$z4pIua1idEZckYtuVqEls.FCgsJC6oDLeG1pvbeNfFfS3kcIoWkAq	f	f	User
 \.
 
 
@@ -2125,7 +2393,7 @@ COPY auth.token (id, app_user_id, created_at, expires_at) FROM stdin;
 -- Data for Name: inventory_lot; Type: TABLE DATA; Schema: lcb; Owner: app
 --
 
-COPY lcb.inventory_lot (id, app_tenant_id, lcb_license_holder_id, created_at, updated_at, deleted_at, id_origin, inventory_type, description, quantity, units, strain_name, area_identifier) FROM stdin;
+COPY lcb.inventory_lot (id, licensee_identifier, app_tenant_id, lcb_license_holder_id, reporting_status, created_at, updated_at, deleted_at, id_origin, inventory_type, description, quantity, units, strain_name, area_identifier) FROM stdin;
 \.
 
 
@@ -2134,9 +2402,9 @@ COPY lcb.inventory_lot (id, app_tenant_id, lcb_license_holder_id, created_at, up
 --
 
 COPY lcb.lcb_license (id, created_at, updated_at, code) FROM stdin;
-01DTX2SR4VNH1Z3V77Z3GG19AE	2019-11-30 02:38:53.595451+00	2019-11-30 02:38:53.595451+00	G11111
-01DTX2SR4V5WVFYFXW2FRXQAGQ	2019-11-30 02:38:53.595451+00	2019-11-30 02:38:53.595451+00	M11111
-01DTX2SR4V6WKPX9ZQ4Y70VFEG	2019-11-30 02:38:53.595451+00	2019-11-30 02:38:53.595451+00	R11111
+01DTZ5844YHDCPZTNY5QTGVBQP	2019-11-30 22:00:10.654378+00	2019-11-30 22:00:10.654378+00	G11111
+01DTZ5844Y8T8CMPRTC4K5NZ8Y	2019-11-30 22:00:10.654378+00	2019-11-30 22:00:10.654378+00	M11111
+01DTZ5844Y31WPG609GZ5DK94Y	2019-11-30 22:00:10.654378+00	2019-11-30 22:00:10.654378+00	R11111
 \.
 
 
@@ -2145,9 +2413,44 @@ COPY lcb.lcb_license (id, created_at, updated_at, code) FROM stdin;
 --
 
 COPY lcb.lcb_license_holder (id, app_tenant_id, created_at, updated_at, lcb_license_id, organization_id, acquisition_date, relinquish_date) FROM stdin;
-01DTX2SR4VGWHKFVAGQ3H6SX87	01DTX2SQRP11641KWYCNEQKDN8	2019-11-30 02:38:53.595451+00	2019-11-30 02:38:53.595451+00	01DTX2SR4VNH1Z3V77Z3GG19AE	01DTX2SQRPJ5VZ9HGQZR5BN9SB	2019-11-30 02:38:53.595451+00	\N
-01DTX2SR4VVWDKKZXD0KCFT0GA	01DTX2SQRP260C2XENBACHEGJF	2019-11-30 02:38:53.595451+00	2019-11-30 02:38:53.595451+00	01DTX2SR4V5WVFYFXW2FRXQAGQ	01DTX2SQRPRP7X3BZ3E3CYB7DT	2019-11-30 02:38:53.595451+00	\N
-01DTX2SR4VQHAW1T2205B1AVWQ	01DTX2SQRP411HJJ8898S0RQNJ	2019-11-30 02:38:53.595451+00	2019-11-30 02:38:53.595451+00	01DTX2SR4V6WKPX9ZQ4Y70VFEG	01DTX2SQRPKAE5HKJBN1Z1QNGE	2019-11-30 02:38:53.595451+00	\N
+01DTZ5844Y745G9JKP01WARKKZ	01DTZ583PZJX3BCV9RH0YSB0HJ	2019-11-30 22:00:10.654378+00	2019-11-30 22:00:10.654378+00	01DTZ5844YHDCPZTNY5QTGVBQP	01DTZ583PZTP8SB5WWVBGEEW3S	2019-11-30 22:00:10.654378+00	\N
+01DTZ5844YR4GYY6AD40WTDGJR	01DTZ583PZPK820HXNDSRRZTDR	2019-11-30 22:00:10.654378+00	2019-11-30 22:00:10.654378+00	01DTZ5844Y8T8CMPRTC4K5NZ8Y	01DTZ583PZ0MZATS8FPD4TER53	2019-11-30 22:00:10.654378+00	\N
+01DTZ5844YCCHXKAWNMZSXV741	01DTZ583PZ42VFVPVMFM4W025N	2019-11-30 22:00:10.654378+00	2019-11-30 22:00:10.654378+00	01DTZ5844Y31WPG609GZ5DK94Y	01DTZ583PZZGD5ZQBZRX337RY5	2019-11-30 22:00:10.654378+00	\N
+\.
+
+
+--
+-- Data for Name: hist_inventory_lot; Type: TABLE DATA; Schema: lcb_hist; Owner: app
+--
+
+COPY lcb_hist.hist_inventory_lot (id, licensee_identifier, inventory_lot_id, app_tenant_id, lcb_license_holder_id, created_at, updated_at, deleted_at, id_origin, reporting_status, inventory_type, description, quantity, units, strain_name, area_identifier) FROM stdin;
+\.
+
+
+--
+-- Data for Name: inventory_type; Type: TABLE DATA; Schema: lcb_ref; Owner: app
+--
+
+COPY lcb_ref.inventory_type (id, name, description) FROM stdin;
+BF	Bulk Flower	\N
+UM	Usable Marijuana	\N
+PM	Packaged Marijuana	\N
+PR	Pre-roll Joints	\N
+CL	Clones	\N
+SD	Seeds	\N
+IS	Infused Solid Edible	\N
+IL	Infused Liquid Edible	\N
+\.
+
+
+--
+-- Data for Name: reporting_status; Type: TABLE DATA; Schema: lcb_ref; Owner: app
+--
+
+COPY lcb_ref.reporting_status (id) FROM stdin;
+PROVISIONED
+INVALIDATED
+REPORTED
 \.
 
 
@@ -2164,13 +2467,13 @@ COPY org.config_org (id, key, value) FROM stdin;
 --
 
 COPY org.contact (id, app_tenant_id, created_at, updated_at, organization_id, location_id, external_id, first_name, last_name, email, cell_phone, office_phone, title, nickname) FROM stdin;
-01DTWX2GRYRKYNC6B68CNP0JD3	01DTWX2GRYZHFNB9XW2RNJHZKT	2019-11-30 00:58:49.502291+00	2019-11-30 02:38:53.428914+00	01DTWX2GRYV6NTJYD2FNCN2HPK	01DTX2SQZNA5J5J0WCR455VYV1	appsuperadmin	Super	Admin	appsuperadmin@tst.tst	\N	\N	\N	\N
-01DTX2SQRPKVH6RMNQZVXA5XF6	01DTX2SQRP11641KWYCNEQKDN8	2019-11-30 02:38:53.205998+00	2019-11-30 02:38:53.428914+00	01DTX2SQRPJ5VZ9HGQZR5BN9SB	01DTX2SQZNGN377MDGDMA4EKVC	lcb_producer_admin	lcb_producer_admin	Test	lcb_producer_admin@blah.blah	\N	\N	\N	\N
-01DTX2SQRPVQXW7CD9AXQH8B38	01DTX2SQRP11641KWYCNEQKDN8	2019-11-30 02:38:53.205998+00	2019-11-30 02:38:53.428914+00	01DTX2SQRPJ5VZ9HGQZR5BN9SB	01DTX2SQZNRMCCRFDZNYMBVBR3	lcb_producer_user	lcb_producer_user	Test	lcb_producer_user@blah.blah	\N	\N	\N	\N
-01DTX2SQRPS07SH4ACC7BA98NH	01DTX2SQRP260C2XENBACHEGJF	2019-11-30 02:38:53.205998+00	2019-11-30 02:38:53.428914+00	01DTX2SQRPRP7X3BZ3E3CYB7DT	01DTX2SQZN1BSX880RQY5MKN9H	lcb_processor_admin	lcb_processor_admin	Test	lcb_processor_admin@blah.blah	\N	\N	\N	\N
-01DTX2SQRPZBKWHR1VJ7YNNY7X	01DTX2SQRP260C2XENBACHEGJF	2019-11-30 02:38:53.205998+00	2019-11-30 02:38:53.428914+00	01DTX2SQRPRP7X3BZ3E3CYB7DT	01DTX2SQZN71GHD4VQWD2TCXN3	lcb_processor_user	lcb_processor_user	Test	lcb_processor_user@blah.blah	\N	\N	\N	\N
-01DTX2SQRPJ7KSGZAMD919RKYQ	01DTX2SQRP411HJJ8898S0RQNJ	2019-11-30 02:38:53.205998+00	2019-11-30 02:38:53.428914+00	01DTX2SQRPKAE5HKJBN1Z1QNGE	01DTX2SQZN8C4XCC55TX2C8J0H	lcb_retail_admin	lcb_retail_admin	Test	lcb_retail_admin003@blah.blah	\N	\N	\N	\N
-01DTX2SQRPR3F77KJB44VZ0MFV	01DTX2SQRP411HJJ8898S0RQNJ	2019-11-30 02:38:53.205998+00	2019-11-30 02:38:53.428914+00	01DTX2SQRPKAE5HKJBN1Z1QNGE	01DTX2SQZN8S2YYES39K2GHPKE	lcb_retail_user	lcb_retail_user	Test	lcb_retail_user@blah.blah	\N	\N	\N	\N
+01DTWX2GRYRKYNC6B68CNP0JD3	01DTWX2GRYZHFNB9XW2RNJHZKT	2019-11-30 00:58:49.502291+00	2019-11-30 22:00:10.453438+00	01DTWX2GRYV6NTJYD2FNCN2HPK	01DTZ583YNYFXTS3T7XDYJDTT5	appsuperadmin	Super	Admin	appsuperadmin@tst.tst	\N	\N	\N	\N
+01DTZ583PZ2DW7TES1G044293Y	01DTZ583PZJX3BCV9RH0YSB0HJ	2019-11-30 22:00:10.206617+00	2019-11-30 22:00:10.453438+00	01DTZ583PZTP8SB5WWVBGEEW3S	01DTZ583YNJCFXNT38243GY7N8	lcb_producer_admin	lcb_producer_admin	Test	lcb_producer_admin@blah.blah	\N	\N	\N	\N
+01DTZ583PZRWTBX2ADQBRZPABG	01DTZ583PZJX3BCV9RH0YSB0HJ	2019-11-30 22:00:10.206617+00	2019-11-30 22:00:10.453438+00	01DTZ583PZTP8SB5WWVBGEEW3S	01DTZ583YNS9PQED66YGX9GWRW	lcb_producer_user	lcb_producer_user	Test	lcb_producer_user@blah.blah	\N	\N	\N	\N
+01DTZ583PZP7P7SERN2TFEG78K	01DTZ583PZPK820HXNDSRRZTDR	2019-11-30 22:00:10.206617+00	2019-11-30 22:00:10.453438+00	01DTZ583PZ0MZATS8FPD4TER53	01DTZ583YNV1SCTBTYSRZ0GRKD	lcb_processor_admin	lcb_processor_admin	Test	lcb_processor_admin@blah.blah	\N	\N	\N	\N
+01DTZ583PZSTVHPX5ETJTDW0SG	01DTZ583PZPK820HXNDSRRZTDR	2019-11-30 22:00:10.206617+00	2019-11-30 22:00:10.453438+00	01DTZ583PZ0MZATS8FPD4TER53	01DTZ583YNTXNBENJ7QR4PJB8M	lcb_processor_user	lcb_processor_user	Test	lcb_processor_user@blah.blah	\N	\N	\N	\N
+01DTZ583PZ739981XS50EJAB2H	01DTZ583PZ42VFVPVMFM4W025N	2019-11-30 22:00:10.206617+00	2019-11-30 22:00:10.453438+00	01DTZ583PZZGD5ZQBZRX337RY5	01DTZ583YNG7CDF407YQHRSEBS	lcb_retail_admin	lcb_retail_admin	Test	lcb_retail_admin003@blah.blah	\N	\N	\N	\N
+01DTZ583PZ1KJCRBY7KTQK5PM9	01DTZ583PZ42VFVPVMFM4W025N	2019-11-30 22:00:10.206617+00	2019-11-30 22:00:10.453438+00	01DTZ583PZZGD5ZQBZRX337RY5	01DTZ583YNFFXY02MCXGF93SNJ	lcb_retail_user	lcb_retail_user	Test	lcb_retail_user@blah.blah	\N	\N	\N	\N
 \.
 
 
@@ -2180,12 +2483,12 @@ COPY org.contact (id, app_tenant_id, created_at, updated_at, organization_id, lo
 
 COPY org.contact_app_user (id, app_tenant_id, created_at, updated_at, contact_id, app_user_id, username) FROM stdin;
 01DTWX2GRYNM1J522ZX2JS0N3R	01DTWX2GRYZHFNB9XW2RNJHZKT	2019-11-30 00:58:49.502291+00	2019-11-30 00:58:49.502291+00	01DTWX2GRYRKYNC6B68CNP0JD3	01DTWX2GRYN5BAAYRY78KEWDYD	appsuperadmin
-01DTX2SQRPMQ22FH19TKRAYV2Y	01DTX2SQRP11641KWYCNEQKDN8	2019-11-30 02:38:53.205998+00	2019-11-30 02:38:53.205998+00	01DTX2SQRPKVH6RMNQZVXA5XF6	01DTX2SQRPPGEVSNM9G4GZ5601	lcb_producer_admin
-01DTX2SQRPQGT1A7N9JWM8MSSF	01DTX2SQRP11641KWYCNEQKDN8	2019-11-30 02:38:53.205998+00	2019-11-30 02:38:53.205998+00	01DTX2SQRPVQXW7CD9AXQH8B38	01DTX2SQRPRDSEAT78KBM3D460	lcb_producer_user
-01DTX2SQRPQZFB18VX1WBNG4C9	01DTX2SQRP260C2XENBACHEGJF	2019-11-30 02:38:53.205998+00	2019-11-30 02:38:53.205998+00	01DTX2SQRPS07SH4ACC7BA98NH	01DTX2SQRP25V7MEN6RJF5CX1H	lcb_processor_admin
-01DTX2SQRP2BP4BRC12NGZG1A4	01DTX2SQRP260C2XENBACHEGJF	2019-11-30 02:38:53.205998+00	2019-11-30 02:38:53.205998+00	01DTX2SQRPZBKWHR1VJ7YNNY7X	01DTX2SQRPGC8E3HN8XXA3YNB6	lcb_processor_user
-01DTX2SQRPVTHZVDB77SGDP4DZ	01DTX2SQRP411HJJ8898S0RQNJ	2019-11-30 02:38:53.205998+00	2019-11-30 02:38:53.205998+00	01DTX2SQRPJ7KSGZAMD919RKYQ	01DTX2SQRPQ8A9F57RQ7Z0HA3G	lcb_retail_admin
-01DTX2SQRPWXZ3AQRGAREK0B2S	01DTX2SQRP411HJJ8898S0RQNJ	2019-11-30 02:38:53.205998+00	2019-11-30 02:38:53.205998+00	01DTX2SQRPR3F77KJB44VZ0MFV	01DTX2SQRP8X07EWZJ0861RFC9	lcb_retail_user
+01DTZ583PZXY1VJ52W2Q49NJJQ	01DTZ583PZJX3BCV9RH0YSB0HJ	2019-11-30 22:00:10.206617+00	2019-11-30 22:00:10.206617+00	01DTZ583PZ2DW7TES1G044293Y	01DTZ583PZEHV8SCXNJXGEYREF	lcb_producer_admin
+01DTZ583PZZ9EKMZR5KE011DCP	01DTZ583PZJX3BCV9RH0YSB0HJ	2019-11-30 22:00:10.206617+00	2019-11-30 22:00:10.206617+00	01DTZ583PZRWTBX2ADQBRZPABG	01DTZ583PZ1VGCP95DXVH225SW	lcb_producer_user
+01DTZ583PZ6YNFH118EG0MPRQH	01DTZ583PZPK820HXNDSRRZTDR	2019-11-30 22:00:10.206617+00	2019-11-30 22:00:10.206617+00	01DTZ583PZP7P7SERN2TFEG78K	01DTZ583PZ20K01GEY3BHVQT76	lcb_processor_admin
+01DTZ583PZN3A6K53FWKNJ9VFX	01DTZ583PZPK820HXNDSRRZTDR	2019-11-30 22:00:10.206617+00	2019-11-30 22:00:10.206617+00	01DTZ583PZSTVHPX5ETJTDW0SG	01DTZ583PZ9AAFAK7Z394PGSX9	lcb_processor_user
+01DTZ583PZ5RHXN33GM41EVSNA	01DTZ583PZ42VFVPVMFM4W025N	2019-11-30 22:00:10.206617+00	2019-11-30 22:00:10.206617+00	01DTZ583PZ739981XS50EJAB2H	01DTZ583PZ1FTP02PCMVCBZYQT	lcb_retail_admin
+01DTZ583PZHQF93ERMC7HYAP12	01DTZ583PZ42VFVPVMFM4W025N	2019-11-30 22:00:10.206617+00	2019-11-30 22:00:10.206617+00	01DTZ583PZ1KJCRBY7KTQK5PM9	01DTZ583PZPC40BCZKMXACT0CK	lcb_retail_user
 \.
 
 
@@ -2202,17 +2505,17 @@ COPY org.facility (id, app_tenant_id, created_at, updated_at, organization_id, l
 --
 
 COPY org.location (id, app_tenant_id, created_at, updated_at, external_id, name, address1, address2, city, state, zip, lat, lon) FROM stdin;
-01DTX2SQZNKVQQV4VHWRYC6JK3	01DTWX2GRYZHFNB9XW2RNJHZKT	2019-11-30 02:38:53.428914+00	2019-11-30 02:38:53.428914+00	anchor-org	Anchor Tenant Location	addy 1	addy 2	a city	??	?????	44.8103477	-99.9507832
-01DTX2SQZN7F2XPKH6Y59P3JYW	01DTX2SQRP11641KWYCNEQKDN8	2019-11-30 02:38:53.428914+00	2019-11-30 02:38:53.428914+00	G11111-org	Producer-1 Location	addy 1	addy 2	a city	??	?????	38.3213107	-98.4512081
-01DTX2SQZNXPGXR4K9Y0NKM60E	01DTX2SQRP260C2XENBACHEGJF	2019-11-30 02:38:53.428914+00	2019-11-30 02:38:53.428914+00	M11111-org	Processor-1 Location	addy 1	addy 2	a city	??	?????	43.5309281	-104.6385263
-01DTX2SQZNH25AM2DA5B51XSQD	01DTX2SQRP411HJJ8898S0RQNJ	2019-11-30 02:38:53.428914+00	2019-11-30 02:38:53.428914+00	R11111-org	Retail-1 Location	addy 1	addy 2	a city	??	?????	40.7971677	-107.7745158
-01DTX2SQZNA5J5J0WCR455VYV1	01DTWX2GRYZHFNB9XW2RNJHZKT	2019-11-30 02:38:53.428914+00	2019-11-30 02:38:53.428914+00	appsuperadmin	appsuperadmin Location	addy 1	addy 2	a city	??	?????	42.0616062	-105.2547448
-01DTX2SQZNGN377MDGDMA4EKVC	01DTX2SQRP11641KWYCNEQKDN8	2019-11-30 02:38:53.428914+00	2019-11-30 02:38:53.428914+00	lcb_producer_admin	lcb_producer_admin Location	addy 1	addy 2	a city	??	?????	39.9679401	-98.1125528
-01DTX2SQZNRMCCRFDZNYMBVBR3	01DTX2SQRP11641KWYCNEQKDN8	2019-11-30 02:38:53.428914+00	2019-11-30 02:38:53.428914+00	lcb_producer_user	lcb_producer_user Location	addy 1	addy 2	a city	??	?????	41.7184363	-104.5038560
-01DTX2SQZN1BSX880RQY5MKN9H	01DTX2SQRP260C2XENBACHEGJF	2019-11-30 02:38:53.428914+00	2019-11-30 02:38:53.428914+00	lcb_processor_admin	lcb_processor_admin Location	addy 1	addy 2	a city	??	?????	42.6081926	-99.3298419
-01DTX2SQZN71GHD4VQWD2TCXN3	01DTX2SQRP260C2XENBACHEGJF	2019-11-30 02:38:53.428914+00	2019-11-30 02:38:53.428914+00	lcb_processor_user	lcb_processor_user Location	addy 1	addy 2	a city	??	?????	41.4289027	-107.1721052
-01DTX2SQZN8C4XCC55TX2C8J0H	01DTX2SQRP411HJJ8898S0RQNJ	2019-11-30 02:38:53.428914+00	2019-11-30 02:38:53.428914+00	lcb_retail_admin	lcb_retail_admin Location	addy 1	addy 2	a city	??	?????	41.6173579	-108.5998285
-01DTX2SQZN8S2YYES39K2GHPKE	01DTX2SQRP411HJJ8898S0RQNJ	2019-11-30 02:38:53.428914+00	2019-11-30 02:38:53.428914+00	lcb_retail_user	lcb_retail_user Location	addy 1	addy 2	a city	??	?????	39.0166526	-96.7475456
+01DTZ583YNTG3PNAZH9BS8N1XB	01DTWX2GRYZHFNB9XW2RNJHZKT	2019-11-30 22:00:10.453438+00	2019-11-30 22:00:10.453438+00	anchor-org	Anchor Tenant Location	addy 1	addy 2	a city	??	?????	43.4687361	-101.8008000
+01DTZ583YNPVA33M0371TE3JHE	01DTZ583PZJX3BCV9RH0YSB0HJ	2019-11-30 22:00:10.453438+00	2019-11-30 22:00:10.453438+00	G11111-org	Producer-1 Location	addy 1	addy 2	a city	??	?????	44.1382549	-97.3811078
+01DTZ583YNW505S76RZN4YMRMB	01DTZ583PZPK820HXNDSRRZTDR	2019-11-30 22:00:10.453438+00	2019-11-30 22:00:10.453438+00	M11111-org	Processor-1 Location	addy 1	addy 2	a city	??	?????	35.5059770	-103.1871705
+01DTZ583YNGFHXM4J30TX3THBJ	01DTZ583PZ42VFVPVMFM4W025N	2019-11-30 22:00:10.453438+00	2019-11-30 22:00:10.453438+00	R11111-org	Retail-1 Location	addy 1	addy 2	a city	??	?????	37.6530695	-106.6990243
+01DTZ583YNYFXTS3T7XDYJDTT5	01DTWX2GRYZHFNB9XW2RNJHZKT	2019-11-30 22:00:10.453438+00	2019-11-30 22:00:10.453438+00	appsuperadmin	appsuperadmin Location	addy 1	addy 2	a city	??	?????	38.9758439	-98.0747656
+01DTZ583YNJCFXNT38243GY7N8	01DTZ583PZJX3BCV9RH0YSB0HJ	2019-11-30 22:00:10.453438+00	2019-11-30 22:00:10.453438+00	lcb_producer_admin	lcb_producer_admin Location	addy 1	addy 2	a city	??	?????	35.1081387	-103.1765717
+01DTZ583YNS9PQED66YGX9GWRW	01DTZ583PZJX3BCV9RH0YSB0HJ	2019-11-30 22:00:10.453438+00	2019-11-30 22:00:10.453438+00	lcb_producer_user	lcb_producer_user Location	addy 1	addy 2	a city	??	?????	38.4797528	-106.9153411
+01DTZ583YNV1SCTBTYSRZ0GRKD	01DTZ583PZPK820HXNDSRRZTDR	2019-11-30 22:00:10.453438+00	2019-11-30 22:00:10.453438+00	lcb_processor_admin	lcb_processor_admin Location	addy 1	addy 2	a city	??	?????	38.8475096	-95.7116447
+01DTZ583YNTXNBENJ7QR4PJB8M	01DTZ583PZPK820HXNDSRRZTDR	2019-11-30 22:00:10.453438+00	2019-11-30 22:00:10.453438+00	lcb_processor_user	lcb_processor_user Location	addy 1	addy 2	a city	??	?????	43.9934163	-107.8536212
+01DTZ583YNG7CDF407YQHRSEBS	01DTZ583PZ42VFVPVMFM4W025N	2019-11-30 22:00:10.453438+00	2019-11-30 22:00:10.453438+00	lcb_retail_admin	lcb_retail_admin Location	addy 1	addy 2	a city	??	?????	38.8738213	-109.2622088
+01DTZ583YNFFXY02MCXGF93SNJ	01DTZ583PZ42VFVPVMFM4W025N	2019-11-30 22:00:10.453438+00	2019-11-30 22:00:10.453438+00	lcb_retail_user	lcb_retail_user Location	addy 1	addy 2	a city	??	?????	41.9165923	-96.6946462
 \.
 
 
@@ -2221,10 +2524,10 @@ COPY org.location (id, app_tenant_id, created_at, updated_at, external_id, name,
 --
 
 COPY org.organization (id, app_tenant_id, actual_app_tenant_id, created_at, updated_at, external_id, name, location_id, primary_contact_id) FROM stdin;
-01DTWX2GRYV6NTJYD2FNCN2HPK	01DTWX2GRYZHFNB9XW2RNJHZKT	01DTWX2GRYZHFNB9XW2RNJHZKT	2019-11-30 00:58:49.502291+00	2019-11-30 02:38:53.428914+00	anchor-org	Anchor Tenant	01DTX2SQZNKVQQV4VHWRYC6JK3	01DTWX2GRYRKYNC6B68CNP0JD3
-01DTX2SQRPJ5VZ9HGQZR5BN9SB	01DTX2SQRP11641KWYCNEQKDN8	01DTX2SQRP11641KWYCNEQKDN8	2019-11-30 02:38:53.205998+00	2019-11-30 02:38:53.428914+00	G11111-org	Producer-1	01DTX2SQZN7F2XPKH6Y59P3JYW	01DTX2SQRPKVH6RMNQZVXA5XF6
-01DTX2SQRPRP7X3BZ3E3CYB7DT	01DTX2SQRP260C2XENBACHEGJF	01DTX2SQRP260C2XENBACHEGJF	2019-11-30 02:38:53.205998+00	2019-11-30 02:38:53.428914+00	M11111-org	Processor-1	01DTX2SQZNXPGXR4K9Y0NKM60E	01DTX2SQRPS07SH4ACC7BA98NH
-01DTX2SQRPKAE5HKJBN1Z1QNGE	01DTX2SQRP411HJJ8898S0RQNJ	01DTX2SQRP411HJJ8898S0RQNJ	2019-11-30 02:38:53.205998+00	2019-11-30 02:38:53.428914+00	R11111-org	Retail-1	01DTX2SQZNH25AM2DA5B51XSQD	01DTX2SQRPJ7KSGZAMD919RKYQ
+01DTWX2GRYV6NTJYD2FNCN2HPK	01DTWX2GRYZHFNB9XW2RNJHZKT	01DTWX2GRYZHFNB9XW2RNJHZKT	2019-11-30 00:58:49.502291+00	2019-11-30 22:00:10.453438+00	anchor-org	Anchor Tenant	01DTZ583YNTG3PNAZH9BS8N1XB	01DTWX2GRYRKYNC6B68CNP0JD3
+01DTZ583PZTP8SB5WWVBGEEW3S	01DTZ583PZJX3BCV9RH0YSB0HJ	01DTZ583PZJX3BCV9RH0YSB0HJ	2019-11-30 22:00:10.206617+00	2019-11-30 22:00:10.453438+00	G11111-org	Producer-1	01DTZ583YNPVA33M0371TE3JHE	01DTZ583PZ2DW7TES1G044293Y
+01DTZ583PZ0MZATS8FPD4TER53	01DTZ583PZPK820HXNDSRRZTDR	01DTZ583PZPK820HXNDSRRZTDR	2019-11-30 22:00:10.206617+00	2019-11-30 22:00:10.453438+00	M11111-org	Processor-1	01DTZ583YNW505S76RZN4YMRMB	01DTZ583PZP7P7SERN2TFEG78K
+01DTZ583PZZGD5ZQBZRX337RY5	01DTZ583PZ42VFVPVMFM4W025N	01DTZ583PZ42VFVPVMFM4W025N	2019-11-30 22:00:10.206617+00	2019-11-30 22:00:10.453438+00	R11111-org	Retail-1	01DTZ583YNGFHXM4J30TX3THBJ	01DTZ583PZ739981XS50EJAB2H
 \.
 
 
@@ -2380,6 +2683,14 @@ ALTER TABLE ONLY auth.token
 
 
 --
+-- Name: inventory_lot inventory_lot_id_key; Type: CONSTRAINT; Schema: lcb; Owner: app
+--
+
+ALTER TABLE ONLY lcb.inventory_lot
+    ADD CONSTRAINT inventory_lot_id_key UNIQUE (id);
+
+
+--
 -- Name: lcb_license lcb_license_code_key; Type: CONSTRAINT; Schema: lcb; Owner: app
 --
 
@@ -2417,6 +2728,46 @@ ALTER TABLE ONLY lcb.lcb_license
 
 ALTER TABLE ONLY lcb.lcb_license_holder
     ADD CONSTRAINT pk_lcb_license_holder PRIMARY KEY (id);
+
+
+--
+-- Name: hist_inventory_lot hist_inventory_lot_id_key; Type: CONSTRAINT; Schema: lcb_hist; Owner: app
+--
+
+ALTER TABLE ONLY lcb_hist.hist_inventory_lot
+    ADD CONSTRAINT hist_inventory_lot_id_key UNIQUE (id);
+
+
+--
+-- Name: inventory_type inventory_type_id_key; Type: CONSTRAINT; Schema: lcb_ref; Owner: app
+--
+
+ALTER TABLE ONLY lcb_ref.inventory_type
+    ADD CONSTRAINT inventory_type_id_key UNIQUE (id);
+
+
+--
+-- Name: inventory_type inventory_type_name_key; Type: CONSTRAINT; Schema: lcb_ref; Owner: app
+--
+
+ALTER TABLE ONLY lcb_ref.inventory_type
+    ADD CONSTRAINT inventory_type_name_key UNIQUE (name);
+
+
+--
+-- Name: inventory_type pk_inventory_type; Type: CONSTRAINT; Schema: lcb_ref; Owner: app
+--
+
+ALTER TABLE ONLY lcb_ref.inventory_type
+    ADD CONSTRAINT pk_inventory_type PRIMARY KEY (id);
+
+
+--
+-- Name: reporting_status reporting_status_id_key; Type: CONSTRAINT; Schema: lcb_ref; Owner: app
+--
+
+ALTER TABLE ONLY lcb_ref.reporting_status
+    ADD CONSTRAINT reporting_status_id_key UNIQUE (id);
 
 
 --
@@ -2596,6 +2947,13 @@ CREATE TRIGGER tg_timestamp_update_permission BEFORE INSERT OR UPDATE ON auth.pe
 
 
 --
+-- Name: inventory_lot tg_capture_hist_inventory_lot; Type: TRIGGER; Schema: lcb; Owner: app
+--
+
+CREATE TRIGGER tg_capture_hist_inventory_lot AFTER INSERT OR UPDATE ON lcb.inventory_lot FOR EACH ROW EXECUTE PROCEDURE lcb_hist.fn_capture_hist_inventory_lot();
+
+
+--
 -- Name: inventory_lot tg_timestamp_update_inventory_lot; Type: TRIGGER; Schema: lcb; Owner: app
 --
 
@@ -2748,11 +3106,27 @@ ALTER TABLE ONLY lcb.inventory_lot
 
 
 --
+-- Name: inventory_lot fk_inventory_lot_inventory_type; Type: FK CONSTRAINT; Schema: lcb; Owner: app
+--
+
+ALTER TABLE ONLY lcb.inventory_lot
+    ADD CONSTRAINT fk_inventory_lot_inventory_type FOREIGN KEY (inventory_type) REFERENCES lcb_ref.inventory_type(id);
+
+
+--
 -- Name: inventory_lot fk_inventory_lot_lcb_license_holder; Type: FK CONSTRAINT; Schema: lcb; Owner: app
 --
 
 ALTER TABLE ONLY lcb.inventory_lot
     ADD CONSTRAINT fk_inventory_lot_lcb_license_holder FOREIGN KEY (lcb_license_holder_id) REFERENCES lcb.lcb_license_holder(id);
+
+
+--
+-- Name: inventory_lot fk_inventory_lot_reporting_status; Type: FK CONSTRAINT; Schema: lcb; Owner: app
+--
+
+ALTER TABLE ONLY lcb.inventory_lot
+    ADD CONSTRAINT fk_inventory_lot_reporting_status FOREIGN KEY (reporting_status) REFERENCES lcb_ref.reporting_status(id);
 
 
 --
@@ -2777,6 +3151,22 @@ ALTER TABLE ONLY lcb.lcb_license_holder
 
 ALTER TABLE ONLY lcb.lcb_license_holder
     ADD CONSTRAINT fk_lcb_license_holder_organization FOREIGN KEY (organization_id) REFERENCES org.organization(id);
+
+
+--
+-- Name: hist_inventory_lot fk_hist_inventory_lot_app_tenant_id; Type: FK CONSTRAINT; Schema: lcb_hist; Owner: app
+--
+
+ALTER TABLE ONLY lcb_hist.hist_inventory_lot
+    ADD CONSTRAINT fk_hist_inventory_lot_app_tenant_id FOREIGN KEY (app_tenant_id) REFERENCES auth.app_tenant(id);
+
+
+--
+-- Name: hist_inventory_lot fk_hist_inventory_lot_inventory_lot; Type: FK CONSTRAINT; Schema: lcb_hist; Owner: app
+--
+
+ALTER TABLE ONLY lcb_hist.hist_inventory_lot
+    ADD CONSTRAINT fk_hist_inventory_lot_inventory_lot FOREIGN KEY (inventory_lot_id) REFERENCES lcb.inventory_lot(id);
 
 
 --
@@ -2957,6 +3347,19 @@ CREATE POLICY rls_app_user_default_lcb_inventory_lot ON lcb.inventory_lot TO app
 
 
 --
+-- Name: hist_inventory_lot; Type: ROW SECURITY; Schema: lcb_hist; Owner: app
+--
+
+ALTER TABLE lcb_hist.hist_inventory_lot ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: hist_inventory_lot rls_app_user_default_org_contact_app_user; Type: POLICY; Schema: lcb_hist; Owner: app
+--
+
+CREATE POLICY rls_app_user_default_org_contact_app_user ON lcb_hist.hist_inventory_lot TO app_user USING ((auth_fn.app_user_has_access(app_tenant_id) = true));
+
+
+--
 -- Name: contact; Type: ROW SECURITY; Schema: org; Owner: app
 --
 
@@ -3045,21 +3448,21 @@ GRANT USAGE ON SCHEMA auth_fn TO app_anonymous;
 
 
 --
--- Name: SCHEMA lcb; Type: ACL; Schema: -; Owner: postgres
+-- Name: SCHEMA lcb; Type: ACL; Schema: -; Owner: app
 --
 
 GRANT USAGE ON SCHEMA lcb TO app_user;
 
 
 --
--- Name: SCHEMA lcb_fn; Type: ACL; Schema: -; Owner: postgres
+-- Name: SCHEMA lcb_fn; Type: ACL; Schema: -; Owner: app
 --
 
 GRANT USAGE ON SCHEMA lcb_fn TO app_user;
 
 
 --
--- Name: SCHEMA lcb_hist; Type: ACL; Schema: -; Owner: postgres
+-- Name: SCHEMA lcb_hist; Type: ACL; Schema: -; Owner: app
 --
 
 GRANT USAGE ON SCHEMA lcb_hist TO app_user;
@@ -3091,6 +3494,7 @@ GRANT USAGE ON SCHEMA shard_1 TO app_user;
 --
 
 GRANT USAGE ON SCHEMA util_fn TO app_demon;
+GRANT USAGE ON SCHEMA util_fn TO app_user;
 
 
 --
@@ -3261,11 +3665,19 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE lcb.inventory_lot TO app_user;
 
 
 --
--- Name: FUNCTION obtain_ids(_inventory_type text, _number_requested integer); Type: ACL; Schema: lcb_fn; Owner: postgres
+-- Name: FUNCTION obtain_ids(_inventory_type text, _number_requested integer); Type: ACL; Schema: lcb_fn; Owner: app
 --
 
 REVOKE ALL ON FUNCTION lcb_fn.obtain_ids(_inventory_type text, _number_requested integer) FROM PUBLIC;
 GRANT ALL ON FUNCTION lcb_fn.obtain_ids(_inventory_type text, _number_requested integer) TO app_user;
+
+
+--
+-- Name: FUNCTION report_inventory_lot(_input lcb_fn.report_inventory_lot_input[]); Type: ACL; Schema: lcb_fn; Owner: app
+--
+
+REVOKE ALL ON FUNCTION lcb_fn.report_inventory_lot(_input lcb_fn.report_inventory_lot_input[]) FROM PUBLIC;
+GRANT ALL ON FUNCTION lcb_fn.report_inventory_lot(_input lcb_fn.report_inventory_lot_input[]) TO app_user;
 
 
 --
@@ -3476,6 +3888,13 @@ GRANT SELECT ON TABLE lcb.lcb_license TO app_user;
 
 GRANT INSERT,DELETE,UPDATE ON TABLE lcb.lcb_license_holder TO app_super_admin;
 GRANT SELECT ON TABLE lcb.lcb_license_holder TO app_user;
+
+
+--
+-- Name: TABLE hist_inventory_lot; Type: ACL; Schema: lcb_hist; Owner: app
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE lcb_hist.hist_inventory_lot TO app_user;
 
 
 --

@@ -854,3 +854,30 @@
 ----------  END FUNCTION POLICY: org_fn.modify_location (text,text,text,text,text,text,text,text,text)
 --==
 
+
+----------
+----------  BEGIN FUNCTION POLICY: lcb_fn.report_inventory_lot(lcb_fn.report_inventory_lot_input[])
+----------  POLICY NAME:  Default Function Policy - NO ACCESS
+----------
+
+----------  REMOVE EXISTING FUNCTION GRANTS
+
+  revoke all privileges 
+  on function lcb_fn.report_inventory_lot(lcb_fn.report_inventory_lot_input[]) 
+  from public;
+
+  revoke all privileges 
+  on function lcb_fn.report_inventory_lot(lcb_fn.report_inventory_lot_input[]) 
+  from app_super_admin, app_tenant_admin, app_admin, app_demon, app_user, app_anonymous;
+
+----------  CREATE NEW FUNCTION GRANTS
+
+----------  app_user
+  grant 
+  execute
+  on function lcb_fn.report_inventory_lot (lcb_fn.report_inventory_lot_input[]) 
+  to app_user;
+
+----------  END FUNCTION POLICY: lcb_fn.report_inventory_lot(lcb_fn.report_inventory_lot_input[])
+--==
+

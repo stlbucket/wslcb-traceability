@@ -814,3 +814,51 @@ $body$;
 
 ----------  END TABLE POLICY: org.contact_app_user
 --==
+
+
+--==
+----------
+----------  BEGIN TABLE POLICY: lcb_hist.hist_inventory_lot
+----------  POLICY NAME:  app_user default with rls
+----------
+
+----------  REMOVE EXISTING TABLE GRANTS
+
+  revoke all privileges 
+  on table lcb_hist.hist_inventory_lot 
+  from public;
+
+  revoke all privileges 
+  on table lcb_hist.hist_inventory_lot 
+  from app_super_admin, app_tenant_admin, app_admin, app_demon, app_user, app_anonymous;
+
+----------  ENABLE ROW LEVEL SECURITY
+
+  alter table lcb_hist.hist_inventory_lot enable row level security;
+
+  create policy rls_app_user_default_org_contact_app_user 
+    on lcb_hist.hist_inventory_lot
+    as permissive
+    for all
+    to app_user
+    using ( auth_fn.app_user_has_access(app_tenant_id) = true )
+    ;
+
+
+----------  CREATE NEW TABLE GRANTS
+
+----------  app_user
+  grant 
+    select , 
+    insert, -- ( id, app_tenant_id, created_at, updated_at, contact_id, app_user_id, username ), 
+        -- no excluded columns
+    update, -- ( id, app_tenant_id, created_at, updated_at, contact_id, app_user_id, username ), 
+        -- no excluded columns
+    delete  
+  on table lcb_hist.hist_inventory_lot 
+  to app_user;
+
+
+
+----------  END TABLE POLICY: lcb_hist.hist_inventory_lot
+--==

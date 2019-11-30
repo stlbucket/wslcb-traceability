@@ -6,7 +6,7 @@ import { Pool } from "pg";
 
 const pools: {[key: string]: any} = {};
 
-const testDatabaseUrl = process.env.TEST_DATABASE_URL || 'postgres://app:1234@0.0.0.0/lcb'
+const testDatabaseUrl = process.env.TEST_DATABASE_URL || 'postgres://postgres:1234@0.0.0.0/lcb'
 
 // Make sure we release those pgPools so that our tests exit!
 afterAll(() => {
@@ -63,6 +63,7 @@ const getUserInfo = async (client: Pool, username: string) => {
 export const becomeUser = async (pgPool: Pool, username: string) => {
   const userInfo = await getUserInfo(pgPool, username)
   console.log('userInfo', userInfo);
+  // await pgPool.query(`set row_security = on;`)
   await pgPool.query(`set jwt.claims.app_user_id = '${userInfo.id}';`)
   await pgPool.query(`set jwt.claims.app_tenant_id = '${userInfo.app_tenant_id}';`)
   await pgPool.query(`set jwt.claims.role = '${userInfo.permission_key  }';`)

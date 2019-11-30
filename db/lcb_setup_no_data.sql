@@ -43,31 +43,40 @@ CREATE SCHEMA auth_fn;
 ALTER SCHEMA auth_fn OWNER TO app;
 
 --
--- Name: lcb; Type: SCHEMA; Schema: -; Owner: postgres
+-- Name: lcb; Type: SCHEMA; Schema: -; Owner: app
 --
 
 CREATE SCHEMA lcb;
 
 
-ALTER SCHEMA lcb OWNER TO postgres;
+ALTER SCHEMA lcb OWNER TO app;
 
 --
--- Name: lcb_fn; Type: SCHEMA; Schema: -; Owner: postgres
+-- Name: lcb_fn; Type: SCHEMA; Schema: -; Owner: app
 --
 
 CREATE SCHEMA lcb_fn;
 
 
-ALTER SCHEMA lcb_fn OWNER TO postgres;
+ALTER SCHEMA lcb_fn OWNER TO app;
 
 --
--- Name: lcb_hist; Type: SCHEMA; Schema: -; Owner: postgres
+-- Name: lcb_hist; Type: SCHEMA; Schema: -; Owner: app
 --
 
 CREATE SCHEMA lcb_hist;
 
 
-ALTER SCHEMA lcb_hist OWNER TO postgres;
+ALTER SCHEMA lcb_hist OWNER TO app;
+
+--
+-- Name: lcb_ref; Type: SCHEMA; Schema: -; Owner: app
+--
+
+CREATE SCHEMA lcb_ref;
+
+
+ALTER SCHEMA lcb_ref OWNER TO app;
 
 --
 -- Name: org; Type: SCHEMA; Schema: -; Owner: app
@@ -146,6 +155,24 @@ CREATE TYPE auth.permission_key AS ENUM (
 
 
 ALTER TYPE auth.permission_key OWNER TO app;
+
+--
+-- Name: report_inventory_lot_input; Type: TYPE; Schema: lcb_fn; Owner: app
+--
+
+CREATE TYPE lcb_fn.report_inventory_lot_input AS (
+	id text,
+	licensee_identifier text,
+	inventory_type text,
+	description text,
+	quantity numeric(10,2),
+	units text,
+	strain_name text,
+	area_identifier text
+);
+
+
+ALTER TYPE lcb_fn.report_inventory_lot_input OWNER TO app;
 
 --
 -- Name: fn_timestamp_update_application(); Type: FUNCTION; Schema: app; Owner: app
@@ -758,8 +785,10 @@ ALTER FUNCTION lcb.fn_timestamp_update_lcb_license_holder() OWNER TO app;
 
 CREATE TABLE lcb.inventory_lot (
     id text DEFAULT util_fn.generate_ulid() NOT NULL,
+    licensee_identifier text,
     app_tenant_id text NOT NULL,
     lcb_license_holder_id text NOT NULL,
+    reporting_status text NOT NULL,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at timestamp with time zone NOT NULL,
     deleted_at timestamp with time zone,
@@ -779,7 +808,35 @@ CREATE TABLE lcb.inventory_lot (
 ALTER TABLE lcb.inventory_lot OWNER TO app;
 
 --
--- Name: obtain_ids(text, integer); Type: FUNCTION; Schema: lcb_fn; Owner: postgres
+-- Name: invalidate_inventory_lot_ids(text[]); Type: FUNCTION; Schema: lcb_fn; Owner: app
+--
+
+CREATE FUNCTION lcb_fn.invalidate_inventory_lot_ids(_ids text[]) RETURNS SETOF lcb.inventory_lot
+    LANGUAGE plpgsql STRICT
+    AS $$
+  DECLARE
+    _current_app_user auth.app_user;
+    _lcb_license_holder_id text;
+    _inventory_lot_input lcb_fn.report_inventory_lot_input;
+    _inventory_lot lcb.inventory_lot;
+    _inventory_lot_id text;
+  BEGIN
+    _current_app_user := auth_fn.current_app_user();
+
+    update lcb.inventory_lot set
+      reporting_status = 'INVALIDATED'
+    where id = ANY(_ids);
+
+
+    RETURN QUERY SELECT * FROM lcb.inventory_lot WHERE id = ANY(_ids);
+  END;
+  $$;
+
+
+ALTER FUNCTION lcb_fn.invalidate_inventory_lot_ids(_ids text[]) OWNER TO app;
+
+--
+-- Name: obtain_ids(text, integer); Type: FUNCTION; Schema: lcb_fn; Owner: app
 --
 
 CREATE FUNCTION lcb_fn.obtain_ids(_inventory_type text, _number_requested integer) RETURNS SETOF lcb.inventory_lot
@@ -789,12 +846,10 @@ CREATE FUNCTION lcb_fn.obtain_ids(_inventory_type text, _number_requested intege
     _current_app_user auth.app_user;
     _lcb_license_holder_id text;
     _inventory_lot lcb.inventory_lot;
-    _created_count integer;
   BEGIN
-    _created_count := 0;
     _current_app_user := auth_fn.current_app_user();
 
-    -- this is not reall correct.  need mechanism to switch between licenses
+    -- this is not really correct.  need mechanism to switch between licenses
     select id
     into _lcb_license_holder_id
     from lcb.lcb_license_holder
@@ -806,12 +861,14 @@ CREATE FUNCTION lcb_fn.obtain_ids(_inventory_type text, _number_requested intege
       app_tenant_id,
       lcb_license_holder_id,
       id_origin,
+      reporting_status,
       inventory_type
     )
     SELECT
       _current_app_user.app_tenant_id,
       _lcb_license_holder_id,
       'WSLCB',
+      'PROVISIONED',
       _inventory_type
     FROM
       generate_series(1, _number_requested)
@@ -821,7 +878,166 @@ CREATE FUNCTION lcb_fn.obtain_ids(_inventory_type text, _number_requested intege
   $$;
 
 
-ALTER FUNCTION lcb_fn.obtain_ids(_inventory_type text, _number_requested integer) OWNER TO postgres;
+ALTER FUNCTION lcb_fn.obtain_ids(_inventory_type text, _number_requested integer) OWNER TO app;
+
+--
+-- Name: report_inventory_lot(lcb_fn.report_inventory_lot_input[]); Type: FUNCTION; Schema: lcb_fn; Owner: app
+--
+
+CREATE FUNCTION lcb_fn.report_inventory_lot(_input lcb_fn.report_inventory_lot_input[]) RETURNS SETOF lcb.inventory_lot
+    LANGUAGE plpgsql STRICT
+    AS $$
+  DECLARE
+    _current_app_user auth.app_user;
+    _lcb_license_holder_id text;
+    _inventory_lot_input lcb_fn.report_inventory_lot_input;
+    _inventory_lot lcb.inventory_lot;
+    _inventory_lot_id text;
+  BEGIN
+    _current_app_user := auth_fn.current_app_user();
+
+    -- this is not really correct.  need mechanism to switch between licenses
+    select id
+    into _lcb_license_holder_id
+    from lcb.lcb_license_holder
+    where app_tenant_id = _current_app_user.app_tenant_id;
+
+    foreach _inventory_lot_input in ARRAY _input
+    loop
+
+      -- make sure this lot can be identified later
+      if _inventory_lot_input.id is null or _inventory_lot_input.id = '' then
+        if _inventory_lot_input.licensee_identifier is null or _inventory_lot_input.licensee_identifier = '' then
+          raise exception 'illegal operation - batch cancelled:  all inventory lots must have id OR licensee_identifier defined.';
+        end if;
+        _inventory_lot_id := util_fn.generate_ulid();
+      else
+        -- _inventory_lot_input.id should be verified as a valid ulid here
+        _inventory_lot_id := _inventory_lot_input.id;
+      end if;
+
+      -- find existing lot if it's there
+      select *
+      into _inventory_lot
+      from lcb.inventory_lot
+      where id = _inventory_lot_id;
+
+      if _inventory_lot.id is null then
+        insert into lcb.inventory_lot(
+          id,
+          licensee_identifier,
+          app_tenant_id,
+          lcb_license_holder_id,
+          id_origin,
+          reporting_status,
+          inventory_type,
+          description,
+          quantity,
+          units,
+          strain_name,
+          area_identifier
+        )
+        SELECT
+          COALESCE(_inventory_lot_input.id, util_fn.generate_ulid()),
+          _inventory_lot_input.licensee_identifier,
+          _current_app_user.app_tenant_id,
+          _lcb_license_holder_id,
+          case when _inventory_lot_input.id is null then 'WSLCB' else 'LICENSEE' end,
+          'REPORTED',
+          _inventory_lot_input.inventory_type,
+          _inventory_lot_input.description,
+          _inventory_lot_input.quantity,
+          _inventory_lot_input.units,
+          _inventory_lot_input.strain_name,
+          _inventory_lot_input.area_identifier
+        RETURNING * INTO _inventory_lot;
+      else
+        if _inventory_lot_input.inventory_type != _inventory_lot.inventory_type then
+          raise exception 'illegal operation - batch cancelled:  cannot change inventory type of an existing inventory lot: %', _inventory_lot.id;
+        end if;
+
+        update lcb.inventory_lot set
+          licensee_identifier = _inventory_lot_input.licensee_identifier,
+          description = _inventory_lot_input.description,
+          quantity = _inventory_lot_input.quantity,
+          units = _inventory_lot_input.units,
+          strain_name = _inventory_lot_input.strain_name,
+          area_identifier = _inventory_lot_input.area_identifier,
+          reporting_status = 'REPORTED'
+        where id = _inventory_lot_id
+        and (
+          _inventory_lot_input.licensee_identifier != licensee_identifier
+          OR _inventory_lot_input.description != description
+          OR _inventory_lot_input.quantity != quantity
+          OR _inventory_lot_input.units != units
+          OR _inventory_lot_input.strain_name != strain_name
+          OR _inventory_lot_input.area_identifier != area_identifier
+        )
+        ;
+
+        SELECT * INTO _inventory_lot FROM lcb.inventory_lot WHERE id = _inventory_lot_id;
+      end if;
+
+      return next _inventory_lot;
+
+    end loop;
+
+    RETURN;
+  end;
+  $$;
+
+
+ALTER FUNCTION lcb_fn.report_inventory_lot(_input lcb_fn.report_inventory_lot_input[]) OWNER TO app;
+
+--
+-- Name: fn_capture_hist_inventory_lot(); Type: FUNCTION; Schema: lcb_hist; Owner: app
+--
+
+CREATE FUNCTION lcb_hist.fn_capture_hist_inventory_lot() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+  BEGIN
+    insert into lcb_hist.hist_inventory_lot(
+        inventory_lot_id,
+        licensee_identifier,
+        app_tenant_id,
+        lcb_license_holder_id,
+        created_at,
+        updated_at,
+        deleted_at,
+        id_origin,
+        reporting_status,
+        inventory_type,
+        description,
+        quantity,
+        units,
+        strain_name,
+        area_identifier
+    )
+    values (
+        NEW.id,
+        NEW.licensee_identifier,
+        NEW.app_tenant_id,
+        NEW.lcb_license_holder_id,
+        NEW.created_at,
+        NEW.updated_at,
+        NEW.deleted_at,
+        NEW.id_origin,
+        NEW.reporting_status,
+        NEW.inventory_type,
+        NEW.description,
+        NEW.quantity,
+        NEW.units,
+        NEW.strain_name,
+        NEW.area_identifier
+    )
+    ;
+
+    RETURN NEW;
+  END; $$;
+
+
+ALTER FUNCTION lcb_hist.fn_capture_hist_inventory_lot() OWNER TO app;
 
 --
 -- Name: fn_timestamp_update_contact(); Type: FUNCTION; Schema: org; Owner: app
@@ -1924,6 +2140,58 @@ CREATE TABLE lcb.lcb_license_holder (
 ALTER TABLE lcb.lcb_license_holder OWNER TO app;
 
 --
+-- Name: hist_inventory_lot; Type: TABLE; Schema: lcb_hist; Owner: app
+--
+
+CREATE TABLE lcb_hist.hist_inventory_lot (
+    id text DEFAULT util_fn.generate_ulid() NOT NULL,
+    licensee_identifier text,
+    inventory_lot_id text NOT NULL,
+    app_tenant_id text NOT NULL,
+    lcb_license_holder_id text NOT NULL,
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone NOT NULL,
+    deleted_at timestamp with time zone,
+    id_origin text NOT NULL,
+    reporting_status text NOT NULL,
+    inventory_type text NOT NULL,
+    description text,
+    quantity numeric(10,2),
+    units text,
+    strain_name text,
+    area_identifier text
+);
+
+
+ALTER TABLE lcb_hist.hist_inventory_lot OWNER TO app;
+
+--
+-- Name: inventory_type; Type: TABLE; Schema: lcb_ref; Owner: app
+--
+
+CREATE TABLE lcb_ref.inventory_type (
+    id text NOT NULL,
+    name text NOT NULL,
+    description text,
+    CONSTRAINT ck_inventory_type_id CHECK ((id <> ''::text))
+);
+
+
+ALTER TABLE lcb_ref.inventory_type OWNER TO app;
+
+--
+-- Name: reporting_status; Type: TABLE; Schema: lcb_ref; Owner: app
+--
+
+CREATE TABLE lcb_ref.reporting_status (
+    id text NOT NULL,
+    CONSTRAINT ck_reporting_status_id CHECK ((id <> ''::text))
+);
+
+
+ALTER TABLE lcb_ref.reporting_status OWNER TO app;
+
+--
 -- Name: config_org; Type: TABLE; Schema: org; Owner: app
 --
 
@@ -2089,7 +2357,7 @@ COPY auth.token (id, app_user_id, created_at, expires_at) FROM stdin;
 -- Data for Name: inventory_lot; Type: TABLE DATA; Schema: lcb; Owner: app
 --
 
-COPY lcb.inventory_lot (id, app_tenant_id, lcb_license_holder_id, created_at, updated_at, deleted_at, id_origin, inventory_type, description, quantity, units, strain_name, area_identifier) FROM stdin;
+COPY lcb.inventory_lot (id, licensee_identifier, app_tenant_id, lcb_license_holder_id, reporting_status, created_at, updated_at, deleted_at, id_origin, inventory_type, description, quantity, units, strain_name, area_identifier) FROM stdin;
 \.
 
 
@@ -2106,6 +2374,41 @@ COPY lcb.lcb_license (id, created_at, updated_at, code) FROM stdin;
 --
 
 COPY lcb.lcb_license_holder (id, app_tenant_id, created_at, updated_at, lcb_license_id, organization_id, acquisition_date, relinquish_date) FROM stdin;
+\.
+
+
+--
+-- Data for Name: hist_inventory_lot; Type: TABLE DATA; Schema: lcb_hist; Owner: app
+--
+
+COPY lcb_hist.hist_inventory_lot (id, licensee_identifier, inventory_lot_id, app_tenant_id, lcb_license_holder_id, created_at, updated_at, deleted_at, id_origin, reporting_status, inventory_type, description, quantity, units, strain_name, area_identifier) FROM stdin;
+\.
+
+
+--
+-- Data for Name: inventory_type; Type: TABLE DATA; Schema: lcb_ref; Owner: app
+--
+
+COPY lcb_ref.inventory_type (id, name, description) FROM stdin;
+BF	Bulk Flower	\N
+UM	Usable Marijuana	\N
+PM	Packaged Marijuana	\N
+PR	Pre-roll Joints	\N
+CL	Clones	\N
+SD	Seeds	\N
+IS	Infused Solid Edible	\N
+IL	Infused Liquid Edible	\N
+\.
+
+
+--
+-- Data for Name: reporting_status; Type: TABLE DATA; Schema: lcb_ref; Owner: app
+--
+
+COPY lcb_ref.reporting_status (id) FROM stdin;
+PROVISIONED
+INVALIDATED
+REPORTED
 \.
 
 
@@ -2312,6 +2615,14 @@ ALTER TABLE ONLY auth.token
 
 
 --
+-- Name: inventory_lot inventory_lot_id_key; Type: CONSTRAINT; Schema: lcb; Owner: app
+--
+
+ALTER TABLE ONLY lcb.inventory_lot
+    ADD CONSTRAINT inventory_lot_id_key UNIQUE (id);
+
+
+--
 -- Name: lcb_license lcb_license_code_key; Type: CONSTRAINT; Schema: lcb; Owner: app
 --
 
@@ -2349,6 +2660,46 @@ ALTER TABLE ONLY lcb.lcb_license
 
 ALTER TABLE ONLY lcb.lcb_license_holder
     ADD CONSTRAINT pk_lcb_license_holder PRIMARY KEY (id);
+
+
+--
+-- Name: hist_inventory_lot hist_inventory_lot_id_key; Type: CONSTRAINT; Schema: lcb_hist; Owner: app
+--
+
+ALTER TABLE ONLY lcb_hist.hist_inventory_lot
+    ADD CONSTRAINT hist_inventory_lot_id_key UNIQUE (id);
+
+
+--
+-- Name: inventory_type inventory_type_id_key; Type: CONSTRAINT; Schema: lcb_ref; Owner: app
+--
+
+ALTER TABLE ONLY lcb_ref.inventory_type
+    ADD CONSTRAINT inventory_type_id_key UNIQUE (id);
+
+
+--
+-- Name: inventory_type inventory_type_name_key; Type: CONSTRAINT; Schema: lcb_ref; Owner: app
+--
+
+ALTER TABLE ONLY lcb_ref.inventory_type
+    ADD CONSTRAINT inventory_type_name_key UNIQUE (name);
+
+
+--
+-- Name: inventory_type pk_inventory_type; Type: CONSTRAINT; Schema: lcb_ref; Owner: app
+--
+
+ALTER TABLE ONLY lcb_ref.inventory_type
+    ADD CONSTRAINT pk_inventory_type PRIMARY KEY (id);
+
+
+--
+-- Name: reporting_status reporting_status_id_key; Type: CONSTRAINT; Schema: lcb_ref; Owner: app
+--
+
+ALTER TABLE ONLY lcb_ref.reporting_status
+    ADD CONSTRAINT reporting_status_id_key UNIQUE (id);
 
 
 --
@@ -2528,6 +2879,13 @@ CREATE TRIGGER tg_timestamp_update_permission BEFORE INSERT OR UPDATE ON auth.pe
 
 
 --
+-- Name: inventory_lot tg_capture_hist_inventory_lot; Type: TRIGGER; Schema: lcb; Owner: app
+--
+
+CREATE TRIGGER tg_capture_hist_inventory_lot AFTER INSERT OR UPDATE ON lcb.inventory_lot FOR EACH ROW EXECUTE PROCEDURE lcb_hist.fn_capture_hist_inventory_lot();
+
+
+--
 -- Name: inventory_lot tg_timestamp_update_inventory_lot; Type: TRIGGER; Schema: lcb; Owner: app
 --
 
@@ -2680,11 +3038,27 @@ ALTER TABLE ONLY lcb.inventory_lot
 
 
 --
+-- Name: inventory_lot fk_inventory_lot_inventory_type; Type: FK CONSTRAINT; Schema: lcb; Owner: app
+--
+
+ALTER TABLE ONLY lcb.inventory_lot
+    ADD CONSTRAINT fk_inventory_lot_inventory_type FOREIGN KEY (inventory_type) REFERENCES lcb_ref.inventory_type(id);
+
+
+--
 -- Name: inventory_lot fk_inventory_lot_lcb_license_holder; Type: FK CONSTRAINT; Schema: lcb; Owner: app
 --
 
 ALTER TABLE ONLY lcb.inventory_lot
     ADD CONSTRAINT fk_inventory_lot_lcb_license_holder FOREIGN KEY (lcb_license_holder_id) REFERENCES lcb.lcb_license_holder(id);
+
+
+--
+-- Name: inventory_lot fk_inventory_lot_reporting_status; Type: FK CONSTRAINT; Schema: lcb; Owner: app
+--
+
+ALTER TABLE ONLY lcb.inventory_lot
+    ADD CONSTRAINT fk_inventory_lot_reporting_status FOREIGN KEY (reporting_status) REFERENCES lcb_ref.reporting_status(id);
 
 
 --
@@ -2709,6 +3083,22 @@ ALTER TABLE ONLY lcb.lcb_license_holder
 
 ALTER TABLE ONLY lcb.lcb_license_holder
     ADD CONSTRAINT fk_lcb_license_holder_organization FOREIGN KEY (organization_id) REFERENCES org.organization(id);
+
+
+--
+-- Name: hist_inventory_lot fk_hist_inventory_lot_app_tenant_id; Type: FK CONSTRAINT; Schema: lcb_hist; Owner: app
+--
+
+ALTER TABLE ONLY lcb_hist.hist_inventory_lot
+    ADD CONSTRAINT fk_hist_inventory_lot_app_tenant_id FOREIGN KEY (app_tenant_id) REFERENCES auth.app_tenant(id);
+
+
+--
+-- Name: hist_inventory_lot fk_hist_inventory_lot_inventory_lot; Type: FK CONSTRAINT; Schema: lcb_hist; Owner: app
+--
+
+ALTER TABLE ONLY lcb_hist.hist_inventory_lot
+    ADD CONSTRAINT fk_hist_inventory_lot_inventory_lot FOREIGN KEY (inventory_lot_id) REFERENCES lcb.inventory_lot(id);
 
 
 --
@@ -2889,6 +3279,19 @@ CREATE POLICY rls_app_user_default_lcb_inventory_lot ON lcb.inventory_lot TO app
 
 
 --
+-- Name: hist_inventory_lot; Type: ROW SECURITY; Schema: lcb_hist; Owner: app
+--
+
+ALTER TABLE lcb_hist.hist_inventory_lot ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: hist_inventory_lot rls_app_user_default_org_contact_app_user; Type: POLICY; Schema: lcb_hist; Owner: app
+--
+
+CREATE POLICY rls_app_user_default_org_contact_app_user ON lcb_hist.hist_inventory_lot TO app_user USING ((auth_fn.app_user_has_access(app_tenant_id) = true));
+
+
+--
 -- Name: contact; Type: ROW SECURITY; Schema: org; Owner: app
 --
 
@@ -2977,21 +3380,21 @@ GRANT USAGE ON SCHEMA auth_fn TO app_anonymous;
 
 
 --
--- Name: SCHEMA lcb; Type: ACL; Schema: -; Owner: postgres
+-- Name: SCHEMA lcb; Type: ACL; Schema: -; Owner: app
 --
 
 GRANT USAGE ON SCHEMA lcb TO app_user;
 
 
 --
--- Name: SCHEMA lcb_fn; Type: ACL; Schema: -; Owner: postgres
+-- Name: SCHEMA lcb_fn; Type: ACL; Schema: -; Owner: app
 --
 
 GRANT USAGE ON SCHEMA lcb_fn TO app_user;
 
 
 --
--- Name: SCHEMA lcb_hist; Type: ACL; Schema: -; Owner: postgres
+-- Name: SCHEMA lcb_hist; Type: ACL; Schema: -; Owner: app
 --
 
 GRANT USAGE ON SCHEMA lcb_hist TO app_user;
@@ -3023,6 +3426,7 @@ GRANT USAGE ON SCHEMA shard_1 TO app_user;
 --
 
 GRANT USAGE ON SCHEMA util_fn TO app_demon;
+GRANT USAGE ON SCHEMA util_fn TO app_user;
 
 
 --
@@ -3193,11 +3597,19 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE lcb.inventory_lot TO app_user;
 
 
 --
--- Name: FUNCTION obtain_ids(_inventory_type text, _number_requested integer); Type: ACL; Schema: lcb_fn; Owner: postgres
+-- Name: FUNCTION obtain_ids(_inventory_type text, _number_requested integer); Type: ACL; Schema: lcb_fn; Owner: app
 --
 
 REVOKE ALL ON FUNCTION lcb_fn.obtain_ids(_inventory_type text, _number_requested integer) FROM PUBLIC;
 GRANT ALL ON FUNCTION lcb_fn.obtain_ids(_inventory_type text, _number_requested integer) TO app_user;
+
+
+--
+-- Name: FUNCTION report_inventory_lot(_input lcb_fn.report_inventory_lot_input[]); Type: ACL; Schema: lcb_fn; Owner: app
+--
+
+REVOKE ALL ON FUNCTION lcb_fn.report_inventory_lot(_input lcb_fn.report_inventory_lot_input[]) FROM PUBLIC;
+GRANT ALL ON FUNCTION lcb_fn.report_inventory_lot(_input lcb_fn.report_inventory_lot_input[]) TO app_user;
 
 
 --
@@ -3408,6 +3820,13 @@ GRANT SELECT ON TABLE lcb.lcb_license TO app_user;
 
 GRANT INSERT,DELETE,UPDATE ON TABLE lcb.lcb_license_holder TO app_super_admin;
 GRANT SELECT ON TABLE lcb.lcb_license_holder TO app_user;
+
+
+--
+-- Name: TABLE hist_inventory_lot; Type: ACL; Schema: lcb_hist; Owner: app
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE lcb_hist.hist_inventory_lot TO app_user;
 
 
 --
