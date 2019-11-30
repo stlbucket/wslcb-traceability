@@ -18,7 +18,7 @@ CREATE TABLE lcb.lcb_license (
     CONSTRAINT ck_lcb_license_code CHECK ((code <> ''::text))
 );
 
-ALTER TABLE lcb.lcb_license OWNER TO app;
+ALTER TABLE lcb.lcb_license OWNER TO postgres;
 ALTER TABLE ONLY lcb.lcb_license
     ADD CONSTRAINT pk_lcb_license PRIMARY KEY (id);
 
@@ -34,7 +34,7 @@ CREATE TABLE lcb.lcb_license_holder (
     relinquish_date timestamptz null
 );
 
-ALTER TABLE lcb.lcb_license_holder OWNER TO app;
+ALTER TABLE lcb.lcb_license_holder OWNER TO postgres;
 ALTER TABLE ONLY lcb.lcb_license_holder
     ADD CONSTRAINT pk_lcb_license_holder PRIMARY KEY (id);
 ALTER TABLE ONLY lcb.lcb_license_holder
@@ -64,7 +64,7 @@ CREATE TABLE lcb.inventory_lot (
     CONSTRAINT ck_inventory_lot_id CHECK ((id <> ''::text))
 );
 
-ALTER TABLE lcb.inventory_lot OWNER TO app;
+ALTER TABLE lcb.inventory_lot OWNER TO postgres;
 ALTER TABLE ONLY lcb.inventory_lot
     ADD CONSTRAINT pk_inventory_lot PRIMARY KEY (id);
 ALTER TABLE ONLY lcb.inventory_lot
@@ -79,7 +79,7 @@ CREATE FUNCTION lcb.fn_timestamp_update_lcb_license() RETURNS trigger
     NEW.updated_at = current_timestamp;
     RETURN NEW;
   END; $$;
-ALTER FUNCTION lcb.fn_timestamp_update_lcb_license() OWNER TO app;
+ALTER FUNCTION lcb.fn_timestamp_update_lcb_license() OWNER TO postgres;
 CREATE TRIGGER tg_timestamp_update_lcb_license BEFORE INSERT OR UPDATE ON lcb.lcb_license FOR EACH ROW EXECUTE PROCEDURE lcb.fn_timestamp_update_lcb_license();
 
 CREATE FUNCTION lcb.fn_timestamp_update_lcb_license_holder() RETURNS trigger
@@ -89,7 +89,7 @@ CREATE FUNCTION lcb.fn_timestamp_update_lcb_license_holder() RETURNS trigger
     NEW.updated_at = current_timestamp;
     RETURN NEW;
   END; $$;
-ALTER FUNCTION lcb.fn_timestamp_update_lcb_license_holder() OWNER TO app;
+ALTER FUNCTION lcb.fn_timestamp_update_lcb_license_holder() OWNER TO postgres;
 CREATE TRIGGER tg_timestamp_update_lcb_license_holder BEFORE INSERT OR UPDATE ON lcb.lcb_license_holder FOR EACH ROW EXECUTE PROCEDURE lcb.fn_timestamp_update_lcb_license_holder();
 
 CREATE FUNCTION lcb.fn_timestamp_update_inventory_lot() RETURNS trigger
@@ -99,7 +99,7 @@ CREATE FUNCTION lcb.fn_timestamp_update_inventory_lot() RETURNS trigger
     NEW.updated_at = current_timestamp;
     RETURN NEW;
   END; $$;
-ALTER FUNCTION lcb.fn_timestamp_update_inventory_lot() OWNER TO app;
+ALTER FUNCTION lcb.fn_timestamp_update_inventory_lot() OWNER TO postgres;
 CREATE TRIGGER tg_timestamp_update_inventory_lot BEFORE INSERT OR UPDATE ON lcb.inventory_lot FOR EACH ROW EXECUTE PROCEDURE lcb.fn_timestamp_update_inventory_lot();
 
 

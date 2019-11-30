@@ -19,7 +19,6 @@ RETURNS auth.app_user
     return _app_user;
   end;
   $$;
-ALTER FUNCTION auth_fn.current_app_user() OWNER TO app;
 
 
 CREATE OR REPLACE FUNCTION lcb_fn.obtain_ids(
@@ -63,7 +62,6 @@ RETURNS setof lcb.inventory_lot
     ;
   end;
   $$;
-ALTER FUNCTION auth_fn.obtain_ids(text,integer) OWNER TO app;
 
 
 -- create type lcb_fn.report_inventory_lot_input as (

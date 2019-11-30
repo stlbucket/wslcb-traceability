@@ -16,94 +16,94 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
--- Name: app; Type: SCHEMA; Schema: -; Owner: postgres
+-- Name: app; Type: SCHEMA; Schema: -; Owner: app
 --
 
 CREATE SCHEMA app;
 
 
-ALTER SCHEMA app OWNER TO postgres;
+ALTER SCHEMA app OWNER TO app;
 
 --
--- Name: auth; Type: SCHEMA; Schema: -; Owner: postgres
+-- Name: auth; Type: SCHEMA; Schema: -; Owner: app
 --
 
 CREATE SCHEMA auth;
 
 
-ALTER SCHEMA auth OWNER TO postgres;
+ALTER SCHEMA auth OWNER TO app;
 
 --
--- Name: auth_fn; Type: SCHEMA; Schema: -; Owner: postgres
+-- Name: auth_fn; Type: SCHEMA; Schema: -; Owner: app
 --
 
 CREATE SCHEMA auth_fn;
 
 
-ALTER SCHEMA auth_fn OWNER TO postgres;
+ALTER SCHEMA auth_fn OWNER TO app;
 
 --
--- Name: lcb; Type: SCHEMA; Schema: -; Owner: postgres
+-- Name: lcb; Type: SCHEMA; Schema: -; Owner: app
 --
 
 CREATE SCHEMA lcb;
 
 
-ALTER SCHEMA lcb OWNER TO postgres;
+ALTER SCHEMA lcb OWNER TO app;
 
 --
--- Name: lcb_fn; Type: SCHEMA; Schema: -; Owner: postgres
+-- Name: lcb_fn; Type: SCHEMA; Schema: -; Owner: app
 --
 
 CREATE SCHEMA lcb_fn;
 
 
-ALTER SCHEMA lcb_fn OWNER TO postgres;
+ALTER SCHEMA lcb_fn OWNER TO app;
 
 --
--- Name: lcb_hist; Type: SCHEMA; Schema: -; Owner: postgres
+-- Name: lcb_hist; Type: SCHEMA; Schema: -; Owner: app
 --
 
 CREATE SCHEMA lcb_hist;
 
 
-ALTER SCHEMA lcb_hist OWNER TO postgres;
+ALTER SCHEMA lcb_hist OWNER TO app;
 
 --
--- Name: org; Type: SCHEMA; Schema: -; Owner: postgres
+-- Name: org; Type: SCHEMA; Schema: -; Owner: app
 --
 
 CREATE SCHEMA org;
 
 
-ALTER SCHEMA org OWNER TO postgres;
+ALTER SCHEMA org OWNER TO app;
 
 --
--- Name: org_fn; Type: SCHEMA; Schema: -; Owner: postgres
+-- Name: org_fn; Type: SCHEMA; Schema: -; Owner: app
 --
 
 CREATE SCHEMA org_fn;
 
 
-ALTER SCHEMA org_fn OWNER TO postgres;
+ALTER SCHEMA org_fn OWNER TO app;
 
 --
--- Name: shard_1; Type: SCHEMA; Schema: -; Owner: postgres
+-- Name: shard_1; Type: SCHEMA; Schema: -; Owner: app
 --
 
 CREATE SCHEMA shard_1;
 
 
-ALTER SCHEMA shard_1 OWNER TO postgres;
+ALTER SCHEMA shard_1 OWNER TO app;
 
 --
--- Name: util_fn; Type: SCHEMA; Schema: -; Owner: postgres
+-- Name: util_fn; Type: SCHEMA; Schema: -; Owner: app
 --
 
 CREATE SCHEMA util_fn;
 
 
-ALTER SCHEMA util_fn OWNER TO postgres;
+ALTER SCHEMA util_fn OWNER TO app;
 
 --
 -- Name: pgcrypto; Type: EXTENSION; Schema: -; Owner: 
@@ -120,7 +120,7 @@ COMMENT ON EXTENSION pgcrypto IS 'cryptographic functions';
 
 
 --
--- Name: jwt_token; Type: TYPE; Schema: auth; Owner: postgres
+-- Name: jwt_token; Type: TYPE; Schema: auth; Owner: app
 --
 
 CREATE TYPE auth.jwt_token AS (
@@ -131,10 +131,10 @@ CREATE TYPE auth.jwt_token AS (
 );
 
 
-ALTER TYPE auth.jwt_token OWNER TO postgres;
+ALTER TYPE auth.jwt_token OWNER TO app;
 
 --
--- Name: permission_key; Type: TYPE; Schema: auth; Owner: postgres
+-- Name: permission_key; Type: TYPE; Schema: auth; Owner: app
 --
 
 CREATE TYPE auth.permission_key AS ENUM (
@@ -145,10 +145,10 @@ CREATE TYPE auth.permission_key AS ENUM (
 );
 
 
-ALTER TYPE auth.permission_key OWNER TO postgres;
+ALTER TYPE auth.permission_key OWNER TO app;
 
 --
--- Name: fn_timestamp_update_application(); Type: FUNCTION; Schema: app; Owner: postgres
+-- Name: fn_timestamp_update_application(); Type: FUNCTION; Schema: app; Owner: app
 --
 
 CREATE FUNCTION app.fn_timestamp_update_application() RETURNS trigger
@@ -160,10 +160,10 @@ CREATE FUNCTION app.fn_timestamp_update_application() RETURNS trigger
   END; $$;
 
 
-ALTER FUNCTION app.fn_timestamp_update_application() OWNER TO postgres;
+ALTER FUNCTION app.fn_timestamp_update_application() OWNER TO app;
 
 --
--- Name: fn_timestamp_update_license(); Type: FUNCTION; Schema: app; Owner: postgres
+-- Name: fn_timestamp_update_license(); Type: FUNCTION; Schema: app; Owner: app
 --
 
 CREATE FUNCTION app.fn_timestamp_update_license() RETURNS trigger
@@ -181,10 +181,10 @@ CREATE FUNCTION app.fn_timestamp_update_license() RETURNS trigger
   END; $$;
 
 
-ALTER FUNCTION app.fn_timestamp_update_license() OWNER TO postgres;
+ALTER FUNCTION app.fn_timestamp_update_license() OWNER TO app;
 
 --
--- Name: fn_timestamp_update_license_permission(); Type: FUNCTION; Schema: app; Owner: postgres
+-- Name: fn_timestamp_update_license_permission(); Type: FUNCTION; Schema: app; Owner: app
 --
 
 CREATE FUNCTION app.fn_timestamp_update_license_permission() RETURNS trigger
@@ -201,10 +201,10 @@ CREATE FUNCTION app.fn_timestamp_update_license_permission() RETURNS trigger
   END; $$;
 
 
-ALTER FUNCTION app.fn_timestamp_update_license_permission() OWNER TO postgres;
+ALTER FUNCTION app.fn_timestamp_update_license_permission() OWNER TO app;
 
 --
--- Name: fn_timestamp_update_license_type(); Type: FUNCTION; Schema: app; Owner: postgres
+-- Name: fn_timestamp_update_license_type(); Type: FUNCTION; Schema: app; Owner: app
 --
 
 CREATE FUNCTION app.fn_timestamp_update_license_type() RETURNS trigger
@@ -216,10 +216,10 @@ CREATE FUNCTION app.fn_timestamp_update_license_type() RETURNS trigger
   END; $$;
 
 
-ALTER FUNCTION app.fn_timestamp_update_license_type() OWNER TO postgres;
+ALTER FUNCTION app.fn_timestamp_update_license_type() OWNER TO app;
 
 --
--- Name: fn_timestamp_update_license_type_permission(); Type: FUNCTION; Schema: app; Owner: postgres
+-- Name: fn_timestamp_update_license_type_permission(); Type: FUNCTION; Schema: app; Owner: app
 --
 
 CREATE FUNCTION app.fn_timestamp_update_license_type_permission() RETURNS trigger
@@ -231,10 +231,10 @@ CREATE FUNCTION app.fn_timestamp_update_license_type_permission() RETURNS trigge
   END; $$;
 
 
-ALTER FUNCTION app.fn_timestamp_update_license_type_permission() OWNER TO postgres;
+ALTER FUNCTION app.fn_timestamp_update_license_type_permission() OWNER TO app;
 
 --
--- Name: fn_timestamp_update_app_tenant(); Type: FUNCTION; Schema: auth; Owner: postgres
+-- Name: fn_timestamp_update_app_tenant(); Type: FUNCTION; Schema: auth; Owner: app
 --
 
 CREATE FUNCTION auth.fn_timestamp_update_app_tenant() RETURNS trigger
@@ -246,10 +246,10 @@ CREATE FUNCTION auth.fn_timestamp_update_app_tenant() RETURNS trigger
   END; $$;
 
 
-ALTER FUNCTION auth.fn_timestamp_update_app_tenant() OWNER TO postgres;
+ALTER FUNCTION auth.fn_timestamp_update_app_tenant() OWNER TO app;
 
 --
--- Name: fn_timestamp_update_app_user(); Type: FUNCTION; Schema: auth; Owner: postgres
+-- Name: fn_timestamp_update_app_user(); Type: FUNCTION; Schema: auth; Owner: app
 --
 
 CREATE FUNCTION auth.fn_timestamp_update_app_user() RETURNS trigger
@@ -261,10 +261,10 @@ CREATE FUNCTION auth.fn_timestamp_update_app_user() RETURNS trigger
   END; $$;
 
 
-ALTER FUNCTION auth.fn_timestamp_update_app_user() OWNER TO postgres;
+ALTER FUNCTION auth.fn_timestamp_update_app_user() OWNER TO app;
 
 --
--- Name: fn_timestamp_update_permission(); Type: FUNCTION; Schema: auth; Owner: postgres
+-- Name: fn_timestamp_update_permission(); Type: FUNCTION; Schema: auth; Owner: app
 --
 
 CREATE FUNCTION auth.fn_timestamp_update_permission() RETURNS trigger
@@ -276,10 +276,10 @@ CREATE FUNCTION auth.fn_timestamp_update_permission() RETURNS trigger
   END; $$;
 
 
-ALTER FUNCTION auth.fn_timestamp_update_permission() OWNER TO postgres;
+ALTER FUNCTION auth.fn_timestamp_update_permission() OWNER TO app;
 
 --
--- Name: app_user_has_access(text, text); Type: FUNCTION; Schema: auth_fn; Owner: postgres
+-- Name: app_user_has_access(text, text); Type: FUNCTION; Schema: auth_fn; Owner: app
 --
 
 CREATE FUNCTION auth_fn.app_user_has_access(_app_tenant_id text, _permission_key text DEFAULT ''::text) RETURNS boolean
@@ -302,17 +302,17 @@ CREATE FUNCTION auth_fn.app_user_has_access(_app_tenant_id text, _permission_key
   $$;
 
 
-ALTER FUNCTION auth_fn.app_user_has_access(_app_tenant_id text, _permission_key text) OWNER TO postgres;
+ALTER FUNCTION auth_fn.app_user_has_access(_app_tenant_id text, _permission_key text) OWNER TO app;
 
 --
--- Name: FUNCTION app_user_has_access(_app_tenant_id text, _permission_key text); Type: COMMENT; Schema: auth_fn; Owner: postgres
+-- Name: FUNCTION app_user_has_access(_app_tenant_id text, _permission_key text); Type: COMMENT; Schema: auth_fn; Owner: app
 --
 
 COMMENT ON FUNCTION auth_fn.app_user_has_access(_app_tenant_id text, _permission_key text) IS 'Verify if a user has access to an entity via the app_tenant_id';
 
 
 --
--- Name: authenticate(text, text); Type: FUNCTION; Schema: auth_fn; Owner: postgres
+-- Name: authenticate(text, text); Type: FUNCTION; Schema: auth_fn; Owner: app
 --
 
 CREATE FUNCTION auth_fn.authenticate(_username text, _password text) RETURNS auth.jwt_token
@@ -346,17 +346,17 @@ CREATE FUNCTION auth_fn.authenticate(_username text, _password text) RETURNS aut
   $$;
 
 
-ALTER FUNCTION auth_fn.authenticate(_username text, _password text) OWNER TO postgres;
+ALTER FUNCTION auth_fn.authenticate(_username text, _password text) OWNER TO app;
 
 --
--- Name: FUNCTION authenticate(_username text, _password text); Type: COMMENT; Schema: auth_fn; Owner: postgres
+-- Name: FUNCTION authenticate(_username text, _password text); Type: COMMENT; Schema: auth_fn; Owner: app
 --
 
 COMMENT ON FUNCTION auth_fn.authenticate(_username text, _password text) IS 'Creates a JWT token that will securely identify a contact and give them certain permissions.';
 
 
 --
--- Name: generate_ulid(); Type: FUNCTION; Schema: util_fn; Owner: postgres
+-- Name: generate_ulid(); Type: FUNCTION; Schema: util_fn; Owner: app
 --
 
 CREATE FUNCTION util_fn.generate_ulid() RETURNS text
@@ -418,14 +418,14 @@ END
 $$;
 
 
-ALTER FUNCTION util_fn.generate_ulid() OWNER TO postgres;
+ALTER FUNCTION util_fn.generate_ulid() OWNER TO app;
 
 SET default_tablespace = '';
 
 SET default_with_oids = false;
 
 --
--- Name: app_tenant; Type: TABLE; Schema: auth; Owner: postgres
+-- Name: app_tenant; Type: TABLE; Schema: auth; Owner: app
 --
 
 CREATE TABLE auth.app_tenant (
@@ -438,38 +438,38 @@ CREATE TABLE auth.app_tenant (
 );
 
 
-ALTER TABLE auth.app_tenant OWNER TO postgres;
+ALTER TABLE auth.app_tenant OWNER TO app;
 
 --
--- Name: TABLE app_tenant; Type: COMMENT; Schema: auth; Owner: postgres
+-- Name: TABLE app_tenant; Type: COMMENT; Schema: auth; Owner: app
 --
 
 COMMENT ON TABLE auth.app_tenant IS '@omit create,update,delete';
 
 
 --
--- Name: COLUMN app_tenant.id; Type: COMMENT; Schema: auth; Owner: postgres
+-- Name: COLUMN app_tenant.id; Type: COMMENT; Schema: auth; Owner: app
 --
 
 COMMENT ON COLUMN auth.app_tenant.id IS '@omit create';
 
 
 --
--- Name: COLUMN app_tenant.created_at; Type: COMMENT; Schema: auth; Owner: postgres
+-- Name: COLUMN app_tenant.created_at; Type: COMMENT; Schema: auth; Owner: app
 --
 
 COMMENT ON COLUMN auth.app_tenant.created_at IS '@omit create,update';
 
 
 --
--- Name: COLUMN app_tenant.updated_at; Type: COMMENT; Schema: auth; Owner: postgres
+-- Name: COLUMN app_tenant.updated_at; Type: COMMENT; Schema: auth; Owner: app
 --
 
 COMMENT ON COLUMN auth.app_tenant.updated_at IS '@omit create,update';
 
 
 --
--- Name: build_app_tenant(text, text); Type: FUNCTION; Schema: auth_fn; Owner: postgres
+-- Name: build_app_tenant(text, text); Type: FUNCTION; Schema: auth_fn; Owner: app
 --
 
 CREATE FUNCTION auth_fn.build_app_tenant(_name text, _identifier text) RETURNS auth.app_tenant
@@ -518,17 +518,17 @@ CREATE FUNCTION auth_fn.build_app_tenant(_name text, _identifier text) RETURNS a
   $$;
 
 
-ALTER FUNCTION auth_fn.build_app_tenant(_name text, _identifier text) OWNER TO postgres;
+ALTER FUNCTION auth_fn.build_app_tenant(_name text, _identifier text) OWNER TO app;
 
 --
--- Name: FUNCTION build_app_tenant(_name text, _identifier text); Type: COMMENT; Schema: auth_fn; Owner: postgres
+-- Name: FUNCTION build_app_tenant(_name text, _identifier text); Type: COMMENT; Schema: auth_fn; Owner: app
 --
 
 COMMENT ON FUNCTION auth_fn.build_app_tenant(_name text, _identifier text) IS 'Creates a new app user';
 
 
 --
--- Name: app_user; Type: TABLE; Schema: auth; Owner: postgres
+-- Name: app_user; Type: TABLE; Schema: auth; Owner: app
 --
 
 CREATE TABLE auth.app_user (
@@ -545,45 +545,45 @@ CREATE TABLE auth.app_user (
 );
 
 
-ALTER TABLE auth.app_user OWNER TO postgres;
+ALTER TABLE auth.app_user OWNER TO app;
 
 --
--- Name: TABLE app_user; Type: COMMENT; Schema: auth; Owner: postgres
+-- Name: TABLE app_user; Type: COMMENT; Schema: auth; Owner: app
 --
 
 COMMENT ON TABLE auth.app_user IS '@omit create,update,delete';
 
 
 --
--- Name: COLUMN app_user.id; Type: COMMENT; Schema: auth; Owner: postgres
+-- Name: COLUMN app_user.id; Type: COMMENT; Schema: auth; Owner: app
 --
 
 COMMENT ON COLUMN auth.app_user.id IS '@omit create';
 
 
 --
--- Name: COLUMN app_user.created_at; Type: COMMENT; Schema: auth; Owner: postgres
+-- Name: COLUMN app_user.created_at; Type: COMMENT; Schema: auth; Owner: app
 --
 
 COMMENT ON COLUMN auth.app_user.created_at IS '@omit create,update';
 
 
 --
--- Name: COLUMN app_user.updated_at; Type: COMMENT; Schema: auth; Owner: postgres
+-- Name: COLUMN app_user.updated_at; Type: COMMENT; Schema: auth; Owner: app
 --
 
 COMMENT ON COLUMN auth.app_user.updated_at IS '@omit create,update';
 
 
 --
--- Name: COLUMN app_user.password_hash; Type: COMMENT; Schema: auth; Owner: postgres
+-- Name: COLUMN app_user.password_hash; Type: COMMENT; Schema: auth; Owner: app
 --
 
 COMMENT ON COLUMN auth.app_user.password_hash IS '@omit';
 
 
 --
--- Name: build_app_user(text, text, text, text, auth.permission_key); Type: FUNCTION; Schema: auth_fn; Owner: postgres
+-- Name: build_app_user(text, text, text, text, auth.permission_key); Type: FUNCTION; Schema: auth_fn; Owner: app
 --
 
 CREATE FUNCTION auth_fn.build_app_user(_app_tenant_id text, _username text, _password text, _recovery_email text, _permission_key auth.permission_key) RETURNS auth.app_user
@@ -626,17 +626,17 @@ CREATE FUNCTION auth_fn.build_app_user(_app_tenant_id text, _username text, _pas
   $$;
 
 
-ALTER FUNCTION auth_fn.build_app_user(_app_tenant_id text, _username text, _password text, _recovery_email text, _permission_key auth.permission_key) OWNER TO postgres;
+ALTER FUNCTION auth_fn.build_app_user(_app_tenant_id text, _username text, _password text, _recovery_email text, _permission_key auth.permission_key) OWNER TO app;
 
 --
--- Name: FUNCTION build_app_user(_app_tenant_id text, _username text, _password text, _recovery_email text, _permission_key auth.permission_key); Type: COMMENT; Schema: auth_fn; Owner: postgres
+-- Name: FUNCTION build_app_user(_app_tenant_id text, _username text, _password text, _recovery_email text, _permission_key auth.permission_key); Type: COMMENT; Schema: auth_fn; Owner: app
 --
 
 COMMENT ON FUNCTION auth_fn.build_app_user(_app_tenant_id text, _username text, _password text, _recovery_email text, _permission_key auth.permission_key) IS 'Creates a new app user';
 
 
 --
--- Name: current_app_tenant_id(); Type: FUNCTION; Schema: auth_fn; Owner: postgres
+-- Name: current_app_tenant_id(); Type: FUNCTION; Schema: auth_fn; Owner: app
 --
 
 CREATE FUNCTION auth_fn.current_app_tenant_id() RETURNS text
@@ -649,39 +649,43 @@ CREATE FUNCTION auth_fn.current_app_tenant_id() RETURNS text
   $$;
 
 
-ALTER FUNCTION auth_fn.current_app_tenant_id() OWNER TO postgres;
+ALTER FUNCTION auth_fn.current_app_tenant_id() OWNER TO app;
 
 --
--- Name: FUNCTION current_app_tenant_id(); Type: COMMENT; Schema: auth_fn; Owner: postgres
+-- Name: FUNCTION current_app_tenant_id(); Type: COMMENT; Schema: auth_fn; Owner: app
 --
 
 COMMENT ON FUNCTION auth_fn.current_app_tenant_id() IS '@omit';
 
 
 --
--- Name: current_app_user(); Type: FUNCTION; Schema: auth_fn; Owner: postgres
+-- Name: current_app_user(); Type: FUNCTION; Schema: auth_fn; Owner: app
 --
 
 CREATE FUNCTION auth_fn.current_app_user() RETURNS auth.app_user
-    LANGUAGE sql STABLE SECURITY DEFINER
+    LANGUAGE plpgsql STRICT
     AS $$
-  SELECT *
-  FROM auth.app_user
-  WHERE id = current_setting('jwt.claims.app_user_id')::text;
-$$;
+  DECLARE
+    _app_user_id text;
+    _app_user auth.app_user;
+  BEGIN
+    _app_user_id := current_setting('jwt.claims.app_user_id')::text;
+
+    SELECT *
+    INTO _app_user
+    FROM auth.app_user
+    WHERE id = _app_user_id
+    ;
+
+    return _app_user;
+  end;
+  $$;
 
 
-ALTER FUNCTION auth_fn.current_app_user() OWNER TO postgres;
+ALTER FUNCTION auth_fn.current_app_user() OWNER TO app;
 
 --
--- Name: FUNCTION current_app_user(); Type: COMMENT; Schema: auth_fn; Owner: postgres
---
-
-COMMENT ON FUNCTION auth_fn.current_app_user() IS '@ omit';
-
-
---
--- Name: current_app_user_id(); Type: FUNCTION; Schema: auth_fn; Owner: postgres
+-- Name: current_app_user_id(); Type: FUNCTION; Schema: auth_fn; Owner: app
 --
 
 CREATE FUNCTION auth_fn.current_app_user_id() RETURNS text
@@ -694,17 +698,17 @@ CREATE FUNCTION auth_fn.current_app_user_id() RETURNS text
   $$;
 
 
-ALTER FUNCTION auth_fn.current_app_user_id() OWNER TO postgres;
+ALTER FUNCTION auth_fn.current_app_user_id() OWNER TO app;
 
 --
--- Name: FUNCTION current_app_user_id(); Type: COMMENT; Schema: auth_fn; Owner: postgres
+-- Name: FUNCTION current_app_user_id(); Type: COMMENT; Schema: auth_fn; Owner: app
 --
 
 COMMENT ON FUNCTION auth_fn.current_app_user_id() IS '@omit';
 
 
 --
--- Name: fn_timestamp_update_inventory_lot(); Type: FUNCTION; Schema: lcb; Owner: postgres
+-- Name: fn_timestamp_update_inventory_lot(); Type: FUNCTION; Schema: lcb; Owner: app
 --
 
 CREATE FUNCTION lcb.fn_timestamp_update_inventory_lot() RETURNS trigger
@@ -716,10 +720,10 @@ CREATE FUNCTION lcb.fn_timestamp_update_inventory_lot() RETURNS trigger
   END; $$;
 
 
-ALTER FUNCTION lcb.fn_timestamp_update_inventory_lot() OWNER TO postgres;
+ALTER FUNCTION lcb.fn_timestamp_update_inventory_lot() OWNER TO app;
 
 --
--- Name: fn_timestamp_update_lcb_license(); Type: FUNCTION; Schema: lcb; Owner: postgres
+-- Name: fn_timestamp_update_lcb_license(); Type: FUNCTION; Schema: lcb; Owner: app
 --
 
 CREATE FUNCTION lcb.fn_timestamp_update_lcb_license() RETURNS trigger
@@ -731,10 +735,10 @@ CREATE FUNCTION lcb.fn_timestamp_update_lcb_license() RETURNS trigger
   END; $$;
 
 
-ALTER FUNCTION lcb.fn_timestamp_update_lcb_license() OWNER TO postgres;
+ALTER FUNCTION lcb.fn_timestamp_update_lcb_license() OWNER TO app;
 
 --
--- Name: fn_timestamp_update_lcb_license_holder(); Type: FUNCTION; Schema: lcb; Owner: postgres
+-- Name: fn_timestamp_update_lcb_license_holder(); Type: FUNCTION; Schema: lcb; Owner: app
 --
 
 CREATE FUNCTION lcb.fn_timestamp_update_lcb_license_holder() RETURNS trigger
@@ -746,10 +750,81 @@ CREATE FUNCTION lcb.fn_timestamp_update_lcb_license_holder() RETURNS trigger
   END; $$;
 
 
-ALTER FUNCTION lcb.fn_timestamp_update_lcb_license_holder() OWNER TO postgres;
+ALTER FUNCTION lcb.fn_timestamp_update_lcb_license_holder() OWNER TO app;
 
 --
--- Name: fn_timestamp_update_contact(); Type: FUNCTION; Schema: org; Owner: postgres
+-- Name: inventory_lot; Type: TABLE; Schema: lcb; Owner: app
+--
+
+CREATE TABLE lcb.inventory_lot (
+    id text DEFAULT util_fn.generate_ulid() NOT NULL,
+    app_tenant_id text NOT NULL,
+    lcb_license_holder_id text NOT NULL,
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at timestamp with time zone NOT NULL,
+    deleted_at timestamp with time zone,
+    id_origin text NOT NULL,
+    inventory_type text NOT NULL,
+    description text,
+    quantity numeric(10,2),
+    units text,
+    strain_name text,
+    area_identifier text,
+    CONSTRAINT ck_inventory_lot_id CHECK ((id <> ''::text)),
+    CONSTRAINT ck_inventory_lot_id_origin CHECK ((id_origin <> ''::text)),
+    CONSTRAINT ck_inventory_lot_inventory_type CHECK ((inventory_type <> ''::text))
+);
+
+
+ALTER TABLE lcb.inventory_lot OWNER TO app;
+
+--
+-- Name: obtain_ids(text, integer); Type: FUNCTION; Schema: lcb_fn; Owner: app
+--
+
+CREATE FUNCTION lcb_fn.obtain_ids(_inventory_type text, _number_requested integer) RETURNS SETOF lcb.inventory_lot
+    LANGUAGE plpgsql STRICT
+    AS $$
+  DECLARE
+    _current_app_user auth.app_user;
+    _lcb_license_holder_id text;
+    _inventory_lot lcb.inventory_lot;
+    _created_count integer;
+  BEGIN
+    _created_count := 0;
+    _current_app_user := auth_fn.current_app_user();
+
+    -- this is not reall correct.  need mechanism to switch between licenses
+    select id
+    into _lcb_license_holder_id
+    from lcb.lcb_license_holder
+    where app_tenant_id = _current_app_user.app_tenant_id;
+
+    -- raise exception '%, %', _current_app_user.app_tenant_id, _lcb_license_holder_id;
+
+    RETURN QUERY INSERT INTO lcb.inventory_lot(
+      app_tenant_id,
+      lcb_license_holder_id,
+      id_origin,
+      inventory_type
+    )
+    SELECT
+      _current_app_user.app_tenant_id,
+      _lcb_license_holder_id,
+      'WSLCB',
+      _inventory_type
+    FROM
+      generate_series(1, _number_requested)
+    RETURNING *
+    ;
+  end;
+  $$;
+
+
+ALTER FUNCTION lcb_fn.obtain_ids(_inventory_type text, _number_requested integer) OWNER TO app;
+
+--
+-- Name: fn_timestamp_update_contact(); Type: FUNCTION; Schema: org; Owner: app
 --
 
 CREATE FUNCTION org.fn_timestamp_update_contact() RETURNS trigger
@@ -766,10 +841,10 @@ CREATE FUNCTION org.fn_timestamp_update_contact() RETURNS trigger
   END; $$;
 
 
-ALTER FUNCTION org.fn_timestamp_update_contact() OWNER TO postgres;
+ALTER FUNCTION org.fn_timestamp_update_contact() OWNER TO app;
 
 --
--- Name: fn_timestamp_update_contact_app_user(); Type: FUNCTION; Schema: org; Owner: postgres
+-- Name: fn_timestamp_update_contact_app_user(); Type: FUNCTION; Schema: org; Owner: app
 --
 
 CREATE FUNCTION org.fn_timestamp_update_contact_app_user() RETURNS trigger
@@ -786,10 +861,10 @@ CREATE FUNCTION org.fn_timestamp_update_contact_app_user() RETURNS trigger
   END; $$;
 
 
-ALTER FUNCTION org.fn_timestamp_update_contact_app_user() OWNER TO postgres;
+ALTER FUNCTION org.fn_timestamp_update_contact_app_user() OWNER TO app;
 
 --
--- Name: fn_timestamp_update_facility(); Type: FUNCTION; Schema: org; Owner: postgres
+-- Name: fn_timestamp_update_facility(); Type: FUNCTION; Schema: org; Owner: app
 --
 
 CREATE FUNCTION org.fn_timestamp_update_facility() RETURNS trigger
@@ -806,10 +881,10 @@ CREATE FUNCTION org.fn_timestamp_update_facility() RETURNS trigger
   END; $$;
 
 
-ALTER FUNCTION org.fn_timestamp_update_facility() OWNER TO postgres;
+ALTER FUNCTION org.fn_timestamp_update_facility() OWNER TO app;
 
 --
--- Name: fn_timestamp_update_location(); Type: FUNCTION; Schema: org; Owner: postgres
+-- Name: fn_timestamp_update_location(); Type: FUNCTION; Schema: org; Owner: app
 --
 
 CREATE FUNCTION org.fn_timestamp_update_location() RETURNS trigger
@@ -826,10 +901,10 @@ CREATE FUNCTION org.fn_timestamp_update_location() RETURNS trigger
   END; $$;
 
 
-ALTER FUNCTION org.fn_timestamp_update_location() OWNER TO postgres;
+ALTER FUNCTION org.fn_timestamp_update_location() OWNER TO app;
 
 --
--- Name: fn_timestamp_update_organization(); Type: FUNCTION; Schema: org; Owner: postgres
+-- Name: fn_timestamp_update_organization(); Type: FUNCTION; Schema: org; Owner: app
 --
 
 CREATE FUNCTION org.fn_timestamp_update_organization() RETURNS trigger
@@ -848,10 +923,10 @@ CREATE FUNCTION org.fn_timestamp_update_organization() RETURNS trigger
   end; $$;
 
 
-ALTER FUNCTION org.fn_timestamp_update_organization() OWNER TO postgres;
+ALTER FUNCTION org.fn_timestamp_update_organization() OWNER TO app;
 
 --
--- Name: contact; Type: TABLE; Schema: org; Owner: postgres
+-- Name: contact; Type: TABLE; Schema: org; Owner: app
 --
 
 CREATE TABLE org.contact (
@@ -872,45 +947,45 @@ CREATE TABLE org.contact (
 );
 
 
-ALTER TABLE org.contact OWNER TO postgres;
+ALTER TABLE org.contact OWNER TO app;
 
 --
--- Name: COLUMN contact.id; Type: COMMENT; Schema: org; Owner: postgres
+-- Name: COLUMN contact.id; Type: COMMENT; Schema: org; Owner: app
 --
 
 COMMENT ON COLUMN org.contact.id IS '@omit create';
 
 
 --
--- Name: COLUMN contact.app_tenant_id; Type: COMMENT; Schema: org; Owner: postgres
+-- Name: COLUMN contact.app_tenant_id; Type: COMMENT; Schema: org; Owner: app
 --
 
 COMMENT ON COLUMN org.contact.app_tenant_id IS '@omit create, update';
 
 
 --
--- Name: COLUMN contact.created_at; Type: COMMENT; Schema: org; Owner: postgres
+-- Name: COLUMN contact.created_at; Type: COMMENT; Schema: org; Owner: app
 --
 
 COMMENT ON COLUMN org.contact.created_at IS '@omit create,update';
 
 
 --
--- Name: COLUMN contact.updated_at; Type: COMMENT; Schema: org; Owner: postgres
+-- Name: COLUMN contact.updated_at; Type: COMMENT; Schema: org; Owner: app
 --
 
 COMMENT ON COLUMN org.contact.updated_at IS '@omit create,update';
 
 
 --
--- Name: COLUMN contact.organization_id; Type: COMMENT; Schema: org; Owner: postgres
+-- Name: COLUMN contact.organization_id; Type: COMMENT; Schema: org; Owner: app
 --
 
 COMMENT ON COLUMN org.contact.organization_id IS '@omit create,update';
 
 
 --
--- Name: build_contact(text, text, text, text, text, text, text, text, text); Type: FUNCTION; Schema: org_fn; Owner: postgres
+-- Name: build_contact(text, text, text, text, text, text, text, text, text); Type: FUNCTION; Schema: org_fn; Owner: app
 --
 
 CREATE FUNCTION org_fn.build_contact(_first_name text, _last_name text, _email text, _cell_phone text, _office_phone text, _title text, _nickname text, _external_id text, _organization_id text) RETURNS org.contact
@@ -971,10 +1046,10 @@ CREATE FUNCTION org_fn.build_contact(_first_name text, _last_name text, _email t
   $$;
 
 
-ALTER FUNCTION org_fn.build_contact(_first_name text, _last_name text, _email text, _cell_phone text, _office_phone text, _title text, _nickname text, _external_id text, _organization_id text) OWNER TO postgres;
+ALTER FUNCTION org_fn.build_contact(_first_name text, _last_name text, _email text, _cell_phone text, _office_phone text, _title text, _nickname text, _external_id text, _organization_id text) OWNER TO app;
 
 --
--- Name: build_contact_location(text, text, text, text, text, text, text, text, text); Type: FUNCTION; Schema: org_fn; Owner: postgres
+-- Name: build_contact_location(text, text, text, text, text, text, text, text, text); Type: FUNCTION; Schema: org_fn; Owner: app
 --
 
 CREATE FUNCTION org_fn.build_contact_location(_contact_id text, _name text, _address1 text, _address2 text, _city text, _state text, _zip text, _lat text, _lon text) RETURNS org.contact
@@ -1037,10 +1112,10 @@ CREATE FUNCTION org_fn.build_contact_location(_contact_id text, _name text, _add
   $$;
 
 
-ALTER FUNCTION org_fn.build_contact_location(_contact_id text, _name text, _address1 text, _address2 text, _city text, _state text, _zip text, _lat text, _lon text) OWNER TO postgres;
+ALTER FUNCTION org_fn.build_contact_location(_contact_id text, _name text, _address1 text, _address2 text, _city text, _state text, _zip text, _lat text, _lon text) OWNER TO app;
 
 --
--- Name: facility; Type: TABLE; Schema: org; Owner: postgres
+-- Name: facility; Type: TABLE; Schema: org; Owner: app
 --
 
 CREATE TABLE org.facility (
@@ -1055,38 +1130,38 @@ CREATE TABLE org.facility (
 );
 
 
-ALTER TABLE org.facility OWNER TO postgres;
+ALTER TABLE org.facility OWNER TO app;
 
 --
--- Name: COLUMN facility.id; Type: COMMENT; Schema: org; Owner: postgres
+-- Name: COLUMN facility.id; Type: COMMENT; Schema: org; Owner: app
 --
 
 COMMENT ON COLUMN org.facility.id IS '@omit create';
 
 
 --
--- Name: COLUMN facility.app_tenant_id; Type: COMMENT; Schema: org; Owner: postgres
+-- Name: COLUMN facility.app_tenant_id; Type: COMMENT; Schema: org; Owner: app
 --
 
 COMMENT ON COLUMN org.facility.app_tenant_id IS '@omit create';
 
 
 --
--- Name: COLUMN facility.created_at; Type: COMMENT; Schema: org; Owner: postgres
+-- Name: COLUMN facility.created_at; Type: COMMENT; Schema: org; Owner: app
 --
 
 COMMENT ON COLUMN org.facility.created_at IS '@omit create,update';
 
 
 --
--- Name: COLUMN facility.updated_at; Type: COMMENT; Schema: org; Owner: postgres
+-- Name: COLUMN facility.updated_at; Type: COMMENT; Schema: org; Owner: app
 --
 
 COMMENT ON COLUMN org.facility.updated_at IS '@omit create,update';
 
 
 --
--- Name: build_facility(text, text, text); Type: FUNCTION; Schema: org_fn; Owner: postgres
+-- Name: build_facility(text, text, text); Type: FUNCTION; Schema: org_fn; Owner: app
 --
 
 CREATE FUNCTION org_fn.build_facility(_organization_id text, _name text, _external_id text) RETURNS org.facility
@@ -1138,10 +1213,10 @@ CREATE FUNCTION org_fn.build_facility(_organization_id text, _name text, _extern
   $$;
 
 
-ALTER FUNCTION org_fn.build_facility(_organization_id text, _name text, _external_id text) OWNER TO postgres;
+ALTER FUNCTION org_fn.build_facility(_organization_id text, _name text, _external_id text) OWNER TO app;
 
 --
--- Name: build_facility_location(text, text, text, text, text, text, text, text, text); Type: FUNCTION; Schema: org_fn; Owner: postgres
+-- Name: build_facility_location(text, text, text, text, text, text, text, text, text); Type: FUNCTION; Schema: org_fn; Owner: app
 --
 
 CREATE FUNCTION org_fn.build_facility_location(_facility_id text, _name text, _address1 text, _address2 text, _city text, _state text, _zip text, _lat text, _lon text) RETURNS org.facility
@@ -1204,10 +1279,10 @@ CREATE FUNCTION org_fn.build_facility_location(_facility_id text, _name text, _a
   $$;
 
 
-ALTER FUNCTION org_fn.build_facility_location(_facility_id text, _name text, _address1 text, _address2 text, _city text, _state text, _zip text, _lat text, _lon text) OWNER TO postgres;
+ALTER FUNCTION org_fn.build_facility_location(_facility_id text, _name text, _address1 text, _address2 text, _city text, _state text, _zip text, _lat text, _lon text) OWNER TO app;
 
 --
--- Name: location; Type: TABLE; Schema: org; Owner: postgres
+-- Name: location; Type: TABLE; Schema: org; Owner: app
 --
 
 CREATE TABLE org.location (
@@ -1227,38 +1302,38 @@ CREATE TABLE org.location (
 );
 
 
-ALTER TABLE org.location OWNER TO postgres;
+ALTER TABLE org.location OWNER TO app;
 
 --
--- Name: COLUMN location.id; Type: COMMENT; Schema: org; Owner: postgres
+-- Name: COLUMN location.id; Type: COMMENT; Schema: org; Owner: app
 --
 
 COMMENT ON COLUMN org.location.id IS '@omit create';
 
 
 --
--- Name: COLUMN location.app_tenant_id; Type: COMMENT; Schema: org; Owner: postgres
+-- Name: COLUMN location.app_tenant_id; Type: COMMENT; Schema: org; Owner: app
 --
 
 COMMENT ON COLUMN org.location.app_tenant_id IS '@omit create';
 
 
 --
--- Name: COLUMN location.created_at; Type: COMMENT; Schema: org; Owner: postgres
+-- Name: COLUMN location.created_at; Type: COMMENT; Schema: org; Owner: app
 --
 
 COMMENT ON COLUMN org.location.created_at IS '@omit create,update';
 
 
 --
--- Name: COLUMN location.updated_at; Type: COMMENT; Schema: org; Owner: postgres
+-- Name: COLUMN location.updated_at; Type: COMMENT; Schema: org; Owner: app
 --
 
 COMMENT ON COLUMN org.location.updated_at IS '@omit create,update';
 
 
 --
--- Name: build_location(text, text, text, text, text, text, text, text); Type: FUNCTION; Schema: org_fn; Owner: postgres
+-- Name: build_location(text, text, text, text, text, text, text, text); Type: FUNCTION; Schema: org_fn; Owner: app
 --
 
 CREATE FUNCTION org_fn.build_location(_name text, _address1 text, _address2 text, _city text, _state text, _zip text, _lat text, _lon text) RETURNS org.location
@@ -1302,10 +1377,10 @@ end;
 $$;
 
 
-ALTER FUNCTION org_fn.build_location(_name text, _address1 text, _address2 text, _city text, _state text, _zip text, _lat text, _lon text) OWNER TO postgres;
+ALTER FUNCTION org_fn.build_location(_name text, _address1 text, _address2 text, _city text, _state text, _zip text, _lat text, _lon text) OWNER TO app;
 
 --
--- Name: organization; Type: TABLE; Schema: org; Owner: postgres
+-- Name: organization; Type: TABLE; Schema: org; Owner: app
 --
 
 CREATE TABLE org.organization (
@@ -1322,38 +1397,38 @@ CREATE TABLE org.organization (
 );
 
 
-ALTER TABLE org.organization OWNER TO postgres;
+ALTER TABLE org.organization OWNER TO app;
 
 --
--- Name: COLUMN organization.id; Type: COMMENT; Schema: org; Owner: postgres
+-- Name: COLUMN organization.id; Type: COMMENT; Schema: org; Owner: app
 --
 
 COMMENT ON COLUMN org.organization.id IS '@omit create';
 
 
 --
--- Name: COLUMN organization.app_tenant_id; Type: COMMENT; Schema: org; Owner: postgres
+-- Name: COLUMN organization.app_tenant_id; Type: COMMENT; Schema: org; Owner: app
 --
 
 COMMENT ON COLUMN org.organization.app_tenant_id IS '@omit create';
 
 
 --
--- Name: COLUMN organization.created_at; Type: COMMENT; Schema: org; Owner: postgres
+-- Name: COLUMN organization.created_at; Type: COMMENT; Schema: org; Owner: app
 --
 
 COMMENT ON COLUMN org.organization.created_at IS '@omit create,update';
 
 
 --
--- Name: COLUMN organization.updated_at; Type: COMMENT; Schema: org; Owner: postgres
+-- Name: COLUMN organization.updated_at; Type: COMMENT; Schema: org; Owner: app
 --
 
 COMMENT ON COLUMN org.organization.updated_at IS '@omit create,update';
 
 
 --
--- Name: build_organization(text, text); Type: FUNCTION; Schema: org_fn; Owner: postgres
+-- Name: build_organization(text, text); Type: FUNCTION; Schema: org_fn; Owner: app
 --
 
 CREATE FUNCTION org_fn.build_organization(_name text, _external_id text) RETURNS org.organization
@@ -1392,10 +1467,10 @@ end;
 $$;
 
 
-ALTER FUNCTION org_fn.build_organization(_name text, _external_id text) OWNER TO postgres;
+ALTER FUNCTION org_fn.build_organization(_name text, _external_id text) OWNER TO app;
 
 --
--- Name: build_organization_location(text, text, text, text, text, text, text, text, text); Type: FUNCTION; Schema: org_fn; Owner: postgres
+-- Name: build_organization_location(text, text, text, text, text, text, text, text, text); Type: FUNCTION; Schema: org_fn; Owner: app
 --
 
 CREATE FUNCTION org_fn.build_organization_location(_organization_id text, _name text, _address1 text, _address2 text, _city text, _state text, _zip text, _lat text, _lon text) RETURNS org.organization
@@ -1458,10 +1533,10 @@ CREATE FUNCTION org_fn.build_organization_location(_organization_id text, _name 
   $$;
 
 
-ALTER FUNCTION org_fn.build_organization_location(_organization_id text, _name text, _address1 text, _address2 text, _city text, _state text, _zip text, _lat text, _lon text) OWNER TO postgres;
+ALTER FUNCTION org_fn.build_organization_location(_organization_id text, _name text, _address1 text, _address2 text, _city text, _state text, _zip text, _lat text, _lon text) OWNER TO app;
 
 --
--- Name: build_tenant_organization(text, text, text, text, text); Type: FUNCTION; Schema: org_fn; Owner: postgres
+-- Name: build_tenant_organization(text, text, text, text, text); Type: FUNCTION; Schema: org_fn; Owner: app
 --
 
 CREATE FUNCTION org_fn.build_tenant_organization(_name text, _identifier text, _primary_contact_email text, _primary_contact_first_name text, _primary_contact_last_name text) RETURNS org.organization
@@ -1559,10 +1634,10 @@ end;
 $$;
 
 
-ALTER FUNCTION org_fn.build_tenant_organization(_name text, _identifier text, _primary_contact_email text, _primary_contact_first_name text, _primary_contact_last_name text) OWNER TO postgres;
+ALTER FUNCTION org_fn.build_tenant_organization(_name text, _identifier text, _primary_contact_email text, _primary_contact_first_name text, _primary_contact_last_name text) OWNER TO app;
 
 --
--- Name: current_app_user_contact(); Type: FUNCTION; Schema: org_fn; Owner: postgres
+-- Name: current_app_user_contact(); Type: FUNCTION; Schema: org_fn; Owner: app
 --
 
 CREATE FUNCTION org_fn.current_app_user_contact() RETURNS org.contact
@@ -1585,10 +1660,10 @@ end;
 $$;
 
 
-ALTER FUNCTION org_fn.current_app_user_contact() OWNER TO postgres;
+ALTER FUNCTION org_fn.current_app_user_contact() OWNER TO app;
 
 --
--- Name: modify_location(text, text, text, text, text, text, text, text, text); Type: FUNCTION; Schema: org_fn; Owner: postgres
+-- Name: modify_location(text, text, text, text, text, text, text, text, text); Type: FUNCTION; Schema: org_fn; Owner: app
 --
 
 CREATE FUNCTION org_fn.modify_location(_id text, _name text, _address1 text, _address2 text, _city text, _state text, _zip text, _lat text, _lon text) RETURNS org.location
@@ -1632,10 +1707,10 @@ end;
 $$;
 
 
-ALTER FUNCTION org_fn.modify_location(_id text, _name text, _address1 text, _address2 text, _city text, _state text, _zip text, _lat text, _lon text) OWNER TO postgres;
+ALTER FUNCTION org_fn.modify_location(_id text, _name text, _address1 text, _address2 text, _city text, _state text, _zip text, _lat text, _lon text) OWNER TO app;
 
 --
--- Name: trim_text(text); Type: FUNCTION; Schema: util_fn; Owner: postgres
+-- Name: trim_text(text); Type: FUNCTION; Schema: util_fn; Owner: app
 --
 
 CREATE FUNCTION util_fn.trim_text(_input text) RETURNS text
@@ -1653,10 +1728,10 @@ CREATE FUNCTION util_fn.trim_text(_input text) RETURNS text
   $$;
 
 
-ALTER FUNCTION util_fn.trim_text(_input text) OWNER TO postgres;
+ALTER FUNCTION util_fn.trim_text(_input text) OWNER TO app;
 
 --
--- Name: application; Type: TABLE; Schema: app; Owner: postgres
+-- Name: application; Type: TABLE; Schema: app; Owner: app
 --
 
 CREATE TABLE app.application (
@@ -1669,10 +1744,10 @@ CREATE TABLE app.application (
 );
 
 
-ALTER TABLE app.application OWNER TO postgres;
+ALTER TABLE app.application OWNER TO app;
 
 --
--- Name: license; Type: TABLE; Schema: app; Owner: postgres
+-- Name: license; Type: TABLE; Schema: app; Owner: app
 --
 
 CREATE TABLE app.license (
@@ -1687,17 +1762,17 @@ CREATE TABLE app.license (
 );
 
 
-ALTER TABLE app.license OWNER TO postgres;
+ALTER TABLE app.license OWNER TO app;
 
 --
--- Name: TABLE license; Type: COMMENT; Schema: app; Owner: postgres
+-- Name: TABLE license; Type: COMMENT; Schema: app; Owner: app
 --
 
 COMMENT ON TABLE app.license IS '@foreignKey (assigned_to_app_user_id) references org.contact_app_user(app_user_id)';
 
 
 --
--- Name: license_permission; Type: TABLE; Schema: app; Owner: postgres
+-- Name: license_permission; Type: TABLE; Schema: app; Owner: app
 --
 
 CREATE TABLE app.license_permission (
@@ -1710,10 +1785,10 @@ CREATE TABLE app.license_permission (
 );
 
 
-ALTER TABLE app.license_permission OWNER TO postgres;
+ALTER TABLE app.license_permission OWNER TO app;
 
 --
--- Name: license_type; Type: TABLE; Schema: app; Owner: postgres
+-- Name: license_type; Type: TABLE; Schema: app; Owner: app
 --
 
 CREATE TABLE app.license_type (
@@ -1727,10 +1802,10 @@ CREATE TABLE app.license_type (
 );
 
 
-ALTER TABLE app.license_type OWNER TO postgres;
+ALTER TABLE app.license_type OWNER TO app;
 
 --
--- Name: license_type_permission; Type: TABLE; Schema: app; Owner: postgres
+-- Name: license_type_permission; Type: TABLE; Schema: app; Owner: app
 --
 
 CREATE TABLE app.license_type_permission (
@@ -1743,10 +1818,10 @@ CREATE TABLE app.license_type_permission (
 );
 
 
-ALTER TABLE app.license_type_permission OWNER TO postgres;
+ALTER TABLE app.license_type_permission OWNER TO app;
 
 --
--- Name: config_auth; Type: TABLE; Schema: auth; Owner: postgres
+-- Name: config_auth; Type: TABLE; Schema: auth; Owner: app
 --
 
 CREATE TABLE auth.config_auth (
@@ -1756,17 +1831,17 @@ CREATE TABLE auth.config_auth (
 );
 
 
-ALTER TABLE auth.config_auth OWNER TO postgres;
+ALTER TABLE auth.config_auth OWNER TO app;
 
 --
--- Name: TABLE config_auth; Type: COMMENT; Schema: auth; Owner: postgres
+-- Name: TABLE config_auth; Type: COMMENT; Schema: auth; Owner: app
 --
 
 COMMENT ON TABLE auth.config_auth IS '@omit create,update,delete';
 
 
 --
--- Name: permission; Type: TABLE; Schema: auth; Owner: postgres
+-- Name: permission; Type: TABLE; Schema: auth; Owner: app
 --
 
 CREATE TABLE auth.permission (
@@ -1777,10 +1852,10 @@ CREATE TABLE auth.permission (
 );
 
 
-ALTER TABLE auth.permission OWNER TO postgres;
+ALTER TABLE auth.permission OWNER TO app;
 
 --
--- Name: token; Type: TABLE; Schema: auth; Owner: postgres
+-- Name: token; Type: TABLE; Schema: auth; Owner: app
 --
 
 CREATE TABLE auth.token (
@@ -1791,57 +1866,31 @@ CREATE TABLE auth.token (
 );
 
 
-ALTER TABLE auth.token OWNER TO postgres;
+ALTER TABLE auth.token OWNER TO app;
 
 --
--- Name: TABLE token; Type: COMMENT; Schema: auth; Owner: postgres
+-- Name: TABLE token; Type: COMMENT; Schema: auth; Owner: app
 --
 
 COMMENT ON TABLE auth.token IS '@omit create,update,delete';
 
 
 --
--- Name: COLUMN token.created_at; Type: COMMENT; Schema: auth; Owner: postgres
+-- Name: COLUMN token.created_at; Type: COMMENT; Schema: auth; Owner: app
 --
 
 COMMENT ON COLUMN auth.token.created_at IS '@omit create,update';
 
 
 --
--- Name: COLUMN token.expires_at; Type: COMMENT; Schema: auth; Owner: postgres
+-- Name: COLUMN token.expires_at; Type: COMMENT; Schema: auth; Owner: app
 --
 
 COMMENT ON COLUMN auth.token.expires_at IS '@omit create,update';
 
 
 --
--- Name: inventory_lot; Type: TABLE; Schema: lcb; Owner: postgres
---
-
-CREATE TABLE lcb.inventory_lot (
-    id text DEFAULT util_fn.generate_ulid() NOT NULL,
-    app_tenant_id text NOT NULL,
-    lcb_license_holder_id text NOT NULL,
-    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_at timestamp with time zone NOT NULL,
-    deleted_at timestamp with time zone,
-    id_origin text NOT NULL,
-    inventory_type text NOT NULL,
-    description text,
-    quantity numeric(10,2),
-    units text,
-    strain_name text,
-    area_identifier text,
-    CONSTRAINT ck_inventory_lot_id CHECK ((id <> ''::text)),
-    CONSTRAINT ck_inventory_lot_id_origin CHECK ((id_origin <> ''::text)),
-    CONSTRAINT ck_inventory_lot_inventory_type CHECK ((inventory_type <> ''::text))
-);
-
-
-ALTER TABLE lcb.inventory_lot OWNER TO postgres;
-
---
--- Name: lcb_license; Type: TABLE; Schema: lcb; Owner: postgres
+-- Name: lcb_license; Type: TABLE; Schema: lcb; Owner: app
 --
 
 CREATE TABLE lcb.lcb_license (
@@ -1854,10 +1903,10 @@ CREATE TABLE lcb.lcb_license (
 );
 
 
-ALTER TABLE lcb.lcb_license OWNER TO postgres;
+ALTER TABLE lcb.lcb_license OWNER TO app;
 
 --
--- Name: lcb_license_holder; Type: TABLE; Schema: lcb; Owner: postgres
+-- Name: lcb_license_holder; Type: TABLE; Schema: lcb; Owner: app
 --
 
 CREATE TABLE lcb.lcb_license_holder (
@@ -1872,10 +1921,10 @@ CREATE TABLE lcb.lcb_license_holder (
 );
 
 
-ALTER TABLE lcb.lcb_license_holder OWNER TO postgres;
+ALTER TABLE lcb.lcb_license_holder OWNER TO app;
 
 --
--- Name: config_org; Type: TABLE; Schema: org; Owner: postgres
+-- Name: config_org; Type: TABLE; Schema: org; Owner: app
 --
 
 CREATE TABLE org.config_org (
@@ -1885,17 +1934,17 @@ CREATE TABLE org.config_org (
 );
 
 
-ALTER TABLE org.config_org OWNER TO postgres;
+ALTER TABLE org.config_org OWNER TO app;
 
 --
--- Name: TABLE config_org; Type: COMMENT; Schema: org; Owner: postgres
+-- Name: TABLE config_org; Type: COMMENT; Schema: org; Owner: app
 --
 
 COMMENT ON TABLE org.config_org IS '@omit create,update,delete';
 
 
 --
--- Name: contact_app_user; Type: TABLE; Schema: org; Owner: postgres
+-- Name: contact_app_user; Type: TABLE; Schema: org; Owner: app
 --
 
 CREATE TABLE org.contact_app_user (
@@ -1910,38 +1959,38 @@ CREATE TABLE org.contact_app_user (
 );
 
 
-ALTER TABLE org.contact_app_user OWNER TO postgres;
+ALTER TABLE org.contact_app_user OWNER TO app;
 
 --
--- Name: COLUMN contact_app_user.id; Type: COMMENT; Schema: org; Owner: postgres
+-- Name: COLUMN contact_app_user.id; Type: COMMENT; Schema: org; Owner: app
 --
 
 COMMENT ON COLUMN org.contact_app_user.id IS '@omit create';
 
 
 --
--- Name: COLUMN contact_app_user.app_tenant_id; Type: COMMENT; Schema: org; Owner: postgres
+-- Name: COLUMN contact_app_user.app_tenant_id; Type: COMMENT; Schema: org; Owner: app
 --
 
 COMMENT ON COLUMN org.contact_app_user.app_tenant_id IS '@omit create';
 
 
 --
--- Name: COLUMN contact_app_user.created_at; Type: COMMENT; Schema: org; Owner: postgres
+-- Name: COLUMN contact_app_user.created_at; Type: COMMENT; Schema: org; Owner: app
 --
 
 COMMENT ON COLUMN org.contact_app_user.created_at IS '@omit create,update';
 
 
 --
--- Name: COLUMN contact_app_user.updated_at; Type: COMMENT; Schema: org; Owner: postgres
+-- Name: COLUMN contact_app_user.updated_at; Type: COMMENT; Schema: org; Owner: app
 --
 
 COMMENT ON COLUMN org.contact_app_user.updated_at IS '@omit create,update';
 
 
 --
--- Name: global_id_sequence; Type: SEQUENCE; Schema: shard_1; Owner: postgres
+-- Name: global_id_sequence; Type: SEQUENCE; Schema: shard_1; Owner: app
 --
 
 CREATE SEQUENCE shard_1.global_id_sequence
@@ -1952,49 +2001,26 @@ CREATE SEQUENCE shard_1.global_id_sequence
     CACHE 1;
 
 
-ALTER TABLE shard_1.global_id_sequence OWNER TO postgres;
+ALTER TABLE shard_1.global_id_sequence OWNER TO app;
 
 --
--- Data for Name: application; Type: TABLE DATA; Schema: app; Owner: postgres
+-- Data for Name: application; Type: TABLE DATA; Schema: app; Owner: app
 --
 
 COPY app.application (id, created_at, updated_at, external_id, name, key) FROM stdin;
-01DTWQ2DSFBF3087ZJ5WXWCHVQ	2019-11-29 23:13:54.991099+00	2019-11-29 23:13:54.991099+00	\N	Tenant Manager	tenant-manager
-01DTWQ2DSF85A278YPYM0E9RYA	2019-11-29 23:13:54.991099+00	2019-11-29 23:13:54.991099+00	\N	License Manager	license-manager
-01DTWQ2DSFE0NNPH9FN20C97CF	2019-11-29 23:13:54.991099+00	2019-11-29 23:13:54.991099+00	\N	address book	address-book
-01DTWQ2DSFN05TEG9BTWW5YYJ2	2019-11-29 23:13:54.991099+00	2019-11-29 23:13:54.991099+00	\N	LCB Traceability	lcb-traceability
 \.
 
 
 --
--- Data for Name: license; Type: TABLE DATA; Schema: app; Owner: postgres
+-- Data for Name: license; Type: TABLE DATA; Schema: app; Owner: app
 --
 
 COPY app.license (id, app_tenant_id, created_at, updated_at, external_id, name, license_type_id, assigned_to_app_user_id) FROM stdin;
-01DTWQ2DSFV3V0NQPABTPZVAF4	01DTWQ2D28CH8BN9EC3K01YNG3	2019-11-29 23:13:54.991099+00	2019-11-29 23:13:54.991099+00	\N	appsuperadmin - Tenant Manager	01DTWQ2DSF0AH8BFW34EV6V462	01DTWQ2D28455Z8RETA2Q9N2H7
-01DTWQ2DSFYX3R4SBH5R6BFSYZ	01DTWQ2D28CH8BN9EC3K01YNG3	2019-11-29 23:13:54.991099+00	2019-11-29 23:13:54.991099+00	\N	appsuperadmin - License Manager	01DTWQ2DSF1CXH7QW5VHTJKHPK	01DTWQ2D28455Z8RETA2Q9N2H7
-01DTWQ2DSFRCPCN9J9PXFNP94S	01DTWQ2DEG6VGFFBK81A4B0HV8	2019-11-29 23:13:54.991099+00	2019-11-29 23:13:54.991099+00	\N	lcb_producer_admin - License Manager	01DTWQ2DSF1CXH7QW5VHTJKHPK	01DTWQ2DEGFFTFQ39VPQPY811M
-01DTWQ2DSF7J01FGSM9K3KF212	01DTWQ2DEG3JRR3NMRP8P94PJ6	2019-11-29 23:13:54.991099+00	2019-11-29 23:13:54.991099+00	\N	lcb_processor_admin - License Manager	01DTWQ2DSF1CXH7QW5VHTJKHPK	01DTWQ2DEG70MRECH2F5RPF719
-01DTWQ2DSF97ZHPY9WJH1F8465	01DTWQ2DEGE4D5DMCZP31PKMKC	2019-11-29 23:13:54.991099+00	2019-11-29 23:13:54.991099+00	\N	lcb_retail_admin - License Manager	01DTWQ2DSF1CXH7QW5VHTJKHPK	01DTWQ2DEGFQ22K76EX777P9SS
-01DTWQ2DSFN9S1P5GEJGRYPN30	01DTWQ2D28CH8BN9EC3K01YNG3	2019-11-29 23:13:54.991099+00	2019-11-29 23:13:54.991099+00	\N	appsuperadmin - Address Book	01DTWQ2DSFC2VB12W5QYKPY4MA	01DTWQ2D28455Z8RETA2Q9N2H7
-01DTWQ2DSF9GFC1KHFHKZRV7XV	01DTWQ2DEG6VGFFBK81A4B0HV8	2019-11-29 23:13:54.991099+00	2019-11-29 23:13:54.991099+00	\N	lcb_producer_admin - Address Book	01DTWQ2DSFC2VB12W5QYKPY4MA	01DTWQ2DEGFFTFQ39VPQPY811M
-01DTWQ2DSFH8ZJ951QSN55EP35	01DTWQ2DEG6VGFFBK81A4B0HV8	2019-11-29 23:13:54.991099+00	2019-11-29 23:13:54.991099+00	\N	lcb_producer_user - Address Book	01DTWQ2DSFC2VB12W5QYKPY4MA	01DTWQ2DEGM404YQZHVBWRBCPC
-01DTWQ2DSFRWG3CH088JWEZEET	01DTWQ2DEG3JRR3NMRP8P94PJ6	2019-11-29 23:13:54.991099+00	2019-11-29 23:13:54.991099+00	\N	lcb_processor_admin - Address Book	01DTWQ2DSFC2VB12W5QYKPY4MA	01DTWQ2DEG70MRECH2F5RPF719
-01DTWQ2DSF59S9JSDB9Z4RTJP0	01DTWQ2DEG3JRR3NMRP8P94PJ6	2019-11-29 23:13:54.991099+00	2019-11-29 23:13:54.991099+00	\N	lcb_processor_user - Address Book	01DTWQ2DSFC2VB12W5QYKPY4MA	01DTWQ2DEGXT143WN4M045ZEBT
-01DTWQ2DSFNMYX1B3P6Z6AH3EE	01DTWQ2DEGE4D5DMCZP31PKMKC	2019-11-29 23:13:54.991099+00	2019-11-29 23:13:54.991099+00	\N	lcb_retail_admin - Address Book	01DTWQ2DSFC2VB12W5QYKPY4MA	01DTWQ2DEGFQ22K76EX777P9SS
-01DTWQ2DSFFAPZVKA3MKXS5BEA	01DTWQ2DEGE4D5DMCZP31PKMKC	2019-11-29 23:13:54.991099+00	2019-11-29 23:13:54.991099+00	\N	lcb_retail_user - Address Book	01DTWQ2DSFC2VB12W5QYKPY4MA	01DTWQ2DEGH3AASNKDNEWRFRR7
-01DTWQ2DSFEBHZXK97Q9QX2P85	01DTWQ2D28CH8BN9EC3K01YNG3	2019-11-29 23:13:54.991099+00	2019-11-29 23:13:54.991099+00	\N	appsuperadmin - LCB Traceability	01DTWQ2DSFEE29A7KZWK1QES6W	01DTWQ2D28455Z8RETA2Q9N2H7
-01DTWQ2DSF290Y47PMBVBV572C	01DTWQ2DEG6VGFFBK81A4B0HV8	2019-11-29 23:13:54.991099+00	2019-11-29 23:13:54.991099+00	\N	lcb_producer_admin - LCB Traceability	01DTWQ2DSFEE29A7KZWK1QES6W	01DTWQ2DEGFFTFQ39VPQPY811M
-01DTWQ2DSFGF88FMYN5MBB0NRC	01DTWQ2DEG6VGFFBK81A4B0HV8	2019-11-29 23:13:54.991099+00	2019-11-29 23:13:54.991099+00	\N	lcb_producer_user - LCB Traceability	01DTWQ2DSFEE29A7KZWK1QES6W	01DTWQ2DEGM404YQZHVBWRBCPC
-01DTWQ2DSFJ3WAGKC2ZDZX0749	01DTWQ2DEG3JRR3NMRP8P94PJ6	2019-11-29 23:13:54.991099+00	2019-11-29 23:13:54.991099+00	\N	lcb_processor_admin - LCB Traceability	01DTWQ2DSFEE29A7KZWK1QES6W	01DTWQ2DEG70MRECH2F5RPF719
-01DTWQ2DSFRMAC6YRRHAZSEDSR	01DTWQ2DEG3JRR3NMRP8P94PJ6	2019-11-29 23:13:54.991099+00	2019-11-29 23:13:54.991099+00	\N	lcb_processor_user - LCB Traceability	01DTWQ2DSFEE29A7KZWK1QES6W	01DTWQ2DEGXT143WN4M045ZEBT
-01DTWQ2DSF764VVPQCWA4CM1FT	01DTWQ2DEGE4D5DMCZP31PKMKC	2019-11-29 23:13:54.991099+00	2019-11-29 23:13:54.991099+00	\N	lcb_retail_admin - LCB Traceability	01DTWQ2DSFEE29A7KZWK1QES6W	01DTWQ2DEGFQ22K76EX777P9SS
-01DTWQ2DSFJBFZ89CEM2W3Q7DN	01DTWQ2DEGE4D5DMCZP31PKMKC	2019-11-29 23:13:54.991099+00	2019-11-29 23:13:54.991099+00	\N	lcb_retail_user - LCB Traceability	01DTWQ2DSFEE29A7KZWK1QES6W	01DTWQ2DEGH3AASNKDNEWRFRR7
 \.
 
 
 --
--- Data for Name: license_permission; Type: TABLE DATA; Schema: app; Owner: postgres
+-- Data for Name: license_permission; Type: TABLE DATA; Schema: app; Owner: app
 --
 
 COPY app.license_permission (id, app_tenant_id, created_at, updated_at, license_id, permission_id) FROM stdin;
@@ -2002,19 +2028,15 @@ COPY app.license_permission (id, app_tenant_id, created_at, updated_at, license_
 
 
 --
--- Data for Name: license_type; Type: TABLE DATA; Schema: app; Owner: postgres
+-- Data for Name: license_type; Type: TABLE DATA; Schema: app; Owner: app
 --
 
 COPY app.license_type (id, created_at, updated_at, external_id, name, key, application_id) FROM stdin;
-01DTWQ2DSF0AH8BFW34EV6V462	2019-11-29 23:13:54.991099+00	2019-11-29 23:13:54.991099+00	\N	Tenant Manager	tenant-manager	01DTWQ2DSFBF3087ZJ5WXWCHVQ
-01DTWQ2DSF1CXH7QW5VHTJKHPK	2019-11-29 23:13:54.991099+00	2019-11-29 23:13:54.991099+00	\N	License Manager	license-manager	01DTWQ2DSF85A278YPYM0E9RYA
-01DTWQ2DSFC2VB12W5QYKPY4MA	2019-11-29 23:13:54.991099+00	2019-11-29 23:13:54.991099+00	\N	Address Book	address-book	01DTWQ2DSFE0NNPH9FN20C97CF
-01DTWQ2DSFEE29A7KZWK1QES6W	2019-11-29 23:13:54.991099+00	2019-11-29 23:13:54.991099+00	\N	LCB Traceability	lcb-traceability	01DTWQ2DSFN05TEG9BTWW5YYJ2
 \.
 
 
 --
--- Data for Name: license_type_permission; Type: TABLE DATA; Schema: app; Owner: postgres
+-- Data for Name: license_type_permission; Type: TABLE DATA; Schema: app; Owner: app
 --
 
 COPY app.license_type_permission (id, created_at, updated_at, license_type_id, permission_id, key) FROM stdin;
@@ -2022,34 +2044,25 @@ COPY app.license_type_permission (id, created_at, updated_at, license_type_id, p
 
 
 --
--- Data for Name: app_tenant; Type: TABLE DATA; Schema: auth; Owner: postgres
+-- Data for Name: app_tenant; Type: TABLE DATA; Schema: auth; Owner: app
 --
 
 COPY auth.app_tenant (id, created_at, updated_at, name, identifier) FROM stdin;
-01DTWQ2D28CH8BN9EC3K01YNG3	2019-11-29 23:13:54.2477+00	2019-11-29 23:13:54.2477+00	Anchor Tenant	anchor
-01DTWQ2DEG6VGFFBK81A4B0HV8	2019-11-29 23:13:54.640051+00	2019-11-29 23:13:54.640051+00	Producer-1	G11111
-01DTWQ2DEG3JRR3NMRP8P94PJ6	2019-11-29 23:13:54.640051+00	2019-11-29 23:13:54.640051+00	Processor-1	M11111
-01DTWQ2DEGE4D5DMCZP31PKMKC	2019-11-29 23:13:54.640051+00	2019-11-29 23:13:54.640051+00	Retail-1	R11111
+01DTWX2GRYZHFNB9XW2RNJHZKT	2019-11-30 00:58:49.502291+00	2019-11-30 00:58:49.502291+00	Anchor Tenant	anchor
 \.
 
 
 --
--- Data for Name: app_user; Type: TABLE DATA; Schema: auth; Owner: postgres
+-- Data for Name: app_user; Type: TABLE DATA; Schema: auth; Owner: app
 --
 
 COPY auth.app_user (id, app_tenant_id, created_at, updated_at, username, recovery_email, password_hash, inactive, password_reset_required, permission_key) FROM stdin;
-01DTWQ2D28455Z8RETA2Q9N2H7	01DTWQ2D28CH8BN9EC3K01YNG3	2019-11-29 23:13:54.2477+00	2019-11-29 23:13:54.2477+00	appsuperadmin	appsuperadmin@tst.tst	$2a$06$3BU2TYBEkX6unZyBZTgNFOEV6pG2GeBoMDe7/mjeUgog92V3XS.LS	f	f	SuperAdmin
-01DTWQ2DEGFFTFQ39VPQPY811M	01DTWQ2DEG6VGFFBK81A4B0HV8	2019-11-29 23:13:54.640051+00	2019-11-29 23:13:54.640051+00	lcb_producer_admin	lcb_producer_admin@blah.blah	$2a$06$yGQx95dn150BLyNibjRla.1vuMKxgHR/mJnjmDBDYxqk8UtiZDVdC	f	f	Admin
-01DTWQ2DEGM404YQZHVBWRBCPC	01DTWQ2DEG6VGFFBK81A4B0HV8	2019-11-29 23:13:54.640051+00	2019-11-29 23:13:54.640051+00	lcb_producer_user	lcb_producer_user@blah.blah	$2a$06$fYsw8Zc/Ve2gNw/F04cHQOe9nVCKe1fHcfzKsUPPMcSaZgAhc0BHO	f	f	User
-01DTWQ2DEG70MRECH2F5RPF719	01DTWQ2DEG3JRR3NMRP8P94PJ6	2019-11-29 23:13:54.640051+00	2019-11-29 23:13:54.640051+00	lcb_processor_admin	lcb_processor_admin@blah.blah	$2a$06$111ACnSTSu2HYNWaiU2pmeVlGp15Q4SNQclrZG7MVKwGsYym/jq4q	f	f	Admin
-01DTWQ2DEGXT143WN4M045ZEBT	01DTWQ2DEG3JRR3NMRP8P94PJ6	2019-11-29 23:13:54.640051+00	2019-11-29 23:13:54.640051+00	lcb_processor_user	lcb_processor_user@blah.blah	$2a$06$KnFTKdJiijDLmhp0fAo9rOT7D2eIJ0Kyu0iL2L38HhBmbOFM4NcEK	f	f	User
-01DTWQ2DEGFQ22K76EX777P9SS	01DTWQ2DEGE4D5DMCZP31PKMKC	2019-11-29 23:13:54.640051+00	2019-11-29 23:13:54.640051+00	lcb_retail_admin	lcb_retail_admin003@blah.blah	$2a$06$Z715M9HJXDQKLL3x.iLUx.5VPPT3ZdbEZrnK6ucQE13YxUQ0bsyfm	f	f	Admin
-01DTWQ2DEGH3AASNKDNEWRFRR7	01DTWQ2DEGE4D5DMCZP31PKMKC	2019-11-29 23:13:54.640051+00	2019-11-29 23:13:54.640051+00	lcb_retail_user	lcb_retail_user@blah.blah	$2a$06$b4oXqLubx1mtClWReOz.EugstMw87VcibML7xknn/JVsObKhAdMb6	f	f	User
+01DTWX2GRYN5BAAYRY78KEWDYD	01DTWX2GRYZHFNB9XW2RNJHZKT	2019-11-30 00:58:49.502291+00	2019-11-30 00:58:49.502291+00	appsuperadmin	appsuperadmin@tst.tst	$2a$06$UFCeEuicGDM/b28Nz3w76OK3xtzDXg1L.s6zTTOVIzpoGsBfCz3f.	f	f	SuperAdmin
 \.
 
 
 --
--- Data for Name: config_auth; Type: TABLE DATA; Schema: auth; Owner: postgres
+-- Data for Name: config_auth; Type: TABLE DATA; Schema: auth; Owner: app
 --
 
 COPY auth.config_auth (id, key, value) FROM stdin;
@@ -2057,7 +2070,7 @@ COPY auth.config_auth (id, key, value) FROM stdin;
 
 
 --
--- Data for Name: permission; Type: TABLE DATA; Schema: auth; Owner: postgres
+-- Data for Name: permission; Type: TABLE DATA; Schema: auth; Owner: app
 --
 
 COPY auth.permission (id, created_at, key) FROM stdin;
@@ -2065,7 +2078,7 @@ COPY auth.permission (id, created_at, key) FROM stdin;
 
 
 --
--- Data for Name: token; Type: TABLE DATA; Schema: auth; Owner: postgres
+-- Data for Name: token; Type: TABLE DATA; Schema: auth; Owner: app
 --
 
 COPY auth.token (id, app_user_id, created_at, expires_at) FROM stdin;
@@ -2073,7 +2086,7 @@ COPY auth.token (id, app_user_id, created_at, expires_at) FROM stdin;
 
 
 --
--- Data for Name: inventory_lot; Type: TABLE DATA; Schema: lcb; Owner: postgres
+-- Data for Name: inventory_lot; Type: TABLE DATA; Schema: lcb; Owner: app
 --
 
 COPY lcb.inventory_lot (id, app_tenant_id, lcb_license_holder_id, created_at, updated_at, deleted_at, id_origin, inventory_type, description, quantity, units, strain_name, area_identifier) FROM stdin;
@@ -2081,7 +2094,7 @@ COPY lcb.inventory_lot (id, app_tenant_id, lcb_license_holder_id, created_at, up
 
 
 --
--- Data for Name: lcb_license; Type: TABLE DATA; Schema: lcb; Owner: postgres
+-- Data for Name: lcb_license; Type: TABLE DATA; Schema: lcb; Owner: app
 --
 
 COPY lcb.lcb_license (id, created_at, updated_at, code) FROM stdin;
@@ -2089,7 +2102,7 @@ COPY lcb.lcb_license (id, created_at, updated_at, code) FROM stdin;
 
 
 --
--- Data for Name: lcb_license_holder; Type: TABLE DATA; Schema: lcb; Owner: postgres
+-- Data for Name: lcb_license_holder; Type: TABLE DATA; Schema: lcb; Owner: app
 --
 
 COPY lcb.lcb_license_holder (id, app_tenant_id, created_at, updated_at, lcb_license_id, organization_id, acquisition_date, relinquish_date) FROM stdin;
@@ -2097,7 +2110,7 @@ COPY lcb.lcb_license_holder (id, app_tenant_id, created_at, updated_at, lcb_lice
 
 
 --
--- Data for Name: config_org; Type: TABLE DATA; Schema: org; Owner: postgres
+-- Data for Name: config_org; Type: TABLE DATA; Schema: org; Owner: app
 --
 
 COPY org.config_org (id, key, value) FROM stdin;
@@ -2105,37 +2118,25 @@ COPY org.config_org (id, key, value) FROM stdin;
 
 
 --
--- Data for Name: contact; Type: TABLE DATA; Schema: org; Owner: postgres
+-- Data for Name: contact; Type: TABLE DATA; Schema: org; Owner: app
 --
 
 COPY org.contact (id, app_tenant_id, created_at, updated_at, organization_id, location_id, external_id, first_name, last_name, email, cell_phone, office_phone, title, nickname) FROM stdin;
-01DTWQ2D28XCBEMTE1GMPJBFRB	01DTWQ2D28CH8BN9EC3K01YNG3	2019-11-29 23:13:54.2477+00	2019-11-29 23:13:54.819843+00	01DTWQ2D28PXTJTV78EEYPN8XW	01DTWQ2DM42JV8VXQX8YFVHE05	appsuperadmin	Super	Admin	appsuperadmin@tst.tst	\N	\N	\N	\N
-01DTWQ2DEGFQFJY9HJ4K5QCVZ0	01DTWQ2DEG6VGFFBK81A4B0HV8	2019-11-29 23:13:54.640051+00	2019-11-29 23:13:54.819843+00	01DTWQ2DEGT1ZQ591BB48D2REW	01DTWQ2DM4TTM2GBTACP2NCHTZ	lcb_producer_admin	lcb_producer_admin	Test	lcb_producer_admin@blah.blah	\N	\N	\N	\N
-01DTWQ2DEGS90PJ37ZE4GTF8K2	01DTWQ2DEG6VGFFBK81A4B0HV8	2019-11-29 23:13:54.640051+00	2019-11-29 23:13:54.819843+00	01DTWQ2DEGT1ZQ591BB48D2REW	01DTWQ2DM4S9MRS6AFGJ7TEQJ6	lcb_producer_user	lcb_producer_user	Test	lcb_producer_user@blah.blah	\N	\N	\N	\N
-01DTWQ2DEG5KFMY16S8ZPBNQMW	01DTWQ2DEG3JRR3NMRP8P94PJ6	2019-11-29 23:13:54.640051+00	2019-11-29 23:13:54.819843+00	01DTWQ2DEGYECMREJPATFGZ5D4	01DTWQ2DM40BEC4BQV0TN48B3C	lcb_processor_admin	lcb_processor_admin	Test	lcb_processor_admin@blah.blah	\N	\N	\N	\N
-01DTWQ2DEGD5VKE4NQ84SMEPR6	01DTWQ2DEG3JRR3NMRP8P94PJ6	2019-11-29 23:13:54.640051+00	2019-11-29 23:13:54.819843+00	01DTWQ2DEGYECMREJPATFGZ5D4	01DTWQ2DM4FK84T1VV3GX2Y04M	lcb_processor_user	lcb_processor_user	Test	lcb_processor_user@blah.blah	\N	\N	\N	\N
-01DTWQ2DEGEC9TG0EMGPTWDDX9	01DTWQ2DEGE4D5DMCZP31PKMKC	2019-11-29 23:13:54.640051+00	2019-11-29 23:13:54.819843+00	01DTWQ2DEGJ040Z9QV7889A326	01DTWQ2DM4X3AE2Y47JQVH3DG4	lcb_retail_admin	lcb_retail_admin	Test	lcb_retail_admin003@blah.blah	\N	\N	\N	\N
-01DTWQ2DEGHF5WJXTDG9G18QYR	01DTWQ2DEGE4D5DMCZP31PKMKC	2019-11-29 23:13:54.640051+00	2019-11-29 23:13:54.819843+00	01DTWQ2DEGJ040Z9QV7889A326	01DTWQ2DM43YW0Y9J2M75XDKYW	lcb_retail_user	lcb_retail_user	Test	lcb_retail_user@blah.blah	\N	\N	\N	\N
+01DTWX2GRYRKYNC6B68CNP0JD3	01DTWX2GRYZHFNB9XW2RNJHZKT	2019-11-30 00:58:49.502291+00	2019-11-30 00:58:49.502291+00	01DTWX2GRYV6NTJYD2FNCN2HPK	\N	appsuperadmin	Super	Admin	appsuperadmin@tst.tst	\N	\N	\N	\N
 \.
 
 
 --
--- Data for Name: contact_app_user; Type: TABLE DATA; Schema: org; Owner: postgres
+-- Data for Name: contact_app_user; Type: TABLE DATA; Schema: org; Owner: app
 --
 
 COPY org.contact_app_user (id, app_tenant_id, created_at, updated_at, contact_id, app_user_id, username) FROM stdin;
-01DTWQ2D28RBQ4MN68QBJRPNF7	01DTWQ2D28CH8BN9EC3K01YNG3	2019-11-29 23:13:54.2477+00	2019-11-29 23:13:54.2477+00	01DTWQ2D28XCBEMTE1GMPJBFRB	01DTWQ2D28455Z8RETA2Q9N2H7	appsuperadmin
-01DTWQ2DEGZM23Q79NGAHZM4QX	01DTWQ2DEG6VGFFBK81A4B0HV8	2019-11-29 23:13:54.640051+00	2019-11-29 23:13:54.640051+00	01DTWQ2DEGFQFJY9HJ4K5QCVZ0	01DTWQ2DEGFFTFQ39VPQPY811M	lcb_producer_admin
-01DTWQ2DEG8XBJ3F4EK45GCJ8T	01DTWQ2DEG6VGFFBK81A4B0HV8	2019-11-29 23:13:54.640051+00	2019-11-29 23:13:54.640051+00	01DTWQ2DEGS90PJ37ZE4GTF8K2	01DTWQ2DEGM404YQZHVBWRBCPC	lcb_producer_user
-01DTWQ2DEGYMS0JB03PCDM4A8K	01DTWQ2DEG3JRR3NMRP8P94PJ6	2019-11-29 23:13:54.640051+00	2019-11-29 23:13:54.640051+00	01DTWQ2DEG5KFMY16S8ZPBNQMW	01DTWQ2DEG70MRECH2F5RPF719	lcb_processor_admin
-01DTWQ2DEGDRVPYCT7ARCDNFGN	01DTWQ2DEG3JRR3NMRP8P94PJ6	2019-11-29 23:13:54.640051+00	2019-11-29 23:13:54.640051+00	01DTWQ2DEGD5VKE4NQ84SMEPR6	01DTWQ2DEGXT143WN4M045ZEBT	lcb_processor_user
-01DTWQ2DEGH5YWXEDQVDEHTZWE	01DTWQ2DEGE4D5DMCZP31PKMKC	2019-11-29 23:13:54.640051+00	2019-11-29 23:13:54.640051+00	01DTWQ2DEGEC9TG0EMGPTWDDX9	01DTWQ2DEGFQ22K76EX777P9SS	lcb_retail_admin
-01DTWQ2DEG6T3MJD1MHZ6AVRVW	01DTWQ2DEGE4D5DMCZP31PKMKC	2019-11-29 23:13:54.640051+00	2019-11-29 23:13:54.640051+00	01DTWQ2DEGHF5WJXTDG9G18QYR	01DTWQ2DEGH3AASNKDNEWRFRR7	lcb_retail_user
+01DTWX2GRYNM1J522ZX2JS0N3R	01DTWX2GRYZHFNB9XW2RNJHZKT	2019-11-30 00:58:49.502291+00	2019-11-30 00:58:49.502291+00	01DTWX2GRYRKYNC6B68CNP0JD3	01DTWX2GRYN5BAAYRY78KEWDYD	appsuperadmin
 \.
 
 
 --
--- Data for Name: facility; Type: TABLE DATA; Schema: org; Owner: postgres
+-- Data for Name: facility; Type: TABLE DATA; Schema: org; Owner: app
 --
 
 COPY org.facility (id, app_tenant_id, created_at, updated_at, organization_id, location_id, name, external_id) FROM stdin;
@@ -2143,45 +2144,31 @@ COPY org.facility (id, app_tenant_id, created_at, updated_at, organization_id, l
 
 
 --
--- Data for Name: location; Type: TABLE DATA; Schema: org; Owner: postgres
+-- Data for Name: location; Type: TABLE DATA; Schema: org; Owner: app
 --
 
 COPY org.location (id, app_tenant_id, created_at, updated_at, external_id, name, address1, address2, city, state, zip, lat, lon) FROM stdin;
-01DTWQ2DM4A9T8JSGJVHBHTY11	01DTWQ2D28CH8BN9EC3K01YNG3	2019-11-29 23:13:54.819843+00	2019-11-29 23:13:54.819843+00	anchor-org	Anchor Tenant Location	addy 1	addy 2	a city	??	?????	37.5797780	-109.2458130
-01DTWQ2DM48N31NEDPTXQFNGMK	01DTWQ2DEG6VGFFBK81A4B0HV8	2019-11-29 23:13:54.819843+00	2019-11-29 23:13:54.819843+00	G11111-org	Producer-1 Location	addy 1	addy 2	a city	??	?????	36.2787630	-96.7323005
-01DTWQ2DM4CTPV468736BP6A0D	01DTWQ2DEG3JRR3NMRP8P94PJ6	2019-11-29 23:13:54.819843+00	2019-11-29 23:13:54.819843+00	M11111-org	Processor-1 Location	addy 1	addy 2	a city	??	?????	43.2283887	-100.7011131
-01DTWQ2DM46QKHG1V40Z4541GR	01DTWQ2DEGE4D5DMCZP31PKMKC	2019-11-29 23:13:54.819843+00	2019-11-29 23:13:54.819843+00	R11111-org	Retail-1 Location	addy 1	addy 2	a city	??	?????	40.8940954	-106.7287604
-01DTWQ2DM42JV8VXQX8YFVHE05	01DTWQ2D28CH8BN9EC3K01YNG3	2019-11-29 23:13:54.819843+00	2019-11-29 23:13:54.819843+00	appsuperadmin	appsuperadmin Location	addy 1	addy 2	a city	??	?????	43.8322688	-109.1875165
-01DTWQ2DM4TTM2GBTACP2NCHTZ	01DTWQ2DEG6VGFFBK81A4B0HV8	2019-11-29 23:13:54.819843+00	2019-11-29 23:13:54.819843+00	lcb_producer_admin	lcb_producer_admin Location	addy 1	addy 2	a city	??	?????	43.4991091	-103.6058159
-01DTWQ2DM4S9MRS6AFGJ7TEQJ6	01DTWQ2DEG6VGFFBK81A4B0HV8	2019-11-29 23:13:54.819843+00	2019-11-29 23:13:54.819843+00	lcb_producer_user	lcb_producer_user Location	addy 1	addy 2	a city	??	?????	37.6453328	-104.9940197
-01DTWQ2DM40BEC4BQV0TN48B3C	01DTWQ2DEG3JRR3NMRP8P94PJ6	2019-11-29 23:13:54.819843+00	2019-11-29 23:13:54.819843+00	lcb_processor_admin	lcb_processor_admin Location	addy 1	addy 2	a city	??	?????	36.4854100	-103.9519962
-01DTWQ2DM4FK84T1VV3GX2Y04M	01DTWQ2DEG3JRR3NMRP8P94PJ6	2019-11-29 23:13:54.819843+00	2019-11-29 23:13:54.819843+00	lcb_processor_user	lcb_processor_user Location	addy 1	addy 2	a city	??	?????	37.7187585	-107.3066515
-01DTWQ2DM4X3AE2Y47JQVH3DG4	01DTWQ2DEGE4D5DMCZP31PKMKC	2019-11-29 23:13:54.819843+00	2019-11-29 23:13:54.819843+00	lcb_retail_admin	lcb_retail_admin Location	addy 1	addy 2	a city	??	?????	38.0879184	-96.5639827
-01DTWQ2DM43YW0Y9J2M75XDKYW	01DTWQ2DEGE4D5DMCZP31PKMKC	2019-11-29 23:13:54.819843+00	2019-11-29 23:13:54.819843+00	lcb_retail_user	lcb_retail_user Location	addy 1	addy 2	a city	??	?????	39.7786481	-108.9594108
 \.
 
 
 --
--- Data for Name: organization; Type: TABLE DATA; Schema: org; Owner: postgres
+-- Data for Name: organization; Type: TABLE DATA; Schema: org; Owner: app
 --
 
 COPY org.organization (id, app_tenant_id, actual_app_tenant_id, created_at, updated_at, external_id, name, location_id, primary_contact_id) FROM stdin;
-01DTWQ2D28PXTJTV78EEYPN8XW	01DTWQ2D28CH8BN9EC3K01YNG3	01DTWQ2D28CH8BN9EC3K01YNG3	2019-11-29 23:13:54.2477+00	2019-11-29 23:13:54.819843+00	anchor-org	Anchor Tenant	01DTWQ2DM4A9T8JSGJVHBHTY11	01DTWQ2D28XCBEMTE1GMPJBFRB
-01DTWQ2DEGT1ZQ591BB48D2REW	01DTWQ2DEG6VGFFBK81A4B0HV8	01DTWQ2DEG6VGFFBK81A4B0HV8	2019-11-29 23:13:54.640051+00	2019-11-29 23:13:54.819843+00	G11111-org	Producer-1	01DTWQ2DM48N31NEDPTXQFNGMK	01DTWQ2DEGFQFJY9HJ4K5QCVZ0
-01DTWQ2DEGYECMREJPATFGZ5D4	01DTWQ2DEG3JRR3NMRP8P94PJ6	01DTWQ2DEG3JRR3NMRP8P94PJ6	2019-11-29 23:13:54.640051+00	2019-11-29 23:13:54.819843+00	M11111-org	Processor-1	01DTWQ2DM4CTPV468736BP6A0D	01DTWQ2DEG5KFMY16S8ZPBNQMW
-01DTWQ2DEGJ040Z9QV7889A326	01DTWQ2DEGE4D5DMCZP31PKMKC	01DTWQ2DEGE4D5DMCZP31PKMKC	2019-11-29 23:13:54.640051+00	2019-11-29 23:13:54.819843+00	R11111-org	Retail-1	01DTWQ2DM46QKHG1V40Z4541GR	01DTWQ2DEGEC9TG0EMGPTWDDX9
+01DTWX2GRYV6NTJYD2FNCN2HPK	01DTWX2GRYZHFNB9XW2RNJHZKT	01DTWX2GRYZHFNB9XW2RNJHZKT	2019-11-30 00:58:49.502291+00	2019-11-30 00:58:49.502291+00	anchor-org	Anchor Tenant	\N	\N
 \.
 
 
 --
--- Name: global_id_sequence; Type: SEQUENCE SET; Schema: shard_1; Owner: postgres
+-- Name: global_id_sequence; Type: SEQUENCE SET; Schema: shard_1; Owner: app
 --
 
 SELECT pg_catalog.setval('shard_1.global_id_sequence', 91, true);
 
 
 --
--- Name: application application_key_key; Type: CONSTRAINT; Schema: app; Owner: postgres
+-- Name: application application_key_key; Type: CONSTRAINT; Schema: app; Owner: app
 --
 
 ALTER TABLE ONLY app.application
@@ -2189,7 +2176,7 @@ ALTER TABLE ONLY app.application
 
 
 --
--- Name: license_type license_type_key_key; Type: CONSTRAINT; Schema: app; Owner: postgres
+-- Name: license_type license_type_key_key; Type: CONSTRAINT; Schema: app; Owner: app
 --
 
 ALTER TABLE ONLY app.license_type
@@ -2197,7 +2184,7 @@ ALTER TABLE ONLY app.license_type
 
 
 --
--- Name: license_type_permission license_type_permission_key_key; Type: CONSTRAINT; Schema: app; Owner: postgres
+-- Name: license_type_permission license_type_permission_key_key; Type: CONSTRAINT; Schema: app; Owner: app
 --
 
 ALTER TABLE ONLY app.license_type_permission
@@ -2205,7 +2192,7 @@ ALTER TABLE ONLY app.license_type_permission
 
 
 --
--- Name: application pk_application; Type: CONSTRAINT; Schema: app; Owner: postgres
+-- Name: application pk_application; Type: CONSTRAINT; Schema: app; Owner: app
 --
 
 ALTER TABLE ONLY app.application
@@ -2213,7 +2200,7 @@ ALTER TABLE ONLY app.application
 
 
 --
--- Name: license pk_license; Type: CONSTRAINT; Schema: app; Owner: postgres
+-- Name: license pk_license; Type: CONSTRAINT; Schema: app; Owner: app
 --
 
 ALTER TABLE ONLY app.license
@@ -2221,7 +2208,7 @@ ALTER TABLE ONLY app.license
 
 
 --
--- Name: license_permission pk_license_permission; Type: CONSTRAINT; Schema: app; Owner: postgres
+-- Name: license_permission pk_license_permission; Type: CONSTRAINT; Schema: app; Owner: app
 --
 
 ALTER TABLE ONLY app.license_permission
@@ -2229,7 +2216,7 @@ ALTER TABLE ONLY app.license_permission
 
 
 --
--- Name: license_type pk_license_type; Type: CONSTRAINT; Schema: app; Owner: postgres
+-- Name: license_type pk_license_type; Type: CONSTRAINT; Schema: app; Owner: app
 --
 
 ALTER TABLE ONLY app.license_type
@@ -2237,7 +2224,7 @@ ALTER TABLE ONLY app.license_type
 
 
 --
--- Name: license_type_permission pk_license_type_permission; Type: CONSTRAINT; Schema: app; Owner: postgres
+-- Name: license_type_permission pk_license_type_permission; Type: CONSTRAINT; Schema: app; Owner: app
 --
 
 ALTER TABLE ONLY app.license_type_permission
@@ -2245,7 +2232,7 @@ ALTER TABLE ONLY app.license_type_permission
 
 
 --
--- Name: license uq_license_type_assigned_to; Type: CONSTRAINT; Schema: app; Owner: postgres
+-- Name: license uq_license_type_assigned_to; Type: CONSTRAINT; Schema: app; Owner: app
 --
 
 ALTER TABLE ONLY app.license
@@ -2253,7 +2240,7 @@ ALTER TABLE ONLY app.license
 
 
 --
--- Name: app_tenant app_tenant_identifier_key; Type: CONSTRAINT; Schema: auth; Owner: postgres
+-- Name: app_tenant app_tenant_identifier_key; Type: CONSTRAINT; Schema: auth; Owner: app
 --
 
 ALTER TABLE ONLY auth.app_tenant
@@ -2261,7 +2248,7 @@ ALTER TABLE ONLY auth.app_tenant
 
 
 --
--- Name: app_user app_user_recovery_email_key; Type: CONSTRAINT; Schema: auth; Owner: postgres
+-- Name: app_user app_user_recovery_email_key; Type: CONSTRAINT; Schema: auth; Owner: app
 --
 
 ALTER TABLE ONLY auth.app_user
@@ -2269,7 +2256,7 @@ ALTER TABLE ONLY auth.app_user
 
 
 --
--- Name: app_user app_user_username_key; Type: CONSTRAINT; Schema: auth; Owner: postgres
+-- Name: app_user app_user_username_key; Type: CONSTRAINT; Schema: auth; Owner: app
 --
 
 ALTER TABLE ONLY auth.app_user
@@ -2277,7 +2264,7 @@ ALTER TABLE ONLY auth.app_user
 
 
 --
--- Name: app_tenant pk_app_tenant; Type: CONSTRAINT; Schema: auth; Owner: postgres
+-- Name: app_tenant pk_app_tenant; Type: CONSTRAINT; Schema: auth; Owner: app
 --
 
 ALTER TABLE ONLY auth.app_tenant
@@ -2285,7 +2272,7 @@ ALTER TABLE ONLY auth.app_tenant
 
 
 --
--- Name: app_user pk_app_user; Type: CONSTRAINT; Schema: auth; Owner: postgres
+-- Name: app_user pk_app_user; Type: CONSTRAINT; Schema: auth; Owner: app
 --
 
 ALTER TABLE ONLY auth.app_user
@@ -2293,7 +2280,7 @@ ALTER TABLE ONLY auth.app_user
 
 
 --
--- Name: config_auth pk_config_auth; Type: CONSTRAINT; Schema: auth; Owner: postgres
+-- Name: config_auth pk_config_auth; Type: CONSTRAINT; Schema: auth; Owner: app
 --
 
 ALTER TABLE ONLY auth.config_auth
@@ -2301,7 +2288,7 @@ ALTER TABLE ONLY auth.config_auth
 
 
 --
--- Name: permission pk_permission; Type: CONSTRAINT; Schema: auth; Owner: postgres
+-- Name: permission pk_permission; Type: CONSTRAINT; Schema: auth; Owner: app
 --
 
 ALTER TABLE ONLY auth.permission
@@ -2309,7 +2296,7 @@ ALTER TABLE ONLY auth.permission
 
 
 --
--- Name: token pk_token; Type: CONSTRAINT; Schema: auth; Owner: postgres
+-- Name: token pk_token; Type: CONSTRAINT; Schema: auth; Owner: app
 --
 
 ALTER TABLE ONLY auth.token
@@ -2317,7 +2304,7 @@ ALTER TABLE ONLY auth.token
 
 
 --
--- Name: token token_app_user_id_key; Type: CONSTRAINT; Schema: auth; Owner: postgres
+-- Name: token token_app_user_id_key; Type: CONSTRAINT; Schema: auth; Owner: app
 --
 
 ALTER TABLE ONLY auth.token
@@ -2325,7 +2312,7 @@ ALTER TABLE ONLY auth.token
 
 
 --
--- Name: lcb_license lcb_license_code_key; Type: CONSTRAINT; Schema: lcb; Owner: postgres
+-- Name: lcb_license lcb_license_code_key; Type: CONSTRAINT; Schema: lcb; Owner: app
 --
 
 ALTER TABLE ONLY lcb.lcb_license
@@ -2333,7 +2320,7 @@ ALTER TABLE ONLY lcb.lcb_license
 
 
 --
--- Name: lcb_license_holder lcb_license_holder_lcb_license_id_key; Type: CONSTRAINT; Schema: lcb; Owner: postgres
+-- Name: lcb_license_holder lcb_license_holder_lcb_license_id_key; Type: CONSTRAINT; Schema: lcb; Owner: app
 --
 
 ALTER TABLE ONLY lcb.lcb_license_holder
@@ -2341,7 +2328,7 @@ ALTER TABLE ONLY lcb.lcb_license_holder
 
 
 --
--- Name: inventory_lot pk_inventory_lot; Type: CONSTRAINT; Schema: lcb; Owner: postgres
+-- Name: inventory_lot pk_inventory_lot; Type: CONSTRAINT; Schema: lcb; Owner: app
 --
 
 ALTER TABLE ONLY lcb.inventory_lot
@@ -2349,7 +2336,7 @@ ALTER TABLE ONLY lcb.inventory_lot
 
 
 --
--- Name: lcb_license pk_lcb_license; Type: CONSTRAINT; Schema: lcb; Owner: postgres
+-- Name: lcb_license pk_lcb_license; Type: CONSTRAINT; Schema: lcb; Owner: app
 --
 
 ALTER TABLE ONLY lcb.lcb_license
@@ -2357,7 +2344,7 @@ ALTER TABLE ONLY lcb.lcb_license
 
 
 --
--- Name: lcb_license_holder pk_lcb_license_holder; Type: CONSTRAINT; Schema: lcb; Owner: postgres
+-- Name: lcb_license_holder pk_lcb_license_holder; Type: CONSTRAINT; Schema: lcb; Owner: app
 --
 
 ALTER TABLE ONLY lcb.lcb_license_holder
@@ -2365,7 +2352,7 @@ ALTER TABLE ONLY lcb.lcb_license_holder
 
 
 --
--- Name: contact_app_user contact_app_user_app_user_id_key; Type: CONSTRAINT; Schema: org; Owner: postgres
+-- Name: contact_app_user contact_app_user_app_user_id_key; Type: CONSTRAINT; Schema: org; Owner: app
 --
 
 ALTER TABLE ONLY org.contact_app_user
@@ -2373,7 +2360,7 @@ ALTER TABLE ONLY org.contact_app_user
 
 
 --
--- Name: contact_app_user contact_app_user_contact_id_key; Type: CONSTRAINT; Schema: org; Owner: postgres
+-- Name: contact_app_user contact_app_user_contact_id_key; Type: CONSTRAINT; Schema: org; Owner: app
 --
 
 ALTER TABLE ONLY org.contact_app_user
@@ -2381,7 +2368,7 @@ ALTER TABLE ONLY org.contact_app_user
 
 
 --
--- Name: contact_app_user contact_app_user_username_key; Type: CONSTRAINT; Schema: org; Owner: postgres
+-- Name: contact_app_user contact_app_user_username_key; Type: CONSTRAINT; Schema: org; Owner: app
 --
 
 ALTER TABLE ONLY org.contact_app_user
@@ -2389,7 +2376,7 @@ ALTER TABLE ONLY org.contact_app_user
 
 
 --
--- Name: organization organization_actual_app_tenant_id_key; Type: CONSTRAINT; Schema: org; Owner: postgres
+-- Name: organization organization_actual_app_tenant_id_key; Type: CONSTRAINT; Schema: org; Owner: app
 --
 
 ALTER TABLE ONLY org.organization
@@ -2397,7 +2384,7 @@ ALTER TABLE ONLY org.organization
 
 
 --
--- Name: config_org pk_config_org; Type: CONSTRAINT; Schema: org; Owner: postgres
+-- Name: config_org pk_config_org; Type: CONSTRAINT; Schema: org; Owner: app
 --
 
 ALTER TABLE ONLY org.config_org
@@ -2405,7 +2392,7 @@ ALTER TABLE ONLY org.config_org
 
 
 --
--- Name: contact pk_contact; Type: CONSTRAINT; Schema: org; Owner: postgres
+-- Name: contact pk_contact; Type: CONSTRAINT; Schema: org; Owner: app
 --
 
 ALTER TABLE ONLY org.contact
@@ -2413,7 +2400,7 @@ ALTER TABLE ONLY org.contact
 
 
 --
--- Name: contact_app_user pk_contact_app_user; Type: CONSTRAINT; Schema: org; Owner: postgres
+-- Name: contact_app_user pk_contact_app_user; Type: CONSTRAINT; Schema: org; Owner: app
 --
 
 ALTER TABLE ONLY org.contact_app_user
@@ -2421,7 +2408,7 @@ ALTER TABLE ONLY org.contact_app_user
 
 
 --
--- Name: facility pk_facility; Type: CONSTRAINT; Schema: org; Owner: postgres
+-- Name: facility pk_facility; Type: CONSTRAINT; Schema: org; Owner: app
 --
 
 ALTER TABLE ONLY org.facility
@@ -2429,7 +2416,7 @@ ALTER TABLE ONLY org.facility
 
 
 --
--- Name: location pk_location; Type: CONSTRAINT; Schema: org; Owner: postgres
+-- Name: location pk_location; Type: CONSTRAINT; Schema: org; Owner: app
 --
 
 ALTER TABLE ONLY org.location
@@ -2437,7 +2424,7 @@ ALTER TABLE ONLY org.location
 
 
 --
--- Name: organization pk_organization; Type: CONSTRAINT; Schema: org; Owner: postgres
+-- Name: organization pk_organization; Type: CONSTRAINT; Schema: org; Owner: app
 --
 
 ALTER TABLE ONLY org.organization
@@ -2445,7 +2432,7 @@ ALTER TABLE ONLY org.organization
 
 
 --
--- Name: organization uq_app_tenant_external_id; Type: CONSTRAINT; Schema: org; Owner: postgres
+-- Name: organization uq_app_tenant_external_id; Type: CONSTRAINT; Schema: org; Owner: app
 --
 
 ALTER TABLE ONLY org.organization
@@ -2453,7 +2440,7 @@ ALTER TABLE ONLY org.organization
 
 
 --
--- Name: contact uq_contact_app_tenant_and_email; Type: CONSTRAINT; Schema: org; Owner: postgres
+-- Name: contact uq_contact_app_tenant_and_email; Type: CONSTRAINT; Schema: org; Owner: app
 --
 
 ALTER TABLE ONLY org.contact
@@ -2461,7 +2448,7 @@ ALTER TABLE ONLY org.contact
 
 
 --
--- Name: contact uq_contact_app_tenant_and_external_id; Type: CONSTRAINT; Schema: org; Owner: postgres
+-- Name: contact uq_contact_app_tenant_and_external_id; Type: CONSTRAINT; Schema: org; Owner: app
 --
 
 ALTER TABLE ONLY org.contact
@@ -2469,7 +2456,7 @@ ALTER TABLE ONLY org.contact
 
 
 --
--- Name: facility uq_facility_app_tenant_and_organization_and_name; Type: CONSTRAINT; Schema: org; Owner: postgres
+-- Name: facility uq_facility_app_tenant_and_organization_and_name; Type: CONSTRAINT; Schema: org; Owner: app
 --
 
 ALTER TABLE ONLY org.facility
@@ -2477,7 +2464,7 @@ ALTER TABLE ONLY org.facility
 
 
 --
--- Name: location uq_location_app_tenant_and_external_id; Type: CONSTRAINT; Schema: org; Owner: postgres
+-- Name: location uq_location_app_tenant_and_external_id; Type: CONSTRAINT; Schema: org; Owner: app
 --
 
 ALTER TABLE ONLY org.location
@@ -2485,119 +2472,119 @@ ALTER TABLE ONLY org.location
 
 
 --
--- Name: application tg_timestamp_update_application; Type: TRIGGER; Schema: app; Owner: postgres
+-- Name: application tg_timestamp_update_application; Type: TRIGGER; Schema: app; Owner: app
 --
 
 CREATE TRIGGER tg_timestamp_update_application BEFORE INSERT OR UPDATE ON app.application FOR EACH ROW EXECUTE PROCEDURE app.fn_timestamp_update_application();
 
 
 --
--- Name: license tg_timestamp_update_license; Type: TRIGGER; Schema: app; Owner: postgres
+-- Name: license tg_timestamp_update_license; Type: TRIGGER; Schema: app; Owner: app
 --
 
 CREATE TRIGGER tg_timestamp_update_license BEFORE INSERT OR UPDATE ON app.license FOR EACH ROW EXECUTE PROCEDURE app.fn_timestamp_update_license();
 
 
 --
--- Name: license_permission tg_timestamp_update_license_permission; Type: TRIGGER; Schema: app; Owner: postgres
+-- Name: license_permission tg_timestamp_update_license_permission; Type: TRIGGER; Schema: app; Owner: app
 --
 
 CREATE TRIGGER tg_timestamp_update_license_permission BEFORE INSERT OR UPDATE ON app.license_permission FOR EACH ROW EXECUTE PROCEDURE app.fn_timestamp_update_license_permission();
 
 
 --
--- Name: license_type tg_timestamp_update_license_type; Type: TRIGGER; Schema: app; Owner: postgres
+-- Name: license_type tg_timestamp_update_license_type; Type: TRIGGER; Schema: app; Owner: app
 --
 
 CREATE TRIGGER tg_timestamp_update_license_type BEFORE INSERT OR UPDATE ON app.license_type FOR EACH ROW EXECUTE PROCEDURE app.fn_timestamp_update_license_type();
 
 
 --
--- Name: license_type_permission tg_timestamp_update_license_type_permission; Type: TRIGGER; Schema: app; Owner: postgres
+-- Name: license_type_permission tg_timestamp_update_license_type_permission; Type: TRIGGER; Schema: app; Owner: app
 --
 
 CREATE TRIGGER tg_timestamp_update_license_type_permission BEFORE INSERT OR UPDATE ON app.license_type_permission FOR EACH ROW EXECUTE PROCEDURE app.fn_timestamp_update_license_type_permission();
 
 
 --
--- Name: app_tenant tg_timestamp_update_app_tenant; Type: TRIGGER; Schema: auth; Owner: postgres
+-- Name: app_tenant tg_timestamp_update_app_tenant; Type: TRIGGER; Schema: auth; Owner: app
 --
 
 CREATE TRIGGER tg_timestamp_update_app_tenant BEFORE INSERT OR UPDATE ON auth.app_tenant FOR EACH ROW EXECUTE PROCEDURE auth.fn_timestamp_update_app_tenant();
 
 
 --
--- Name: app_user tg_timestamp_update_app_user; Type: TRIGGER; Schema: auth; Owner: postgres
+-- Name: app_user tg_timestamp_update_app_user; Type: TRIGGER; Schema: auth; Owner: app
 --
 
 CREATE TRIGGER tg_timestamp_update_app_user BEFORE INSERT OR UPDATE ON auth.app_user FOR EACH ROW EXECUTE PROCEDURE auth.fn_timestamp_update_app_user();
 
 
 --
--- Name: permission tg_timestamp_update_permission; Type: TRIGGER; Schema: auth; Owner: postgres
+-- Name: permission tg_timestamp_update_permission; Type: TRIGGER; Schema: auth; Owner: app
 --
 
 CREATE TRIGGER tg_timestamp_update_permission BEFORE INSERT OR UPDATE ON auth.permission FOR EACH ROW EXECUTE PROCEDURE auth.fn_timestamp_update_permission();
 
 
 --
--- Name: inventory_lot tg_timestamp_update_inventory_lot; Type: TRIGGER; Schema: lcb; Owner: postgres
+-- Name: inventory_lot tg_timestamp_update_inventory_lot; Type: TRIGGER; Schema: lcb; Owner: app
 --
 
 CREATE TRIGGER tg_timestamp_update_inventory_lot BEFORE INSERT OR UPDATE ON lcb.inventory_lot FOR EACH ROW EXECUTE PROCEDURE lcb.fn_timestamp_update_inventory_lot();
 
 
 --
--- Name: lcb_license tg_timestamp_update_lcb_license; Type: TRIGGER; Schema: lcb; Owner: postgres
+-- Name: lcb_license tg_timestamp_update_lcb_license; Type: TRIGGER; Schema: lcb; Owner: app
 --
 
 CREATE TRIGGER tg_timestamp_update_lcb_license BEFORE INSERT OR UPDATE ON lcb.lcb_license FOR EACH ROW EXECUTE PROCEDURE lcb.fn_timestamp_update_lcb_license();
 
 
 --
--- Name: lcb_license_holder tg_timestamp_update_lcb_license_holder; Type: TRIGGER; Schema: lcb; Owner: postgres
+-- Name: lcb_license_holder tg_timestamp_update_lcb_license_holder; Type: TRIGGER; Schema: lcb; Owner: app
 --
 
 CREATE TRIGGER tg_timestamp_update_lcb_license_holder BEFORE INSERT OR UPDATE ON lcb.lcb_license_holder FOR EACH ROW EXECUTE PROCEDURE lcb.fn_timestamp_update_lcb_license_holder();
 
 
 --
--- Name: contact tg_timestamp_update_contact; Type: TRIGGER; Schema: org; Owner: postgres
+-- Name: contact tg_timestamp_update_contact; Type: TRIGGER; Schema: org; Owner: app
 --
 
 CREATE TRIGGER tg_timestamp_update_contact BEFORE INSERT OR UPDATE ON org.contact FOR EACH ROW EXECUTE PROCEDURE org.fn_timestamp_update_contact();
 
 
 --
--- Name: contact_app_user tg_timestamp_update_contact_app_user; Type: TRIGGER; Schema: org; Owner: postgres
+-- Name: contact_app_user tg_timestamp_update_contact_app_user; Type: TRIGGER; Schema: org; Owner: app
 --
 
 CREATE TRIGGER tg_timestamp_update_contact_app_user BEFORE INSERT OR UPDATE ON org.contact_app_user FOR EACH ROW EXECUTE PROCEDURE org.fn_timestamp_update_contact_app_user();
 
 
 --
--- Name: facility tg_timestamp_update_facility; Type: TRIGGER; Schema: org; Owner: postgres
+-- Name: facility tg_timestamp_update_facility; Type: TRIGGER; Schema: org; Owner: app
 --
 
 CREATE TRIGGER tg_timestamp_update_facility BEFORE INSERT OR UPDATE ON org.facility FOR EACH ROW EXECUTE PROCEDURE org.fn_timestamp_update_facility();
 
 
 --
--- Name: location tg_timestamp_update_location; Type: TRIGGER; Schema: org; Owner: postgres
+-- Name: location tg_timestamp_update_location; Type: TRIGGER; Schema: org; Owner: app
 --
 
 CREATE TRIGGER tg_timestamp_update_location BEFORE INSERT OR UPDATE ON org.location FOR EACH ROW EXECUTE PROCEDURE org.fn_timestamp_update_location();
 
 
 --
--- Name: organization tg_timestamp_update_organization; Type: TRIGGER; Schema: org; Owner: postgres
+-- Name: organization tg_timestamp_update_organization; Type: TRIGGER; Schema: org; Owner: app
 --
 
 CREATE TRIGGER tg_timestamp_update_organization BEFORE INSERT OR UPDATE ON org.organization FOR EACH ROW EXECUTE PROCEDURE org.fn_timestamp_update_organization();
 
 
 --
--- Name: license fk_license_app_tenant; Type: FK CONSTRAINT; Schema: app; Owner: postgres
+-- Name: license fk_license_app_tenant; Type: FK CONSTRAINT; Schema: app; Owner: app
 --
 
 ALTER TABLE ONLY app.license
@@ -2605,7 +2592,7 @@ ALTER TABLE ONLY app.license
 
 
 --
--- Name: license fk_license_assigned_to_app_user; Type: FK CONSTRAINT; Schema: app; Owner: postgres
+-- Name: license fk_license_assigned_to_app_user; Type: FK CONSTRAINT; Schema: app; Owner: app
 --
 
 ALTER TABLE ONLY app.license
@@ -2613,7 +2600,7 @@ ALTER TABLE ONLY app.license
 
 
 --
--- Name: license fk_license_license_type; Type: FK CONSTRAINT; Schema: app; Owner: postgres
+-- Name: license fk_license_license_type; Type: FK CONSTRAINT; Schema: app; Owner: app
 --
 
 ALTER TABLE ONLY app.license
@@ -2621,7 +2608,7 @@ ALTER TABLE ONLY app.license
 
 
 --
--- Name: license fk_license_permission_app_tenant; Type: FK CONSTRAINT; Schema: app; Owner: postgres
+-- Name: license fk_license_permission_app_tenant; Type: FK CONSTRAINT; Schema: app; Owner: app
 --
 
 ALTER TABLE ONLY app.license
@@ -2629,7 +2616,7 @@ ALTER TABLE ONLY app.license
 
 
 --
--- Name: license_permission fk_license_permission_license; Type: FK CONSTRAINT; Schema: app; Owner: postgres
+-- Name: license_permission fk_license_permission_license; Type: FK CONSTRAINT; Schema: app; Owner: app
 --
 
 ALTER TABLE ONLY app.license_permission
@@ -2637,7 +2624,7 @@ ALTER TABLE ONLY app.license_permission
 
 
 --
--- Name: license_permission fk_license_permission_permission; Type: FK CONSTRAINT; Schema: app; Owner: postgres
+-- Name: license_permission fk_license_permission_permission; Type: FK CONSTRAINT; Schema: app; Owner: app
 --
 
 ALTER TABLE ONLY app.license_permission
@@ -2645,7 +2632,7 @@ ALTER TABLE ONLY app.license_permission
 
 
 --
--- Name: license_type fk_license_type_application; Type: FK CONSTRAINT; Schema: app; Owner: postgres
+-- Name: license_type fk_license_type_application; Type: FK CONSTRAINT; Schema: app; Owner: app
 --
 
 ALTER TABLE ONLY app.license_type
@@ -2653,7 +2640,7 @@ ALTER TABLE ONLY app.license_type
 
 
 --
--- Name: license_type_permission fk_license_type_permission_license_type; Type: FK CONSTRAINT; Schema: app; Owner: postgres
+-- Name: license_type_permission fk_license_type_permission_license_type; Type: FK CONSTRAINT; Schema: app; Owner: app
 --
 
 ALTER TABLE ONLY app.license_type_permission
@@ -2661,7 +2648,7 @@ ALTER TABLE ONLY app.license_type_permission
 
 
 --
--- Name: license_type_permission fk_license_type_permission_permission; Type: FK CONSTRAINT; Schema: app; Owner: postgres
+-- Name: license_type_permission fk_license_type_permission_permission; Type: FK CONSTRAINT; Schema: app; Owner: app
 --
 
 ALTER TABLE ONLY app.license_type_permission
@@ -2669,7 +2656,7 @@ ALTER TABLE ONLY app.license_type_permission
 
 
 --
--- Name: app_user fk_app_user_app_tenant; Type: FK CONSTRAINT; Schema: auth; Owner: postgres
+-- Name: app_user fk_app_user_app_tenant; Type: FK CONSTRAINT; Schema: auth; Owner: app
 --
 
 ALTER TABLE ONLY auth.app_user
@@ -2677,7 +2664,7 @@ ALTER TABLE ONLY auth.app_user
 
 
 --
--- Name: token fk_token_user; Type: FK CONSTRAINT; Schema: auth; Owner: postgres
+-- Name: token fk_token_user; Type: FK CONSTRAINT; Schema: auth; Owner: app
 --
 
 ALTER TABLE ONLY auth.token
@@ -2685,7 +2672,7 @@ ALTER TABLE ONLY auth.token
 
 
 --
--- Name: inventory_lot fk_inventory_lot_app_tenant_id; Type: FK CONSTRAINT; Schema: lcb; Owner: postgres
+-- Name: inventory_lot fk_inventory_lot_app_tenant_id; Type: FK CONSTRAINT; Schema: lcb; Owner: app
 --
 
 ALTER TABLE ONLY lcb.inventory_lot
@@ -2693,7 +2680,7 @@ ALTER TABLE ONLY lcb.inventory_lot
 
 
 --
--- Name: inventory_lot fk_inventory_lot_lcb_license_holder; Type: FK CONSTRAINT; Schema: lcb; Owner: postgres
+-- Name: inventory_lot fk_inventory_lot_lcb_license_holder; Type: FK CONSTRAINT; Schema: lcb; Owner: app
 --
 
 ALTER TABLE ONLY lcb.inventory_lot
@@ -2701,7 +2688,7 @@ ALTER TABLE ONLY lcb.inventory_lot
 
 
 --
--- Name: lcb_license_holder fk_lcb_license_holder_app_tenant_id; Type: FK CONSTRAINT; Schema: lcb; Owner: postgres
+-- Name: lcb_license_holder fk_lcb_license_holder_app_tenant_id; Type: FK CONSTRAINT; Schema: lcb; Owner: app
 --
 
 ALTER TABLE ONLY lcb.lcb_license_holder
@@ -2709,7 +2696,7 @@ ALTER TABLE ONLY lcb.lcb_license_holder
 
 
 --
--- Name: lcb_license_holder fk_lcb_license_holder_license; Type: FK CONSTRAINT; Schema: lcb; Owner: postgres
+-- Name: lcb_license_holder fk_lcb_license_holder_license; Type: FK CONSTRAINT; Schema: lcb; Owner: app
 --
 
 ALTER TABLE ONLY lcb.lcb_license_holder
@@ -2717,7 +2704,7 @@ ALTER TABLE ONLY lcb.lcb_license_holder
 
 
 --
--- Name: lcb_license_holder fk_lcb_license_holder_organization; Type: FK CONSTRAINT; Schema: lcb; Owner: postgres
+-- Name: lcb_license_holder fk_lcb_license_holder_organization; Type: FK CONSTRAINT; Schema: lcb; Owner: app
 --
 
 ALTER TABLE ONLY lcb.lcb_license_holder
@@ -2725,7 +2712,7 @@ ALTER TABLE ONLY lcb.lcb_license_holder
 
 
 --
--- Name: contact fk_contact_app_tenant; Type: FK CONSTRAINT; Schema: org; Owner: postgres
+-- Name: contact fk_contact_app_tenant; Type: FK CONSTRAINT; Schema: org; Owner: app
 --
 
 ALTER TABLE ONLY org.contact
@@ -2733,7 +2720,7 @@ ALTER TABLE ONLY org.contact
 
 
 --
--- Name: contact_app_user fk_contact_app_user_app_tenant; Type: FK CONSTRAINT; Schema: org; Owner: postgres
+-- Name: contact_app_user fk_contact_app_user_app_tenant; Type: FK CONSTRAINT; Schema: org; Owner: app
 --
 
 ALTER TABLE ONLY org.contact_app_user
@@ -2741,7 +2728,7 @@ ALTER TABLE ONLY org.contact_app_user
 
 
 --
--- Name: contact_app_user fk_contact_app_user_app_user; Type: FK CONSTRAINT; Schema: org; Owner: postgres
+-- Name: contact_app_user fk_contact_app_user_app_user; Type: FK CONSTRAINT; Schema: org; Owner: app
 --
 
 ALTER TABLE ONLY org.contact_app_user
@@ -2749,7 +2736,7 @@ ALTER TABLE ONLY org.contact_app_user
 
 
 --
--- Name: contact_app_user fk_contact_app_user_contact; Type: FK CONSTRAINT; Schema: org; Owner: postgres
+-- Name: contact_app_user fk_contact_app_user_contact; Type: FK CONSTRAINT; Schema: org; Owner: app
 --
 
 ALTER TABLE ONLY org.contact_app_user
@@ -2757,7 +2744,7 @@ ALTER TABLE ONLY org.contact_app_user
 
 
 --
--- Name: contact fk_contact_location; Type: FK CONSTRAINT; Schema: org; Owner: postgres
+-- Name: contact fk_contact_location; Type: FK CONSTRAINT; Schema: org; Owner: app
 --
 
 ALTER TABLE ONLY org.contact
@@ -2765,7 +2752,7 @@ ALTER TABLE ONLY org.contact
 
 
 --
--- Name: contact fk_contact_organization; Type: FK CONSTRAINT; Schema: org; Owner: postgres
+-- Name: contact fk_contact_organization; Type: FK CONSTRAINT; Schema: org; Owner: app
 --
 
 ALTER TABLE ONLY org.contact
@@ -2773,7 +2760,7 @@ ALTER TABLE ONLY org.contact
 
 
 --
--- Name: facility fk_facility_app_tenant; Type: FK CONSTRAINT; Schema: org; Owner: postgres
+-- Name: facility fk_facility_app_tenant; Type: FK CONSTRAINT; Schema: org; Owner: app
 --
 
 ALTER TABLE ONLY org.facility
@@ -2781,7 +2768,7 @@ ALTER TABLE ONLY org.facility
 
 
 --
--- Name: facility fk_facility_location; Type: FK CONSTRAINT; Schema: org; Owner: postgres
+-- Name: facility fk_facility_location; Type: FK CONSTRAINT; Schema: org; Owner: app
 --
 
 ALTER TABLE ONLY org.facility
@@ -2789,7 +2776,7 @@ ALTER TABLE ONLY org.facility
 
 
 --
--- Name: facility fk_facility_organization; Type: FK CONSTRAINT; Schema: org; Owner: postgres
+-- Name: facility fk_facility_organization; Type: FK CONSTRAINT; Schema: org; Owner: app
 --
 
 ALTER TABLE ONLY org.facility
@@ -2797,7 +2784,7 @@ ALTER TABLE ONLY org.facility
 
 
 --
--- Name: location fk_location_app_tenant; Type: FK CONSTRAINT; Schema: org; Owner: postgres
+-- Name: location fk_location_app_tenant; Type: FK CONSTRAINT; Schema: org; Owner: app
 --
 
 ALTER TABLE ONLY org.location
@@ -2805,7 +2792,7 @@ ALTER TABLE ONLY org.location
 
 
 --
--- Name: organization fk_organization_actual_app_tenant; Type: FK CONSTRAINT; Schema: org; Owner: postgres
+-- Name: organization fk_organization_actual_app_tenant; Type: FK CONSTRAINT; Schema: org; Owner: app
 --
 
 ALTER TABLE ONLY org.organization
@@ -2813,7 +2800,7 @@ ALTER TABLE ONLY org.organization
 
 
 --
--- Name: organization fk_organization_app_tenant; Type: FK CONSTRAINT; Schema: org; Owner: postgres
+-- Name: organization fk_organization_app_tenant; Type: FK CONSTRAINT; Schema: org; Owner: app
 --
 
 ALTER TABLE ONLY org.organization
@@ -2821,7 +2808,7 @@ ALTER TABLE ONLY org.organization
 
 
 --
--- Name: organization fk_organization_location; Type: FK CONSTRAINT; Schema: org; Owner: postgres
+-- Name: organization fk_organization_location; Type: FK CONSTRAINT; Schema: org; Owner: app
 --
 
 ALTER TABLE ONLY org.organization
@@ -2829,7 +2816,7 @@ ALTER TABLE ONLY org.organization
 
 
 --
--- Name: organization fk_organization_primary_contact; Type: FK CONSTRAINT; Schema: org; Owner: postgres
+-- Name: organization fk_organization_primary_contact; Type: FK CONSTRAINT; Schema: org; Owner: app
 --
 
 ALTER TABLE ONLY org.organization
@@ -2837,144 +2824,144 @@ ALTER TABLE ONLY org.organization
 
 
 --
--- Name: license; Type: ROW SECURITY; Schema: app; Owner: postgres
+-- Name: license; Type: ROW SECURITY; Schema: app; Owner: app
 --
 
 ALTER TABLE app.license ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: license_permission; Type: ROW SECURITY; Schema: app; Owner: postgres
+-- Name: license_permission; Type: ROW SECURITY; Schema: app; Owner: app
 --
 
 ALTER TABLE app.license_permission ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: license rls_app_user_default_app_license; Type: POLICY; Schema: app; Owner: postgres
+-- Name: license rls_app_user_default_app_license; Type: POLICY; Schema: app; Owner: app
 --
 
 CREATE POLICY rls_app_user_default_app_license ON app.license TO app_user USING ((auth_fn.app_user_has_access(app_tenant_id) = true));
 
 
 --
--- Name: license_permission rls_app_user_default_app_license_permission; Type: POLICY; Schema: app; Owner: postgres
+-- Name: license_permission rls_app_user_default_app_license_permission; Type: POLICY; Schema: app; Owner: app
 --
 
 CREATE POLICY rls_app_user_default_app_license_permission ON app.license_permission TO app_user USING ((auth_fn.app_user_has_access(app_tenant_id) = true));
 
 
 --
--- Name: app_tenant; Type: ROW SECURITY; Schema: auth; Owner: postgres
+-- Name: app_tenant; Type: ROW SECURITY; Schema: auth; Owner: app
 --
 
 ALTER TABLE auth.app_tenant ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: app_user; Type: ROW SECURITY; Schema: auth; Owner: postgres
+-- Name: app_user; Type: ROW SECURITY; Schema: auth; Owner: app
 --
 
 ALTER TABLE auth.app_user ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: app_user rls_app_user_default_auth_app_user; Type: POLICY; Schema: auth; Owner: postgres
+-- Name: app_user rls_app_user_default_auth_app_user; Type: POLICY; Schema: auth; Owner: app
 --
 
 CREATE POLICY rls_app_user_default_auth_app_user ON auth.app_user TO app_user USING ((auth_fn.app_user_has_access(app_tenant_id) = true));
 
 
 --
--- Name: app_tenant rls_auth_app_tenant_auth_app_tenant; Type: POLICY; Schema: auth; Owner: postgres
+-- Name: app_tenant rls_auth_app_tenant_auth_app_tenant; Type: POLICY; Schema: auth; Owner: app
 --
 
 CREATE POLICY rls_auth_app_tenant_auth_app_tenant ON auth.app_tenant TO app_user USING ((auth_fn.app_user_has_access(id) = true));
 
 
 --
--- Name: inventory_lot; Type: ROW SECURITY; Schema: lcb; Owner: postgres
+-- Name: inventory_lot; Type: ROW SECURITY; Schema: lcb; Owner: app
 --
 
 ALTER TABLE lcb.inventory_lot ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: inventory_lot rls_app_user_default_lcb_inventory_lot; Type: POLICY; Schema: lcb; Owner: postgres
+-- Name: inventory_lot rls_app_user_default_lcb_inventory_lot; Type: POLICY; Schema: lcb; Owner: app
 --
 
 CREATE POLICY rls_app_user_default_lcb_inventory_lot ON lcb.inventory_lot TO app_user USING ((auth_fn.app_user_has_access(app_tenant_id) = true));
 
 
 --
--- Name: contact; Type: ROW SECURITY; Schema: org; Owner: postgres
+-- Name: contact; Type: ROW SECURITY; Schema: org; Owner: app
 --
 
 ALTER TABLE org.contact ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: contact_app_user; Type: ROW SECURITY; Schema: org; Owner: postgres
+-- Name: contact_app_user; Type: ROW SECURITY; Schema: org; Owner: app
 --
 
 ALTER TABLE org.contact_app_user ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: facility; Type: ROW SECURITY; Schema: org; Owner: postgres
+-- Name: facility; Type: ROW SECURITY; Schema: org; Owner: app
 --
 
 ALTER TABLE org.facility ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: location; Type: ROW SECURITY; Schema: org; Owner: postgres
+-- Name: location; Type: ROW SECURITY; Schema: org; Owner: app
 --
 
 ALTER TABLE org.location ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: organization; Type: ROW SECURITY; Schema: org; Owner: postgres
+-- Name: organization; Type: ROW SECURITY; Schema: org; Owner: app
 --
 
 ALTER TABLE org.organization ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: contact rls_app_user_default_org_contact; Type: POLICY; Schema: org; Owner: postgres
+-- Name: contact rls_app_user_default_org_contact; Type: POLICY; Schema: org; Owner: app
 --
 
 CREATE POLICY rls_app_user_default_org_contact ON org.contact TO app_user USING ((auth_fn.app_user_has_access(app_tenant_id) = true));
 
 
 --
--- Name: contact_app_user rls_app_user_default_org_contact_app_user; Type: POLICY; Schema: org; Owner: postgres
+-- Name: contact_app_user rls_app_user_default_org_contact_app_user; Type: POLICY; Schema: org; Owner: app
 --
 
 CREATE POLICY rls_app_user_default_org_contact_app_user ON org.contact_app_user TO app_user USING ((auth_fn.app_user_has_access(app_tenant_id) = true));
 
 
 --
--- Name: facility rls_app_user_default_org_facility; Type: POLICY; Schema: org; Owner: postgres
+-- Name: facility rls_app_user_default_org_facility; Type: POLICY; Schema: org; Owner: app
 --
 
 CREATE POLICY rls_app_user_default_org_facility ON org.facility TO app_user USING ((auth_fn.app_user_has_access(app_tenant_id) = true));
 
 
 --
--- Name: location rls_app_user_default_org_location; Type: POLICY; Schema: org; Owner: postgres
+-- Name: location rls_app_user_default_org_location; Type: POLICY; Schema: org; Owner: app
 --
 
 CREATE POLICY rls_app_user_default_org_location ON org.location TO app_user USING ((auth_fn.app_user_has_access(app_tenant_id) = true));
 
 
 --
--- Name: organization rls_app_user_default_org_organization; Type: POLICY; Schema: org; Owner: postgres
+-- Name: organization rls_app_user_default_org_organization; Type: POLICY; Schema: org; Owner: app
 --
 
 CREATE POLICY rls_app_user_default_org_organization ON org.organization TO app_user USING ((auth_fn.app_user_has_access(app_tenant_id) = true));
 
 
 --
--- Name: SCHEMA app; Type: ACL; Schema: -; Owner: postgres
+-- Name: SCHEMA app; Type: ACL; Schema: -; Owner: app
 --
 
 GRANT USAGE ON SCHEMA app TO app_user;
 
 
 --
--- Name: SCHEMA auth; Type: ACL; Schema: -; Owner: postgres
+-- Name: SCHEMA auth; Type: ACL; Schema: -; Owner: app
 --
 
 GRANT USAGE ON SCHEMA auth TO app_user;
@@ -2982,7 +2969,7 @@ GRANT USAGE ON SCHEMA auth TO app_anonymous;
 
 
 --
--- Name: SCHEMA auth_fn; Type: ACL; Schema: -; Owner: postgres
+-- Name: SCHEMA auth_fn; Type: ACL; Schema: -; Owner: app
 --
 
 GRANT USAGE ON SCHEMA auth_fn TO app_user;
@@ -2990,56 +2977,56 @@ GRANT USAGE ON SCHEMA auth_fn TO app_anonymous;
 
 
 --
--- Name: SCHEMA lcb; Type: ACL; Schema: -; Owner: postgres
+-- Name: SCHEMA lcb; Type: ACL; Schema: -; Owner: app
 --
 
 GRANT USAGE ON SCHEMA lcb TO app_user;
 
 
 --
--- Name: SCHEMA lcb_fn; Type: ACL; Schema: -; Owner: postgres
+-- Name: SCHEMA lcb_fn; Type: ACL; Schema: -; Owner: app
 --
 
 GRANT USAGE ON SCHEMA lcb_fn TO app_user;
 
 
 --
--- Name: SCHEMA lcb_hist; Type: ACL; Schema: -; Owner: postgres
+-- Name: SCHEMA lcb_hist; Type: ACL; Schema: -; Owner: app
 --
 
 GRANT USAGE ON SCHEMA lcb_hist TO app_user;
 
 
 --
--- Name: SCHEMA org; Type: ACL; Schema: -; Owner: postgres
+-- Name: SCHEMA org; Type: ACL; Schema: -; Owner: app
 --
 
 GRANT USAGE ON SCHEMA org TO app_user;
 
 
 --
--- Name: SCHEMA org_fn; Type: ACL; Schema: -; Owner: postgres
+-- Name: SCHEMA org_fn; Type: ACL; Schema: -; Owner: app
 --
 
 GRANT USAGE ON SCHEMA org_fn TO app_user;
 
 
 --
--- Name: SCHEMA shard_1; Type: ACL; Schema: -; Owner: postgres
+-- Name: SCHEMA shard_1; Type: ACL; Schema: -; Owner: app
 --
 
 GRANT USAGE ON SCHEMA shard_1 TO app_user;
 
 
 --
--- Name: SCHEMA util_fn; Type: ACL; Schema: -; Owner: postgres
+-- Name: SCHEMA util_fn; Type: ACL; Schema: -; Owner: app
 --
 
 GRANT USAGE ON SCHEMA util_fn TO app_demon;
 
 
 --
--- Name: FUNCTION fn_timestamp_update_application(); Type: ACL; Schema: app; Owner: postgres
+-- Name: FUNCTION fn_timestamp_update_application(); Type: ACL; Schema: app; Owner: app
 --
 
 REVOKE ALL ON FUNCTION app.fn_timestamp_update_application() FROM PUBLIC;
@@ -3047,7 +3034,7 @@ GRANT ALL ON FUNCTION app.fn_timestamp_update_application() TO app_user;
 
 
 --
--- Name: FUNCTION fn_timestamp_update_license(); Type: ACL; Schema: app; Owner: postgres
+-- Name: FUNCTION fn_timestamp_update_license(); Type: ACL; Schema: app; Owner: app
 --
 
 REVOKE ALL ON FUNCTION app.fn_timestamp_update_license() FROM PUBLIC;
@@ -3055,7 +3042,7 @@ GRANT ALL ON FUNCTION app.fn_timestamp_update_license() TO app_user;
 
 
 --
--- Name: FUNCTION fn_timestamp_update_license_permission(); Type: ACL; Schema: app; Owner: postgres
+-- Name: FUNCTION fn_timestamp_update_license_permission(); Type: ACL; Schema: app; Owner: app
 --
 
 REVOKE ALL ON FUNCTION app.fn_timestamp_update_license_permission() FROM PUBLIC;
@@ -3063,7 +3050,7 @@ GRANT ALL ON FUNCTION app.fn_timestamp_update_license_permission() TO app_user;
 
 
 --
--- Name: FUNCTION fn_timestamp_update_license_type(); Type: ACL; Schema: app; Owner: postgres
+-- Name: FUNCTION fn_timestamp_update_license_type(); Type: ACL; Schema: app; Owner: app
 --
 
 REVOKE ALL ON FUNCTION app.fn_timestamp_update_license_type() FROM PUBLIC;
@@ -3071,7 +3058,7 @@ GRANT ALL ON FUNCTION app.fn_timestamp_update_license_type() TO app_user;
 
 
 --
--- Name: FUNCTION fn_timestamp_update_license_type_permission(); Type: ACL; Schema: app; Owner: postgres
+-- Name: FUNCTION fn_timestamp_update_license_type_permission(); Type: ACL; Schema: app; Owner: app
 --
 
 REVOKE ALL ON FUNCTION app.fn_timestamp_update_license_type_permission() FROM PUBLIC;
@@ -3079,7 +3066,7 @@ GRANT ALL ON FUNCTION app.fn_timestamp_update_license_type_permission() TO app_u
 
 
 --
--- Name: FUNCTION fn_timestamp_update_app_tenant(); Type: ACL; Schema: auth; Owner: postgres
+-- Name: FUNCTION fn_timestamp_update_app_tenant(); Type: ACL; Schema: auth; Owner: app
 --
 
 REVOKE ALL ON FUNCTION auth.fn_timestamp_update_app_tenant() FROM PUBLIC;
@@ -3087,7 +3074,7 @@ GRANT ALL ON FUNCTION auth.fn_timestamp_update_app_tenant() TO app_user;
 
 
 --
--- Name: FUNCTION fn_timestamp_update_app_user(); Type: ACL; Schema: auth; Owner: postgres
+-- Name: FUNCTION fn_timestamp_update_app_user(); Type: ACL; Schema: auth; Owner: app
 --
 
 REVOKE ALL ON FUNCTION auth.fn_timestamp_update_app_user() FROM PUBLIC;
@@ -3095,7 +3082,7 @@ GRANT ALL ON FUNCTION auth.fn_timestamp_update_app_user() TO app_user;
 
 
 --
--- Name: FUNCTION fn_timestamp_update_permission(); Type: ACL; Schema: auth; Owner: postgres
+-- Name: FUNCTION fn_timestamp_update_permission(); Type: ACL; Schema: auth; Owner: app
 --
 
 REVOKE ALL ON FUNCTION auth.fn_timestamp_update_permission() FROM PUBLIC;
@@ -3103,7 +3090,7 @@ GRANT ALL ON FUNCTION auth.fn_timestamp_update_permission() TO app_user;
 
 
 --
--- Name: FUNCTION app_user_has_access(_app_tenant_id text, _permission_key text); Type: ACL; Schema: auth_fn; Owner: postgres
+-- Name: FUNCTION app_user_has_access(_app_tenant_id text, _permission_key text); Type: ACL; Schema: auth_fn; Owner: app
 --
 
 REVOKE ALL ON FUNCTION auth_fn.app_user_has_access(_app_tenant_id text, _permission_key text) FROM PUBLIC;
@@ -3111,7 +3098,7 @@ GRANT ALL ON FUNCTION auth_fn.app_user_has_access(_app_tenant_id text, _permissi
 
 
 --
--- Name: FUNCTION authenticate(_username text, _password text); Type: ACL; Schema: auth_fn; Owner: postgres
+-- Name: FUNCTION authenticate(_username text, _password text); Type: ACL; Schema: auth_fn; Owner: app
 --
 
 REVOKE ALL ON FUNCTION auth_fn.authenticate(_username text, _password text) FROM PUBLIC;
@@ -3119,7 +3106,7 @@ GRANT ALL ON FUNCTION auth_fn.authenticate(_username text, _password text) TO ap
 
 
 --
--- Name: TABLE app_tenant; Type: ACL; Schema: auth; Owner: postgres
+-- Name: TABLE app_tenant; Type: ACL; Schema: auth; Owner: app
 --
 
 GRANT INSERT,DELETE,UPDATE ON TABLE auth.app_tenant TO app_super_admin;
@@ -3127,7 +3114,7 @@ GRANT SELECT ON TABLE auth.app_tenant TO app_user;
 
 
 --
--- Name: FUNCTION build_app_tenant(_name text, _identifier text); Type: ACL; Schema: auth_fn; Owner: postgres
+-- Name: FUNCTION build_app_tenant(_name text, _identifier text); Type: ACL; Schema: auth_fn; Owner: app
 --
 
 REVOKE ALL ON FUNCTION auth_fn.build_app_tenant(_name text, _identifier text) FROM PUBLIC;
@@ -3135,7 +3122,7 @@ GRANT ALL ON FUNCTION auth_fn.build_app_tenant(_name text, _identifier text) TO 
 
 
 --
--- Name: TABLE app_user; Type: ACL; Schema: auth; Owner: postgres
+-- Name: TABLE app_user; Type: ACL; Schema: auth; Owner: app
 --
 
 GRANT INSERT,DELETE ON TABLE auth.app_user TO app_admin;
@@ -3143,7 +3130,7 @@ GRANT SELECT,UPDATE ON TABLE auth.app_user TO app_user;
 
 
 --
--- Name: FUNCTION build_app_user(_app_tenant_id text, _username text, _password text, _recovery_email text, _permission_key auth.permission_key); Type: ACL; Schema: auth_fn; Owner: postgres
+-- Name: FUNCTION build_app_user(_app_tenant_id text, _username text, _password text, _recovery_email text, _permission_key auth.permission_key); Type: ACL; Schema: auth_fn; Owner: app
 --
 
 REVOKE ALL ON FUNCTION auth_fn.build_app_user(_app_tenant_id text, _username text, _password text, _recovery_email text, _permission_key auth.permission_key) FROM PUBLIC;
@@ -3151,7 +3138,7 @@ GRANT ALL ON FUNCTION auth_fn.build_app_user(_app_tenant_id text, _username text
 
 
 --
--- Name: FUNCTION current_app_tenant_id(); Type: ACL; Schema: auth_fn; Owner: postgres
+-- Name: FUNCTION current_app_tenant_id(); Type: ACL; Schema: auth_fn; Owner: app
 --
 
 REVOKE ALL ON FUNCTION auth_fn.current_app_tenant_id() FROM PUBLIC;
@@ -3159,7 +3146,7 @@ GRANT ALL ON FUNCTION auth_fn.current_app_tenant_id() TO app_user;
 
 
 --
--- Name: FUNCTION current_app_user(); Type: ACL; Schema: auth_fn; Owner: postgres
+-- Name: FUNCTION current_app_user(); Type: ACL; Schema: auth_fn; Owner: app
 --
 
 REVOKE ALL ON FUNCTION auth_fn.current_app_user() FROM PUBLIC;
@@ -3167,7 +3154,7 @@ GRANT ALL ON FUNCTION auth_fn.current_app_user() TO app_user;
 
 
 --
--- Name: FUNCTION current_app_user_id(); Type: ACL; Schema: auth_fn; Owner: postgres
+-- Name: FUNCTION current_app_user_id(); Type: ACL; Schema: auth_fn; Owner: app
 --
 
 REVOKE ALL ON FUNCTION auth_fn.current_app_user_id() FROM PUBLIC;
@@ -3175,7 +3162,7 @@ GRANT ALL ON FUNCTION auth_fn.current_app_user_id() TO app_user;
 
 
 --
--- Name: FUNCTION fn_timestamp_update_inventory_lot(); Type: ACL; Schema: lcb; Owner: postgres
+-- Name: FUNCTION fn_timestamp_update_inventory_lot(); Type: ACL; Schema: lcb; Owner: app
 --
 
 REVOKE ALL ON FUNCTION lcb.fn_timestamp_update_inventory_lot() FROM PUBLIC;
@@ -3183,7 +3170,7 @@ GRANT ALL ON FUNCTION lcb.fn_timestamp_update_inventory_lot() TO app_user;
 
 
 --
--- Name: FUNCTION fn_timestamp_update_lcb_license(); Type: ACL; Schema: lcb; Owner: postgres
+-- Name: FUNCTION fn_timestamp_update_lcb_license(); Type: ACL; Schema: lcb; Owner: app
 --
 
 REVOKE ALL ON FUNCTION lcb.fn_timestamp_update_lcb_license() FROM PUBLIC;
@@ -3191,7 +3178,7 @@ GRANT ALL ON FUNCTION lcb.fn_timestamp_update_lcb_license() TO app_user;
 
 
 --
--- Name: FUNCTION fn_timestamp_update_lcb_license_holder(); Type: ACL; Schema: lcb; Owner: postgres
+-- Name: FUNCTION fn_timestamp_update_lcb_license_holder(); Type: ACL; Schema: lcb; Owner: app
 --
 
 REVOKE ALL ON FUNCTION lcb.fn_timestamp_update_lcb_license_holder() FROM PUBLIC;
@@ -3199,7 +3186,22 @@ GRANT ALL ON FUNCTION lcb.fn_timestamp_update_lcb_license_holder() TO app_user;
 
 
 --
--- Name: FUNCTION fn_timestamp_update_contact(); Type: ACL; Schema: org; Owner: postgres
+-- Name: TABLE inventory_lot; Type: ACL; Schema: lcb; Owner: app
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE lcb.inventory_lot TO app_user;
+
+
+--
+-- Name: FUNCTION obtain_ids(_inventory_type text, _number_requested integer); Type: ACL; Schema: lcb_fn; Owner: app
+--
+
+REVOKE ALL ON FUNCTION lcb_fn.obtain_ids(_inventory_type text, _number_requested integer) FROM PUBLIC;
+GRANT ALL ON FUNCTION lcb_fn.obtain_ids(_inventory_type text, _number_requested integer) TO app_user;
+
+
+--
+-- Name: FUNCTION fn_timestamp_update_contact(); Type: ACL; Schema: org; Owner: app
 --
 
 REVOKE ALL ON FUNCTION org.fn_timestamp_update_contact() FROM PUBLIC;
@@ -3207,7 +3209,7 @@ GRANT ALL ON FUNCTION org.fn_timestamp_update_contact() TO app_user;
 
 
 --
--- Name: FUNCTION fn_timestamp_update_contact_app_user(); Type: ACL; Schema: org; Owner: postgres
+-- Name: FUNCTION fn_timestamp_update_contact_app_user(); Type: ACL; Schema: org; Owner: app
 --
 
 REVOKE ALL ON FUNCTION org.fn_timestamp_update_contact_app_user() FROM PUBLIC;
@@ -3215,7 +3217,7 @@ GRANT ALL ON FUNCTION org.fn_timestamp_update_contact_app_user() TO app_user;
 
 
 --
--- Name: FUNCTION fn_timestamp_update_facility(); Type: ACL; Schema: org; Owner: postgres
+-- Name: FUNCTION fn_timestamp_update_facility(); Type: ACL; Schema: org; Owner: app
 --
 
 REVOKE ALL ON FUNCTION org.fn_timestamp_update_facility() FROM PUBLIC;
@@ -3223,7 +3225,7 @@ GRANT ALL ON FUNCTION org.fn_timestamp_update_facility() TO app_user;
 
 
 --
--- Name: FUNCTION fn_timestamp_update_location(); Type: ACL; Schema: org; Owner: postgres
+-- Name: FUNCTION fn_timestamp_update_location(); Type: ACL; Schema: org; Owner: app
 --
 
 REVOKE ALL ON FUNCTION org.fn_timestamp_update_location() FROM PUBLIC;
@@ -3231,7 +3233,7 @@ GRANT ALL ON FUNCTION org.fn_timestamp_update_location() TO app_user;
 
 
 --
--- Name: FUNCTION fn_timestamp_update_organization(); Type: ACL; Schema: org; Owner: postgres
+-- Name: FUNCTION fn_timestamp_update_organization(); Type: ACL; Schema: org; Owner: app
 --
 
 REVOKE ALL ON FUNCTION org.fn_timestamp_update_organization() FROM PUBLIC;
@@ -3239,91 +3241,91 @@ GRANT ALL ON FUNCTION org.fn_timestamp_update_organization() TO app_user;
 
 
 --
--- Name: TABLE contact; Type: ACL; Schema: org; Owner: postgres
+-- Name: TABLE contact; Type: ACL; Schema: org; Owner: app
 --
 
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE org.contact TO app_user;
 
 
 --
--- Name: FUNCTION build_contact(_first_name text, _last_name text, _email text, _cell_phone text, _office_phone text, _title text, _nickname text, _external_id text, _organization_id text); Type: ACL; Schema: org_fn; Owner: postgres
+-- Name: FUNCTION build_contact(_first_name text, _last_name text, _email text, _cell_phone text, _office_phone text, _title text, _nickname text, _external_id text, _organization_id text); Type: ACL; Schema: org_fn; Owner: app
 --
 
 REVOKE ALL ON FUNCTION org_fn.build_contact(_first_name text, _last_name text, _email text, _cell_phone text, _office_phone text, _title text, _nickname text, _external_id text, _organization_id text) FROM PUBLIC;
 
 
 --
--- Name: FUNCTION build_contact_location(_contact_id text, _name text, _address1 text, _address2 text, _city text, _state text, _zip text, _lat text, _lon text); Type: ACL; Schema: org_fn; Owner: postgres
+-- Name: FUNCTION build_contact_location(_contact_id text, _name text, _address1 text, _address2 text, _city text, _state text, _zip text, _lat text, _lon text); Type: ACL; Schema: org_fn; Owner: app
 --
 
 REVOKE ALL ON FUNCTION org_fn.build_contact_location(_contact_id text, _name text, _address1 text, _address2 text, _city text, _state text, _zip text, _lat text, _lon text) FROM PUBLIC;
 
 
 --
--- Name: TABLE facility; Type: ACL; Schema: org; Owner: postgres
+-- Name: TABLE facility; Type: ACL; Schema: org; Owner: app
 --
 
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE org.facility TO app_user;
 
 
 --
--- Name: FUNCTION build_facility(_organization_id text, _name text, _external_id text); Type: ACL; Schema: org_fn; Owner: postgres
+-- Name: FUNCTION build_facility(_organization_id text, _name text, _external_id text); Type: ACL; Schema: org_fn; Owner: app
 --
 
 REVOKE ALL ON FUNCTION org_fn.build_facility(_organization_id text, _name text, _external_id text) FROM PUBLIC;
 
 
 --
--- Name: FUNCTION build_facility_location(_facility_id text, _name text, _address1 text, _address2 text, _city text, _state text, _zip text, _lat text, _lon text); Type: ACL; Schema: org_fn; Owner: postgres
+-- Name: FUNCTION build_facility_location(_facility_id text, _name text, _address1 text, _address2 text, _city text, _state text, _zip text, _lat text, _lon text); Type: ACL; Schema: org_fn; Owner: app
 --
 
 REVOKE ALL ON FUNCTION org_fn.build_facility_location(_facility_id text, _name text, _address1 text, _address2 text, _city text, _state text, _zip text, _lat text, _lon text) FROM PUBLIC;
 
 
 --
--- Name: TABLE location; Type: ACL; Schema: org; Owner: postgres
+-- Name: TABLE location; Type: ACL; Schema: org; Owner: app
 --
 
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE org.location TO app_user;
 
 
 --
--- Name: FUNCTION build_location(_name text, _address1 text, _address2 text, _city text, _state text, _zip text, _lat text, _lon text); Type: ACL; Schema: org_fn; Owner: postgres
+-- Name: FUNCTION build_location(_name text, _address1 text, _address2 text, _city text, _state text, _zip text, _lat text, _lon text); Type: ACL; Schema: org_fn; Owner: app
 --
 
 REVOKE ALL ON FUNCTION org_fn.build_location(_name text, _address1 text, _address2 text, _city text, _state text, _zip text, _lat text, _lon text) FROM PUBLIC;
 
 
 --
--- Name: TABLE organization; Type: ACL; Schema: org; Owner: postgres
+-- Name: TABLE organization; Type: ACL; Schema: org; Owner: app
 --
 
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE org.organization TO app_user;
 
 
 --
--- Name: FUNCTION build_organization(_name text, _external_id text); Type: ACL; Schema: org_fn; Owner: postgres
+-- Name: FUNCTION build_organization(_name text, _external_id text); Type: ACL; Schema: org_fn; Owner: app
 --
 
 REVOKE ALL ON FUNCTION org_fn.build_organization(_name text, _external_id text) FROM PUBLIC;
 
 
 --
--- Name: FUNCTION build_organization_location(_organization_id text, _name text, _address1 text, _address2 text, _city text, _state text, _zip text, _lat text, _lon text); Type: ACL; Schema: org_fn; Owner: postgres
+-- Name: FUNCTION build_organization_location(_organization_id text, _name text, _address1 text, _address2 text, _city text, _state text, _zip text, _lat text, _lon text); Type: ACL; Schema: org_fn; Owner: app
 --
 
 REVOKE ALL ON FUNCTION org_fn.build_organization_location(_organization_id text, _name text, _address1 text, _address2 text, _city text, _state text, _zip text, _lat text, _lon text) FROM PUBLIC;
 
 
 --
--- Name: FUNCTION build_tenant_organization(_name text, _identifier text, _primary_contact_email text, _primary_contact_first_name text, _primary_contact_last_name text); Type: ACL; Schema: org_fn; Owner: postgres
+-- Name: FUNCTION build_tenant_organization(_name text, _identifier text, _primary_contact_email text, _primary_contact_first_name text, _primary_contact_last_name text); Type: ACL; Schema: org_fn; Owner: app
 --
 
 REVOKE ALL ON FUNCTION org_fn.build_tenant_organization(_name text, _identifier text, _primary_contact_email text, _primary_contact_first_name text, _primary_contact_last_name text) FROM PUBLIC;
 
 
 --
--- Name: FUNCTION current_app_user_contact(); Type: ACL; Schema: org_fn; Owner: postgres
+-- Name: FUNCTION current_app_user_contact(); Type: ACL; Schema: org_fn; Owner: app
 --
 
 REVOKE ALL ON FUNCTION org_fn.current_app_user_contact() FROM PUBLIC;
@@ -3331,14 +3333,14 @@ GRANT ALL ON FUNCTION org_fn.current_app_user_contact() TO app_user;
 
 
 --
--- Name: FUNCTION modify_location(_id text, _name text, _address1 text, _address2 text, _city text, _state text, _zip text, _lat text, _lon text); Type: ACL; Schema: org_fn; Owner: postgres
+-- Name: FUNCTION modify_location(_id text, _name text, _address1 text, _address2 text, _city text, _state text, _zip text, _lat text, _lon text); Type: ACL; Schema: org_fn; Owner: app
 --
 
 REVOKE ALL ON FUNCTION org_fn.modify_location(_id text, _name text, _address1 text, _address2 text, _city text, _state text, _zip text, _lat text, _lon text) FROM PUBLIC;
 
 
 --
--- Name: FUNCTION trim_text(_input text); Type: ACL; Schema: util_fn; Owner: postgres
+-- Name: FUNCTION trim_text(_input text); Type: ACL; Schema: util_fn; Owner: app
 --
 
 REVOKE ALL ON FUNCTION util_fn.trim_text(_input text) FROM PUBLIC;
@@ -3346,7 +3348,7 @@ GRANT ALL ON FUNCTION util_fn.trim_text(_input text) TO app_anonymous;
 
 
 --
--- Name: TABLE application; Type: ACL; Schema: app; Owner: postgres
+-- Name: TABLE application; Type: ACL; Schema: app; Owner: app
 --
 
 GRANT INSERT,DELETE,UPDATE ON TABLE app.application TO app_super_admin;
@@ -3354,14 +3356,14 @@ GRANT SELECT ON TABLE app.application TO app_user;
 
 
 --
--- Name: TABLE license; Type: ACL; Schema: app; Owner: postgres
+-- Name: TABLE license; Type: ACL; Schema: app; Owner: app
 --
 
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE app.license TO app_user;
 
 
 --
--- Name: TABLE license_permission; Type: ACL; Schema: app; Owner: postgres
+-- Name: TABLE license_permission; Type: ACL; Schema: app; Owner: app
 --
 
 GRANT INSERT,DELETE,UPDATE ON TABLE app.license_permission TO app_admin;
@@ -3369,7 +3371,7 @@ GRANT SELECT ON TABLE app.license_permission TO app_user;
 
 
 --
--- Name: TABLE license_type; Type: ACL; Schema: app; Owner: postgres
+-- Name: TABLE license_type; Type: ACL; Schema: app; Owner: app
 --
 
 GRANT INSERT,DELETE,UPDATE ON TABLE app.license_type TO app_super_admin;
@@ -3377,7 +3379,7 @@ GRANT SELECT ON TABLE app.license_type TO app_user;
 
 
 --
--- Name: TABLE license_type_permission; Type: ACL; Schema: app; Owner: postgres
+-- Name: TABLE license_type_permission; Type: ACL; Schema: app; Owner: app
 --
 
 GRANT INSERT,DELETE,UPDATE ON TABLE app.license_type_permission TO app_super_admin;
@@ -3385,7 +3387,7 @@ GRANT SELECT ON TABLE app.license_type_permission TO app_user;
 
 
 --
--- Name: TABLE permission; Type: ACL; Schema: auth; Owner: postgres
+-- Name: TABLE permission; Type: ACL; Schema: auth; Owner: app
 --
 
 GRANT INSERT,DELETE,UPDATE ON TABLE auth.permission TO app_super_admin;
@@ -3393,14 +3395,7 @@ GRANT SELECT ON TABLE auth.permission TO app_user;
 
 
 --
--- Name: TABLE inventory_lot; Type: ACL; Schema: lcb; Owner: postgres
---
-
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE lcb.inventory_lot TO app_user;
-
-
---
--- Name: TABLE lcb_license; Type: ACL; Schema: lcb; Owner: postgres
+-- Name: TABLE lcb_license; Type: ACL; Schema: lcb; Owner: app
 --
 
 GRANT INSERT,DELETE,UPDATE ON TABLE lcb.lcb_license TO app_super_admin;
@@ -3408,7 +3403,7 @@ GRANT SELECT ON TABLE lcb.lcb_license TO app_user;
 
 
 --
--- Name: TABLE lcb_license_holder; Type: ACL; Schema: lcb; Owner: postgres
+-- Name: TABLE lcb_license_holder; Type: ACL; Schema: lcb; Owner: app
 --
 
 GRANT INSERT,DELETE,UPDATE ON TABLE lcb.lcb_license_holder TO app_super_admin;
@@ -3416,14 +3411,14 @@ GRANT SELECT ON TABLE lcb.lcb_license_holder TO app_user;
 
 
 --
--- Name: TABLE contact_app_user; Type: ACL; Schema: org; Owner: postgres
+-- Name: TABLE contact_app_user; Type: ACL; Schema: org; Owner: app
 --
 
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE org.contact_app_user TO app_user;
 
 
 --
--- Name: SEQUENCE global_id_sequence; Type: ACL; Schema: shard_1; Owner: postgres
+-- Name: SEQUENCE global_id_sequence; Type: ACL; Schema: shard_1; Owner: app
 --
 
 GRANT USAGE ON SEQUENCE shard_1.global_id_sequence TO app_user;
