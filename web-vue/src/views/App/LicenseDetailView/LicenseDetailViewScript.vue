@@ -59,7 +59,7 @@ export default {
       },
       update (data) {
         this.license = data.licenseById
-        console.log('license', this.license)
+      //  console.log('license', this.license)
       }
     }
   }

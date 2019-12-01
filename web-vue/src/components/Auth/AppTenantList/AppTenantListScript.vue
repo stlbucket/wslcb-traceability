@@ -4,7 +4,7 @@ export default {
   props: {
     appTenants: {
       type: Array,
-      default: []
+      default: () => []
     }
   },
   components: {

@@ -24,7 +24,7 @@ export default {
         this.$eventHub.$emit('login')
       })
       .catch(error => {
-        console.log('ERROR', error)
+        console.error(error)
       })
     },
     getCurrentAppUserContact () {
@@ -38,7 +38,7 @@ export default {
         this.$router.push({name: 'home'})
       })
       .catch(error => {
-        console.log('ERROR', error)
+       console.error(error)
       })
     }
   },

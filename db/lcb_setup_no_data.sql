@@ -808,6 +808,70 @@ CREATE TABLE lcb.inventory_lot (
 ALTER TABLE lcb.inventory_lot OWNER TO app;
 
 --
+-- Name: deplete_inventory_lot_ids(text[]); Type: FUNCTION; Schema: lcb_fn; Owner: app
+--
+
+CREATE FUNCTION lcb_fn.deplete_inventory_lot_ids(_ids text[]) RETURNS SETOF lcb.inventory_lot
+    LANGUAGE plpgsql STRICT
+    AS $$
+  DECLARE
+    _current_app_user auth.app_user;
+    _lcb_license_holder_id text;
+    _inventory_lot_input lcb_fn.report_inventory_lot_input;
+    _inventory_lot lcb.inventory_lot;
+    _inventory_lot_id text;
+  BEGIN
+    _current_app_user := auth_fn.current_app_user();
+
+    -- only active ids can be locked
+    if 0 < (select count(*) from lcb.inventory_lot where id = ANY(_ids) and reporting_status != 'ACTIVE') then
+      raise exception 'illegal operation - batch cancelled: only active ids can be depleted.';
+    end if;
+
+    update lcb.inventory_lot set
+      reporting_status = 'DEPLETED'
+    where id = ANY(_ids);
+
+    RETURN QUERY SELECT * FROM lcb.inventory_lot WHERE id = ANY(_ids);
+  END;
+  $$;
+
+
+ALTER FUNCTION lcb_fn.deplete_inventory_lot_ids(_ids text[]) OWNER TO app;
+
+--
+-- Name: destroy_inventory_lot_ids(text[]); Type: FUNCTION; Schema: lcb_fn; Owner: app
+--
+
+CREATE FUNCTION lcb_fn.destroy_inventory_lot_ids(_ids text[]) RETURNS SETOF lcb.inventory_lot
+    LANGUAGE plpgsql STRICT
+    AS $$
+  DECLARE
+    _current_app_user auth.app_user;
+    _lcb_license_holder_id text;
+    _inventory_lot_input lcb_fn.report_inventory_lot_input;
+    _inventory_lot lcb.inventory_lot;
+    _inventory_lot_id text;
+  BEGIN
+    _current_app_user := auth_fn.current_app_user();
+
+    -- only active ids can be locked
+    if 0 < (select count(*) from lcb.inventory_lot where id = ANY(_ids) and reporting_status != 'ACTIVE') then
+      raise exception 'illegal operation - batch cancelled: only active ids can be destroyed.';
+    end if;
+
+    update lcb.inventory_lot set
+      reporting_status = 'DESTROYED'
+    where id = ANY(_ids);
+
+    RETURN QUERY SELECT * FROM lcb.inventory_lot WHERE id = ANY(_ids);
+  END;
+  $$;
+
+
+ALTER FUNCTION lcb_fn.destroy_inventory_lot_ids(_ids text[]) OWNER TO app;
+
+--
 -- Name: invalidate_inventory_lot_ids(text[]); Type: FUNCTION; Schema: lcb_fn; Owner: app
 --
 
@@ -823,10 +887,14 @@ CREATE FUNCTION lcb_fn.invalidate_inventory_lot_ids(_ids text[]) RETURNS SETOF l
   BEGIN
     _current_app_user := auth_fn.current_app_user();
 
+    -- only provisioned ids can be invalidated
+    if 0 < (select count(*) from lcb.inventory_lot where id = ANY(_ids) and reporting_status != 'PROVISIONED') then
+      raise exception 'illegal operation - batch cancelled: only provisioned ids can be invalidated.';
+    end if;
+
     update lcb.inventory_lot set
       reporting_status = 'INVALIDATED'
     where id = ANY(_ids);
-
 
     RETURN QUERY SELECT * FROM lcb.inventory_lot WHERE id = ANY(_ids);
   END;
@@ -943,7 +1011,7 @@ CREATE FUNCTION lcb_fn.report_inventory_lot(_input lcb_fn.report_inventory_lot_i
           _current_app_user.app_tenant_id,
           _lcb_license_holder_id,
           case when _inventory_lot_input.id is null then 'WSLCB' else 'LICENSEE' end,
-          'REPORTED',
+          'ACTIVE',
           _inventory_lot_input.inventory_type,
           _inventory_lot_input.description,
           _inventory_lot_input.quantity,
@@ -963,7 +1031,7 @@ CREATE FUNCTION lcb_fn.report_inventory_lot(_input lcb_fn.report_inventory_lot_i
           units = _inventory_lot_input.units,
           strain_name = _inventory_lot_input.strain_name,
           area_identifier = _inventory_lot_input.area_identifier,
-          reporting_status = 'REPORTED'
+          reporting_status = 'ACTIVE'
         where id = _inventory_lot_id
         and (
           _inventory_lot_input.licensee_identifier != licensee_identifier
@@ -1015,25 +1083,25 @@ CREATE FUNCTION lcb_hist.fn_capture_hist_inventory_lot() RETURNS trigger
         area_identifier
     )
     values (
-        NEW.id,
-        NEW.licensee_identifier,
-        NEW.app_tenant_id,
-        NEW.lcb_license_holder_id,
-        NEW.created_at,
-        NEW.updated_at,
-        NEW.deleted_at,
-        NEW.id_origin,
-        NEW.reporting_status,
-        NEW.inventory_type,
-        NEW.description,
-        NEW.quantity,
-        NEW.units,
-        NEW.strain_name,
-        NEW.area_identifier
+        OLD.id,
+        OLD.licensee_identifier,
+        OLD.app_tenant_id,
+        OLD.lcb_license_holder_id,
+        OLD.created_at,
+        OLD.updated_at,
+        OLD.deleted_at,
+        OLD.id_origin,
+        OLD.reporting_status,
+        OLD.inventory_type,
+        OLD.description,
+        OLD.quantity,
+        OLD.units,
+        OLD.strain_name,
+        OLD.area_identifier
     )
     ;
 
-    RETURN NEW;
+    RETURN OLD;
   END; $$;
 
 
@@ -2166,6 +2234,18 @@ CREATE TABLE lcb_hist.hist_inventory_lot (
 ALTER TABLE lcb_hist.hist_inventory_lot OWNER TO app;
 
 --
+-- Name: inventory_lot_reporting_status; Type: TABLE; Schema: lcb_ref; Owner: app
+--
+
+CREATE TABLE lcb_ref.inventory_lot_reporting_status (
+    id text NOT NULL,
+    CONSTRAINT ck_inventory_lot_reporting_status_id CHECK ((id <> ''::text))
+);
+
+
+ALTER TABLE lcb_ref.inventory_lot_reporting_status OWNER TO app;
+
+--
 -- Name: inventory_type; Type: TABLE; Schema: lcb_ref; Owner: app
 --
 
@@ -2178,18 +2258,6 @@ CREATE TABLE lcb_ref.inventory_type (
 
 
 ALTER TABLE lcb_ref.inventory_type OWNER TO app;
-
---
--- Name: reporting_status; Type: TABLE; Schema: lcb_ref; Owner: app
---
-
-CREATE TABLE lcb_ref.reporting_status (
-    id text NOT NULL,
-    CONSTRAINT ck_reporting_status_id CHECK ((id <> ''::text))
-);
-
-
-ALTER TABLE lcb_ref.reporting_status OWNER TO app;
 
 --
 -- Name: config_org; Type: TABLE; Schema: org; Owner: app
@@ -2386,6 +2454,19 @@ COPY lcb_hist.hist_inventory_lot (id, licensee_identifier, inventory_lot_id, app
 
 
 --
+-- Data for Name: inventory_lot_reporting_status; Type: TABLE DATA; Schema: lcb_ref; Owner: app
+--
+
+COPY lcb_ref.inventory_lot_reporting_status (id) FROM stdin;
+PROVISIONED
+INVALIDATED
+ACTIVE
+DESTROYED
+DEPLETED
+\.
+
+
+--
 -- Data for Name: inventory_type; Type: TABLE DATA; Schema: lcb_ref; Owner: app
 --
 
@@ -2398,17 +2479,6 @@ CL	Clones	\N
 SD	Seeds	\N
 IS	Infused Solid Edible	\N
 IL	Infused Liquid Edible	\N
-\.
-
-
---
--- Data for Name: reporting_status; Type: TABLE DATA; Schema: lcb_ref; Owner: app
---
-
-COPY lcb_ref.reporting_status (id) FROM stdin;
-PROVISIONED
-INVALIDATED
-REPORTED
 \.
 
 
@@ -2671,6 +2741,14 @@ ALTER TABLE ONLY lcb_hist.hist_inventory_lot
 
 
 --
+-- Name: inventory_lot_reporting_status inventory_lot_reporting_status_id_key; Type: CONSTRAINT; Schema: lcb_ref; Owner: app
+--
+
+ALTER TABLE ONLY lcb_ref.inventory_lot_reporting_status
+    ADD CONSTRAINT inventory_lot_reporting_status_id_key UNIQUE (id);
+
+
+--
 -- Name: inventory_type inventory_type_id_key; Type: CONSTRAINT; Schema: lcb_ref; Owner: app
 --
 
@@ -2692,14 +2770,6 @@ ALTER TABLE ONLY lcb_ref.inventory_type
 
 ALTER TABLE ONLY lcb_ref.inventory_type
     ADD CONSTRAINT pk_inventory_type PRIMARY KEY (id);
-
-
---
--- Name: reporting_status reporting_status_id_key; Type: CONSTRAINT; Schema: lcb_ref; Owner: app
---
-
-ALTER TABLE ONLY lcb_ref.reporting_status
-    ADD CONSTRAINT reporting_status_id_key UNIQUE (id);
 
 
 --
@@ -2882,7 +2952,7 @@ CREATE TRIGGER tg_timestamp_update_permission BEFORE INSERT OR UPDATE ON auth.pe
 -- Name: inventory_lot tg_capture_hist_inventory_lot; Type: TRIGGER; Schema: lcb; Owner: app
 --
 
-CREATE TRIGGER tg_capture_hist_inventory_lot AFTER INSERT OR UPDATE ON lcb.inventory_lot FOR EACH ROW EXECUTE PROCEDURE lcb_hist.fn_capture_hist_inventory_lot();
+CREATE TRIGGER tg_capture_hist_inventory_lot AFTER UPDATE ON lcb.inventory_lot FOR EACH ROW EXECUTE PROCEDURE lcb_hist.fn_capture_hist_inventory_lot();
 
 
 --
@@ -3058,7 +3128,7 @@ ALTER TABLE ONLY lcb.inventory_lot
 --
 
 ALTER TABLE ONLY lcb.inventory_lot
-    ADD CONSTRAINT fk_inventory_lot_reporting_status FOREIGN KEY (reporting_status) REFERENCES lcb_ref.reporting_status(id);
+    ADD CONSTRAINT fk_inventory_lot_reporting_status FOREIGN KEY (reporting_status) REFERENCES lcb_ref.inventory_lot_reporting_status(id);
 
 
 --

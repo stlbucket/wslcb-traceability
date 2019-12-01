@@ -4,7 +4,7 @@ export default {
   props: {
     organizations: {
       type: Array,
-      default: []
+      default: () => []
     }
   },
   components: {

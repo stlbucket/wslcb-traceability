@@ -163,7 +163,6 @@ export default {
   },
   computed: {
     graphiqlUrl () {
-      console.log('w', window.location.origin)
       return `${window.location.origin}/graphiql`
     }
   },

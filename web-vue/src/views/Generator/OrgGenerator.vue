@@ -28,7 +28,7 @@ export default {
       },
       networkPolicy: 'fetch-only',
       update (data) {
-        console.log('data', data.organizationById)
+      //  console.log('data', data.organizationById)
         this.data = data.organizationById
       }
     }

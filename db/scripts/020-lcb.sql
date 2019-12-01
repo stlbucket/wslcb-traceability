@@ -73,7 +73,7 @@ ALTER TABLE ONLY lcb.inventory_lot
 ALTER TABLE ONLY lcb.inventory_lot
     ADD CONSTRAINT fk_inventory_lot_inventory_type FOREIGN KEY (inventory_type) REFERENCES lcb_ref.inventory_type (id);
 ALTER TABLE ONLY lcb.inventory_lot
-    ADD CONSTRAINT fk_inventory_lot_reporting_status FOREIGN KEY (reporting_status) REFERENCES lcb_ref.reporting_status (id);
+    ADD CONSTRAINT fk_inventory_lot_reporting_status FOREIGN KEY (reporting_status) REFERENCES lcb_ref.inventory_lot_reporting_status (id);
 
 CREATE FUNCTION lcb.fn_timestamp_update_lcb_license() RETURNS trigger
     LANGUAGE plpgsql
@@ -152,25 +152,25 @@ CREATE FUNCTION lcb_hist.fn_capture_hist_inventory_lot() RETURNS trigger
         area_identifier
     )
     values (
-        NEW.id,
-        NEW.licensee_identifier,
-        NEW.app_tenant_id,
-        NEW.lcb_license_holder_id,
-        NEW.created_at,
-        NEW.updated_at,
-        NEW.deleted_at,
-        NEW.id_origin,
-        NEW.reporting_status,
-        NEW.inventory_type,
-        NEW.description,
-        NEW.quantity,
-        NEW.units,
-        NEW.strain_name,
-        NEW.area_identifier
+        OLD.id,
+        OLD.licensee_identifier,
+        OLD.app_tenant_id,
+        OLD.lcb_license_holder_id,
+        OLD.created_at,
+        OLD.updated_at,
+        OLD.deleted_at,
+        OLD.id_origin,
+        OLD.reporting_status,
+        OLD.inventory_type,
+        OLD.description,
+        OLD.quantity,
+        OLD.units,
+        OLD.strain_name,
+        OLD.area_identifier
     )
     ;
 
-    RETURN NEW;
+    RETURN OLD;
   END; $$;
 ALTER FUNCTION lcb_hist.fn_capture_hist_inventory_lot() OWNER TO app;
 CREATE TRIGGER tg_capture_hist_inventory_lot AFTER UPDATE ON lcb.inventory_lot FOR EACH ROW EXECUTE PROCEDURE lcb_hist.fn_capture_hist_inventory_lot();

@@ -3,13 +3,13 @@
     <v-text-field
       label="username"
       placeholder="username"
-      box
+      filled
       v-model="username"
     ></v-text-field>
     <v-text-field
       label="password"
       placeholder="password"
-      box
+      filled
       v-model="password"
     ></v-text-field>
     <v-btn @click="login">Login</v-btn>

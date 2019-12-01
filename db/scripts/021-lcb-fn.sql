@@ -118,7 +118,7 @@ RETURNS setof lcb.inventory_lot
           _current_app_user.app_tenant_id,
           _lcb_license_holder_id,
           case when _inventory_lot_input.id is null then 'WSLCB' else 'LICENSEE' end,
-          'REPORTED',
+          'ACTIVE',
           _inventory_lot_input.inventory_type,
           _inventory_lot_input.description,
           _inventory_lot_input.quantity,
@@ -138,7 +138,7 @@ RETURNS setof lcb.inventory_lot
           units = _inventory_lot_input.units,
           strain_name = _inventory_lot_input.strain_name,
           area_identifier = _inventory_lot_input.area_identifier,
-          reporting_status = 'REPORTED'
+          reporting_status = 'ACTIVE'
         where id = _inventory_lot_id
         and (
           _inventory_lot_input.licensee_identifier != licensee_identifier
@@ -175,10 +175,68 @@ RETURNS setof lcb.inventory_lot
   BEGIN
     _current_app_user := auth_fn.current_app_user();
 
+    -- only provisioned ids can be invalidated
+    if 0 < (select count(*) from lcb.inventory_lot where id = ANY(_ids) and reporting_status != 'PROVISIONED') then
+      raise exception 'illegal operation - batch cancelled: only provisioned ids can be invalidated.';
+    end if;
+
     update lcb.inventory_lot set
       reporting_status = 'INVALIDATED'
     where id = ANY(_ids);
 
+    RETURN QUERY SELECT * FROM lcb.inventory_lot WHERE id = ANY(_ids);
+  END;
+  $$;
+
+
+CREATE OR REPLACE FUNCTION lcb_fn.destroy_inventory_lot_ids(_ids text[])
+RETURNS setof lcb.inventory_lot
+    LANGUAGE plpgsql STRICT
+    AS $$
+  DECLARE
+    _current_app_user auth.app_user;
+    _lcb_license_holder_id text;
+    _inventory_lot_input lcb_fn.report_inventory_lot_input;
+    _inventory_lot lcb.inventory_lot;
+    _inventory_lot_id text;
+  BEGIN
+    _current_app_user := auth_fn.current_app_user();
+
+    -- only active ids can be locked
+    if 0 < (select count(*) from lcb.inventory_lot where id = ANY(_ids) and reporting_status != 'ACTIVE') then
+      raise exception 'illegal operation - batch cancelled: only active ids can be destroyed.';
+    end if;
+
+    update lcb.inventory_lot set
+      reporting_status = 'DESTROYED'
+    where id = ANY(_ids);
+
+    RETURN QUERY SELECT * FROM lcb.inventory_lot WHERE id = ANY(_ids);
+  END;
+  $$;
+
+
+CREATE OR REPLACE FUNCTION lcb_fn.deplete_inventory_lot_ids(_ids text[])
+RETURNS setof lcb.inventory_lot
+    LANGUAGE plpgsql STRICT
+    AS $$
+  DECLARE
+    _current_app_user auth.app_user;
+    _lcb_license_holder_id text;
+    _inventory_lot_input lcb_fn.report_inventory_lot_input;
+    _inventory_lot lcb.inventory_lot;
+    _inventory_lot_id text;
+  BEGIN
+    _current_app_user := auth_fn.current_app_user();
+
+    -- only active ids can be locked
+    if 0 < (select count(*) from lcb.inventory_lot where id = ANY(_ids) and reporting_status != 'ACTIVE') then
+      raise exception 'illegal operation - batch cancelled: only active ids can be depleted.';
+    end if;
+
+    update lcb.inventory_lot set
+      reporting_status = 'DEPLETED'
+    where id = ANY(_ids);
 
     RETURN QUERY SELECT * FROM lcb.inventory_lot WHERE id = ANY(_ids);
   END;

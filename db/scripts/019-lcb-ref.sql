@@ -24,21 +24,21 @@ values
   ('IL', 'Infused Liquid Edible')
 ;
 
-
-
-CREATE TABLE lcb_ref.reporting_status (
+CREATE TABLE lcb_ref.inventory_lot_reporting_status (
     id text NOT NULL UNIQUE,
-    CONSTRAINT ck_reporting_status_id CHECK ((id <> ''::text))
+    CONSTRAINT ck_inventory_lot_reporting_status_id CHECK ((id <> ''::text))
 );
 
-ALTER TABLE lcb_ref.reporting_status OWNER TO app;
-ALTER TABLE ONLY lcb_ref.reporting_status
-    ADD CONSTRAINT reporting_status PRIMARY KEY (id);
+ALTER TABLE lcb_ref.inventory_lot_reporting_status OWNER TO app;
+ALTER TABLE ONLY lcb_ref.inventory_lot_reporting_status
+    ADD CONSTRAINT inventory_lot_reporting_status PRIMARY KEY (id);
 
-INSERT INTO lcb_ref.reporting_status(id)
+INSERT INTO lcb_ref.inventory_lot_reporting_status(id)
 values
   ('PROVISIONED'),
   ('INVALIDATED'),
-  ('REPORTED')
+  ('ACTIVE'),
+  ('DESTROYED'),
+  ('DEPLETED')
 ;
 

@@ -45,7 +45,7 @@ export default {
       },
       update (data) {
         this.appTenant = data.appTenantById
-        console.log('app', this.appTenant)
+      //  console.log('app', this.appTenant)
 
       }
     }
