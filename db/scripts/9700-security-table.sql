@@ -862,3 +862,90 @@ $body$;
 
 ----------  END TABLE POLICY: lcb_hist.hist_inventory_lot
 --==
+
+
+
+----------
+----------  BEGIN TABLE POLICY: lcb_ref.inventory_lot_reporting_status
+----------  POLICY NAME:  app_user  select only no rls  :::  app_super_admin manage
+----------
+
+----------  REMOVE EXISTING TABLE GRANTS
+
+  revoke all privileges 
+  on table lcb_ref.inventory_lot_reporting_status 
+  from public;
+
+  revoke all privileges 
+  on table lcb_ref.inventory_lot_reporting_status 
+  from app_super_admin, app_tenant_admin, app_admin, app_demon, app_user, app_anonymous;
+
+----------  DISABLE ROW LEVEL SECURITY
+
+  alter table lcb_ref.inventory_lot_reporting_status disable row level security;
+
+----------  CREATE NEW TABLE GRANTS
+
+----------  app_super_admin
+  grant 
+    insert ( id ), 
+        -- no excluded columns
+    update ( id ),
+        -- no excluded columns
+    delete  
+  on table lcb_ref.inventory_lot_reporting_status 
+  to app_super_admin;
+
+
+----------  app_user
+  grant 
+    select  
+  on table lcb_ref.inventory_lot_reporting_status 
+  to app_user;
+
+
+
+----------  END TABLE POLICY: lcb_ref.inventory_lot_reporting_status
+--==
+----------
+----------  BEGIN TABLE POLICY: lcb_ref.inventory_type
+----------  POLICY NAME:  app_user  select only no rls  :::  app_super_admin manage
+----------
+
+----------  REMOVE EXISTING TABLE GRANTS
+
+  revoke all privileges 
+  on table lcb_ref.inventory_type 
+  from public;
+
+  revoke all privileges 
+  on table lcb_ref.inventory_type 
+  from app_super_admin, app_tenant_admin, app_admin, app_demon, app_user, app_anonymous;
+
+----------  DISABLE ROW LEVEL SECURITY
+
+  alter table lcb_ref.inventory_type disable row level security;
+
+----------  CREATE NEW TABLE GRANTS
+
+----------  app_super_admin
+  grant 
+    insert ( id, name, description ), 
+        -- no excluded columns
+    update ( id, name, description ),
+        -- no excluded columns
+    delete  
+  on table lcb_ref.inventory_type 
+  to app_super_admin;
+
+
+----------  app_user
+  grant 
+    select  
+  on table lcb_ref.inventory_type 
+  to app_user;
+
+
+
+----------  END TABLE POLICY: lcb_ref.inventory_type
+--==

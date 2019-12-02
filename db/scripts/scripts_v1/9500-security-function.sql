@@ -486,18 +486,18 @@
 
 
 ----------
-----------  BEGIN FUNCTION POLICY: lcb_fn.obtain_ids (text,integer)
+----------  BEGIN FUNCTION POLICY: lcb_fn.provision_inventory_lot_ids (text,integer)
 ----------  POLICY NAME:  app_user
 ----------
 
 ----------  REMOVE EXISTING FUNCTION GRANTS
 
   revoke all privileges 
-  on function lcb_fn.obtain_ids (text,integer) 
+  on function lcb_fn.provision_inventory_lot_ids (text,integer) 
   from public;
 
   revoke all privileges 
-  on function lcb_fn.obtain_ids (text,integer) 
+  on function lcb_fn.provision_inventory_lot_ids (text,integer) 
   from app_super_admin, app_tenant_admin, app_admin, app_demon, app_user, app_anonymous;
 
 ----------  CREATE NEW FUNCTION GRANTS
@@ -505,10 +505,10 @@
 ----------  app_user
   grant 
   execute
-  on function lcb_fn.obtain_ids (text,integer) 
+  on function lcb_fn.provision_inventory_lot_ids (text,integer) 
   to app_user;
 
-----------  END FUNCTION POLICY: lcb_fn.obtain_ids (text,integer)
+----------  END FUNCTION POLICY: lcb_fn.provision_inventory_lot_ids (text,integer)
 --==
 
 

@@ -1237,8 +1237,8 @@
         "errors": []
       }
     },
-    "lcb_fn.obtain_ids_542287": {
-      "functionId": "lcb_fn.obtain_ids_542287",
+    "lcb_fn.provision_inventory_lot_ids_542287": {
+      "functionId": "lcb_fn.provision_inventory_lot_ids_542287",
       "policyDefinitionId": 637106493361420000,
       "evaluation": {
         "status": "PASS",
@@ -9332,10 +9332,10 @@
           "argumentDataTypes": ""
         },
         {
-          "id": "lcb_fn.obtain_ids_542287",
+          "id": "lcb_fn.provision_inventory_lot_ids_542287",
           "typename": "function",
-          "definition": "CREATE OR REPLACE FUNCTION lcb_fn.obtain_ids(_inventory_type text, _number_requested integer)\n RETURNS SETOF lcb.inventory_lot\n LANGUAGE plpgsql\n STRICT\nAS $function$\n  DECLARE\n    _lcb_license_holder_id uuid;\n    _inventory_lot lcb.inventory_lot;\n    _created_count integer;\n  BEGIN\n    _created_count := 0;\n    _lcb_license_holder_id := lcb_fn.current_lcb_license_holder_id();\n\n    LOOP\n      -- some computations\n      IF _created_count = _number_requested THEN\n          EXIT;  -- exit loop\n      END IF;\n\n      -- INSERT INTO lcb.inventory_lot(\n      --   app_tenant_id,\n      --   lcb_license_holder_id,\n      --   id_origin,\n      --   inventory_type\n      -- )\n      -- VALUES (\n\n      -- )\n    END LOOP;\n\n    -- RETURN _app_tenant;\n  end;\n  $function$\n",
-          "functionName": "obtain_ids",
+          "definition": "CREATE OR REPLACE FUNCTION lcb_fn.provision_inventory_lot_ids(_inventory_type text, _number_requested integer)\n RETURNS SETOF lcb.inventory_lot\n LANGUAGE plpgsql\n STRICT\nAS $function$\n  DECLARE\n    _lcb_license_holder_id uuid;\n    _inventory_lot lcb.inventory_lot;\n    _created_count integer;\n  BEGIN\n    _created_count := 0;\n    _lcb_license_holder_id := lcb_fn.current_lcb_license_holder_id();\n\n    LOOP\n      -- some computations\n      IF _created_count = _number_requested THEN\n          EXIT;  -- exit loop\n      END IF;\n\n      -- INSERT INTO lcb.inventory_lot(\n      --   app_tenant_id,\n      --   lcb_license_holder_id,\n      --   id_origin,\n      --   inventory_type\n      -- )\n      -- VALUES (\n\n      -- )\n    END LOOP;\n\n    -- RETURN _app_tenant;\n  end;\n  $function$\n",
+          "functionName": "provision_inventory_lot_ids",
           "functionSchema": "lcb_fn",
           "resultDataType": "SETOF lcb.inventory_lot",
           "argumentDataTypes": "_inventory_type text, _number_requested integer"

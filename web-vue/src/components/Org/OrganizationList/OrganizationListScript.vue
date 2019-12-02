@@ -13,7 +13,7 @@ export default {
   },
   computed: {
     items () {
-      return this.organizations.map(
+      const retval = this.organizations.map(
         organization => {
           const location = organization.location || {
             city: 'N/A'
@@ -33,6 +33,7 @@ export default {
           }
         }
       )
+      return retval
     }
   },
   data () {

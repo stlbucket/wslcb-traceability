@@ -11,7 +11,8 @@ export default new Vuex.Store({
   state: {
     isLoggedIn: false,
     currentAppUser: null,
-    graphqlTypes: []
+    graphqlTypes: [],
+    recentInventoryLotChanges: []
   },
   mutations: {
     login (state, payload) {
@@ -24,6 +25,15 @@ export default new Vuex.Store({
     },
     setGraphqlTypes (state, payload) {
       state.graphqlTypes = payload
+    },
+    addRecentInventoryLotChange (state, payload) {
+      const newChanges = payload.newChanges
+      const changedIds = newChanges.map(nc => nc.id)
+      const existingChanges = state.recentInventoryLotChanges.filter(cc => changedIds.indexOf(cc.id) === -1)
+      state.recentInventoryLotChanges = [...existingChanges, ...newChanges]
+    },
+    clearRecentChanges (state) {
+      state.recentInventoryLotChanges = []
     }
   },
   actions: {

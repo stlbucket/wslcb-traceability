@@ -5,7 +5,7 @@
       :headers="headers"
       :columns="columns"
       :items="items"
-      hide-actions
+      hide-default-footer
     >
       <template slot="items" slot-scope="props">
         <td 

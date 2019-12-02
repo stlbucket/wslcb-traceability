@@ -1,0 +1,42 @@
+mutation ProvisionInventoryLotIds(
+  $inventoryType: String!
+  $numberRequested: Int!
+) {
+  provisionInventoryLotIds(input: {
+    _inventoryType: $inventoryType
+  	_numberRequested: $numberRequested
+  }) {
+    inventoryLots {
+      id
+      createdAt
+      updatedAt
+      reportingStatus
+      inventoryType: inventoryTypeByInventoryType {
+        id
+        name
+        description
+        units
+      }
+      strainName
+      description
+      quantity
+      areaIdentifier
+      licenseeIdentifier
+      histInventoryLots: histInventoryLotsByInventoryLotId {
+        nodes {
+          id
+          inventoryLotId
+		      reportingStatus
+          createdAt
+          updatedAt
+          inventoryType
+          strainName
+          description
+          quantity
+          areaIdentifier
+          licenseeIdentifier
+        }
+      }
+    }
+  }
+}

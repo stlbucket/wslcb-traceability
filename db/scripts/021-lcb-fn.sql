@@ -3,7 +3,7 @@ create schema lcb_fn;
 grant usage on schema lcb_fn to app_user;
 grant usage on schema util_fn to app_user;
 
-CREATE OR REPLACE FUNCTION lcb_fn.obtain_ids(
+CREATE OR REPLACE FUNCTION lcb_fn.provision_inventory_lot_ids(
   _inventory_type text, 
   _number_requested integer
 ) 
@@ -44,7 +44,7 @@ RETURNS setof lcb.inventory_lot
     ;
   end;
   $$;
-ALTER FUNCTION lcb_fn.obtain_ids(text,integer) OWNER TO app;
+ALTER FUNCTION lcb_fn.provision_inventory_lot_ids(text,integer) OWNER TO app;
 
 
 create type lcb_fn.report_inventory_lot_input as (
@@ -53,7 +53,6 @@ create type lcb_fn.report_inventory_lot_input as (
   inventory_type text,
   description text,
   quantity numeric(10,2),
-  units text,
   strain_name text,
   area_identifier text
 );
@@ -80,6 +79,10 @@ RETURNS setof lcb.inventory_lot
     foreach _inventory_lot_input in ARRAY _input
     loop
 
+      -- if _inventory_lot_input.id is null or _inventory_lot_input.id = '' then
+      --   raise exception 'illegal operation - batch cancelled:  all inventory lots must have id defined.';
+      -- end if;
+
       -- make sure this lot can be identified later
       if _inventory_lot_input.id is null or _inventory_lot_input.id = '' then
         if _inventory_lot_input.licensee_identifier is null or _inventory_lot_input.licensee_identifier = '' then
@@ -90,7 +93,7 @@ RETURNS setof lcb.inventory_lot
         -- _inventory_lot_input.id should be verified as a valid ulid here
         _inventory_lot_id := _inventory_lot_input.id;
       end if;
-
+      
       -- find existing lot if it's there
       select *
       into _inventory_lot
@@ -108,7 +111,6 @@ RETURNS setof lcb.inventory_lot
           inventory_type,
           description,
           quantity,
-          units,
           strain_name,
           area_identifier
         )
@@ -118,38 +120,58 @@ RETURNS setof lcb.inventory_lot
           _current_app_user.app_tenant_id,
           _lcb_license_holder_id,
           case when _inventory_lot_input.id is null then 'WSLCB' else 'LICENSEE' end,
-          'ACTIVE',
-          _inventory_lot_input.inventory_type,
-          _inventory_lot_input.description,
-          _inventory_lot_input.quantity,
-          _inventory_lot_input.units,
-          _inventory_lot_input.strain_name,
-          _inventory_lot_input.area_identifier
+          case when _inventory_lot_input.quantity > 0 then 'ACTIVE' else 'DEPLETED' end,
+          _inventory_lot_input.inventory_type::text,
+          _inventory_lot_input.description::text,
+          _inventory_lot_input.quantity::numeric(10,2),
+          _inventory_lot_input.strain_name::text,
+          _inventory_lot_input.area_identifier::text
         RETURNING * INTO _inventory_lot;
       else
+        if _inventory_lot.reporting_status != 'ACTIVE' and _inventory_lot.reporting_status != 'PROVISIONED' then
+          raise exception 'illegal operation - batch cancelled:  can only report on ACTIVE or PROVISIONED inventory lots: %', _inventory_lot.id;
+        end if;
+
         if _inventory_lot_input.inventory_type != _inventory_lot.inventory_type then
           raise exception 'illegal operation - batch cancelled:  cannot change inventory type of an existing inventory lot: %', _inventory_lot.id;
         end if;
 
-        update lcb.inventory_lot set
-          licensee_identifier = _inventory_lot_input.licensee_identifier,
-          description = _inventory_lot_input.description,
-          quantity = _inventory_lot_input.quantity,
-          units = _inventory_lot_input.units,
-          strain_name = _inventory_lot_input.strain_name,
-          area_identifier = _inventory_lot_input.area_identifier,
-          reporting_status = 'ACTIVE'
-        where id = _inventory_lot_id
-        and (
-          _inventory_lot_input.licensee_identifier != licensee_identifier
-          OR _inventory_lot_input.description != description
-          OR _inventory_lot_input.quantity != quantity
-          OR _inventory_lot_input.units != units
-          OR _inventory_lot_input.strain_name != strain_name
-          OR _inventory_lot_input.area_identifier != area_identifier
-        )
-        ;
+        -- update lcb.inventory_lot set
+        --   licensee_identifier = _inventory_lot_input.licensee_identifier::text,
+        --   description = _inventory_lot_input.description::text,
+        --   quantity = _inventory_lot_input.quantity::numeric(10,2),
+        --   strain_name = _inventory_lot_input.strain_name::text,
+        --   area_identifier = _inventory_lot_input.area_identifier::text,
+        --   reporting_status = case when _inventory_lot_input.quantity::numeric(10,2) > 0 then 'ACTIVE' else 'DEPLETED' end
+        -- where id = _inventory_lot_id
+        -- and (
+        --   _inventory_lot_input.licensee_identifier::text != licensee_identifier
+        --   OR _inventory_lot_input.description::text != description
+        --   OR _inventory_lot_input.quantity::numeric(20,2) != quantity
+        --   OR _inventory_lot_input.strain_name::text != strain_name
+        --   OR _inventory_lot_input.area_identifier::text != area_identifier
+        -- )
+        -- returning * into _inventory_lot
+        -- ;
+        if   coalesce(_inventory_lot_input.licensee_identifier::text, '') != coalesce(_inventory_lot.licensee_identifier, '')
+          OR coalesce(_inventory_lot_input.description::text, '')         != coalesce(_inventory_lot.description, '')
+          OR coalesce(_inventory_lot_input.quantity::numeric(20,2), -1)   != coalesce(_inventory_lot.quantity, -1)
+          OR coalesce(_inventory_lot_input.strain_name::text, '')         != coalesce(_inventory_lot.strain_name, '')
+          OR coalesce(_inventory_lot_input.area_identifier::text, '')     != coalesce(_inventory_lot.area_identifier, '')
+        then
+          update lcb.inventory_lot set
+            licensee_identifier = _inventory_lot_input.licensee_identifier::text,
+            description = _inventory_lot_input.description::text,
+            quantity = _inventory_lot_input.quantity::numeric(10,2),
+            strain_name = _inventory_lot_input.strain_name::text,
+            area_identifier = _inventory_lot_input.area_identifier::text,
+            reporting_status = case when _inventory_lot_input.quantity::numeric(10,2) > 0 then 'ACTIVE' else 'DEPLETED' end
+          where id = _inventory_lot_id
+          returning * into _inventory_lot
+          ;
+        end if;
 
+-- raise exception 'wtf %', _inventory_lot_input.quantity::numeric(10,2);
         SELECT * INTO _inventory_lot FROM lcb.inventory_lot WHERE id = _inventory_lot_id;
       end if;
 
@@ -158,6 +180,8 @@ RETURNS setof lcb.inventory_lot
     end loop;
 
     RETURN;
+
+
   end;
   $$;
 
@@ -208,7 +232,8 @@ RETURNS setof lcb.inventory_lot
     end if;
 
     update lcb.inventory_lot set
-      reporting_status = 'DESTROYED'
+      reporting_status = 'DESTROYED',
+      quantity = 0
     where id = ANY(_ids);
 
     RETURN QUERY SELECT * FROM lcb.inventory_lot WHERE id = ANY(_ids);
@@ -235,7 +260,8 @@ RETURNS setof lcb.inventory_lot
     end if;
 
     update lcb.inventory_lot set
-      reporting_status = 'DEPLETED'
+      reporting_status = 'DEPLETED',
+      quantity = 0
     where id = ANY(_ids);
 
     RETURN QUERY SELECT * FROM lcb.inventory_lot WHERE id = ANY(_ids);

@@ -779,10 +779,10 @@ CREATE TABLE lcb.inventory_lot (
 ALTER TABLE lcb.inventory_lot OWNER TO app;
 
 --
--- Name: obtain_ids(text, integer); Type: FUNCTION; Schema: lcb_fn; Owner: app
+-- Name: provision_inventory_lot_ids(text, integer); Type: FUNCTION; Schema: lcb_fn; Owner: app
 --
 
-CREATE FUNCTION lcb_fn.obtain_ids(_inventory_type text, _number_requested integer) RETURNS SETOF lcb.inventory_lot
+CREATE FUNCTION lcb_fn.provision_inventory_lot_ids(_inventory_type text, _number_requested integer) RETURNS SETOF lcb.inventory_lot
     LANGUAGE plpgsql STRICT
     AS $$
   DECLARE
@@ -821,7 +821,7 @@ CREATE FUNCTION lcb_fn.obtain_ids(_inventory_type text, _number_requested intege
   $$;
 
 
-ALTER FUNCTION lcb_fn.obtain_ids(_inventory_type text, _number_requested integer) OWNER TO app;
+ALTER FUNCTION lcb_fn.provision_inventory_lot_ids(_inventory_type text, _number_requested integer) OWNER TO app;
 
 --
 -- Name: fn_timestamp_update_contact(); Type: FUNCTION; Schema: org; Owner: app
@@ -3193,11 +3193,11 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE lcb.inventory_lot TO app_user;
 
 
 --
--- Name: FUNCTION obtain_ids(_inventory_type text, _number_requested integer); Type: ACL; Schema: lcb_fn; Owner: app
+-- Name: FUNCTION provision_inventory_lot_ids(_inventory_type text, _number_requested integer); Type: ACL; Schema: lcb_fn; Owner: app
 --
 
-REVOKE ALL ON FUNCTION lcb_fn.obtain_ids(_inventory_type text, _number_requested integer) FROM PUBLIC;
-GRANT ALL ON FUNCTION lcb_fn.obtain_ids(_inventory_type text, _number_requested integer) TO app_user;
+REVOKE ALL ON FUNCTION lcb_fn.provision_inventory_lot_ids(_inventory_type text, _number_requested integer) FROM PUBLIC;
+GRANT ALL ON FUNCTION lcb_fn.provision_inventory_lot_ids(_inventory_type text, _number_requested integer) TO app_user;
 
 
 --

@@ -166,7 +166,6 @@ CREATE TYPE lcb_fn.report_inventory_lot_input AS (
 	inventory_type text,
 	description text,
 	quantity numeric(10,2),
-	units text,
 	strain_name text,
 	area_identifier text
 );
@@ -796,7 +795,6 @@ CREATE TABLE lcb.inventory_lot (
     inventory_type text NOT NULL,
     description text,
     quantity numeric(10,2),
-    units text,
     strain_name text,
     area_identifier text,
     CONSTRAINT ck_inventory_lot_id CHECK ((id <> ''::text)),
@@ -829,7 +827,8 @@ CREATE FUNCTION lcb_fn.deplete_inventory_lot_ids(_ids text[]) RETURNS SETOF lcb.
     end if;
 
     update lcb.inventory_lot set
-      reporting_status = 'DEPLETED'
+      reporting_status = 'DEPLETED',
+      quantity = 0
     where id = ANY(_ids);
 
     RETURN QUERY SELECT * FROM lcb.inventory_lot WHERE id = ANY(_ids);
@@ -861,7 +860,8 @@ CREATE FUNCTION lcb_fn.destroy_inventory_lot_ids(_ids text[]) RETURNS SETOF lcb.
     end if;
 
     update lcb.inventory_lot set
-      reporting_status = 'DESTROYED'
+      reporting_status = 'DESTROYED',
+      quantity = 0
     where id = ANY(_ids);
 
     RETURN QUERY SELECT * FROM lcb.inventory_lot WHERE id = ANY(_ids);
@@ -904,10 +904,10 @@ CREATE FUNCTION lcb_fn.invalidate_inventory_lot_ids(_ids text[]) RETURNS SETOF l
 ALTER FUNCTION lcb_fn.invalidate_inventory_lot_ids(_ids text[]) OWNER TO app;
 
 --
--- Name: obtain_ids(text, integer); Type: FUNCTION; Schema: lcb_fn; Owner: app
+-- Name: provision_inventory_lot_ids(text, integer); Type: FUNCTION; Schema: lcb_fn; Owner: app
 --
 
-CREATE FUNCTION lcb_fn.obtain_ids(_inventory_type text, _number_requested integer) RETURNS SETOF lcb.inventory_lot
+CREATE FUNCTION lcb_fn.provision_inventory_lot_ids(_inventory_type text, _number_requested integer) RETURNS SETOF lcb.inventory_lot
     LANGUAGE plpgsql STRICT
     AS $$
   DECLARE
@@ -946,7 +946,7 @@ CREATE FUNCTION lcb_fn.obtain_ids(_inventory_type text, _number_requested intege
   $$;
 
 
-ALTER FUNCTION lcb_fn.obtain_ids(_inventory_type text, _number_requested integer) OWNER TO app;
+ALTER FUNCTION lcb_fn.provision_inventory_lot_ids(_inventory_type text, _number_requested integer) OWNER TO app;
 
 --
 -- Name: report_inventory_lot(lcb_fn.report_inventory_lot_input[]); Type: FUNCTION; Schema: lcb_fn; Owner: app
@@ -973,6 +973,10 @@ CREATE FUNCTION lcb_fn.report_inventory_lot(_input lcb_fn.report_inventory_lot_i
     foreach _inventory_lot_input in ARRAY _input
     loop
 
+      -- if _inventory_lot_input.id is null or _inventory_lot_input.id = '' then
+      --   raise exception 'illegal operation - batch cancelled:  all inventory lots must have id defined.';
+      -- end if;
+
       -- make sure this lot can be identified later
       if _inventory_lot_input.id is null or _inventory_lot_input.id = '' then
         if _inventory_lot_input.licensee_identifier is null or _inventory_lot_input.licensee_identifier = '' then
@@ -983,7 +987,7 @@ CREATE FUNCTION lcb_fn.report_inventory_lot(_input lcb_fn.report_inventory_lot_i
         -- _inventory_lot_input.id should be verified as a valid ulid here
         _inventory_lot_id := _inventory_lot_input.id;
       end if;
-
+      
       -- find existing lot if it's there
       select *
       into _inventory_lot
@@ -1001,7 +1005,6 @@ CREATE FUNCTION lcb_fn.report_inventory_lot(_input lcb_fn.report_inventory_lot_i
           inventory_type,
           description,
           quantity,
-          units,
           strain_name,
           area_identifier
         )
@@ -1011,33 +1014,34 @@ CREATE FUNCTION lcb_fn.report_inventory_lot(_input lcb_fn.report_inventory_lot_i
           _current_app_user.app_tenant_id,
           _lcb_license_holder_id,
           case when _inventory_lot_input.id is null then 'WSLCB' else 'LICENSEE' end,
-          'ACTIVE',
-          _inventory_lot_input.inventory_type,
-          _inventory_lot_input.description,
-          _inventory_lot_input.quantity,
-          _inventory_lot_input.units,
-          _inventory_lot_input.strain_name,
-          _inventory_lot_input.area_identifier
+          case when _inventory_lot_input.quantity > 0 then 'ACTIVE' else 'DEPLETED' end,
+          _inventory_lot_input.inventory_type::text,
+          _inventory_lot_input.description::text,
+          _inventory_lot_input.quantity::numeric(10,2),
+          _inventory_lot_input.strain_name::text,
+          _inventory_lot_input.area_identifier::text
         RETURNING * INTO _inventory_lot;
       else
+        if _inventory_lot.reporting_status != 'ACTIVE' and _inventory_lot.reporting_status != 'PROVISIONED' then
+          raise exception 'illegal operation - batch cancelled:  can only report on ACTIVE or PROVISIONED inventory lots: %', _inventory_lot.id;
+        end if;
+
         if _inventory_lot_input.inventory_type != _inventory_lot.inventory_type then
           raise exception 'illegal operation - batch cancelled:  cannot change inventory type of an existing inventory lot: %', _inventory_lot.id;
         end if;
 
         update lcb.inventory_lot set
-          licensee_identifier = _inventory_lot_input.licensee_identifier,
-          description = _inventory_lot_input.description,
-          quantity = _inventory_lot_input.quantity,
-          units = _inventory_lot_input.units,
-          strain_name = _inventory_lot_input.strain_name,
-          area_identifier = _inventory_lot_input.area_identifier,
-          reporting_status = 'ACTIVE'
+          licensee_identifier = _inventory_lot_input.licensee_identifier::text,
+          description = _inventory_lot_input.description::text,
+          quantity = _inventory_lot_input.quantity::numeric(10,2),
+          strain_name = _inventory_lot_input.strain_name::text,
+          area_identifier = _inventory_lot_input.area_identifier::text,
+          reporting_status = case when _inventory_lot_input.quantity::numeric(10,2) > 0 then 'ACTIVE' else 'DEPLETED' end
         where id = _inventory_lot_id
         and (
           _inventory_lot_input.licensee_identifier != licensee_identifier
           OR _inventory_lot_input.description != description
           OR _inventory_lot_input.quantity != quantity
-          OR _inventory_lot_input.units != units
           OR _inventory_lot_input.strain_name != strain_name
           OR _inventory_lot_input.area_identifier != area_identifier
         )
@@ -1078,7 +1082,6 @@ CREATE FUNCTION lcb_hist.fn_capture_hist_inventory_lot() RETURNS trigger
         inventory_type,
         description,
         quantity,
-        units,
         strain_name,
         area_identifier
     )
@@ -1095,7 +1098,6 @@ CREATE FUNCTION lcb_hist.fn_capture_hist_inventory_lot() RETURNS trigger
         OLD.inventory_type,
         OLD.description,
         OLD.quantity,
-        OLD.units,
         OLD.strain_name,
         OLD.area_identifier
     )
@@ -2253,6 +2255,7 @@ CREATE TABLE lcb_ref.inventory_type (
     id text NOT NULL,
     name text NOT NULL,
     description text,
+    units text NOT NULL,
     CONSTRAINT ck_inventory_type_id CHECK ((id <> ''::text))
 );
 
@@ -2425,7 +2428,7 @@ COPY auth.token (id, app_user_id, created_at, expires_at) FROM stdin;
 -- Data for Name: inventory_lot; Type: TABLE DATA; Schema: lcb; Owner: app
 --
 
-COPY lcb.inventory_lot (id, licensee_identifier, app_tenant_id, lcb_license_holder_id, reporting_status, created_at, updated_at, deleted_at, id_origin, inventory_type, description, quantity, units, strain_name, area_identifier) FROM stdin;
+COPY lcb.inventory_lot (id, licensee_identifier, app_tenant_id, lcb_license_holder_id, reporting_status, created_at, updated_at, deleted_at, id_origin, inventory_type, description, quantity, strain_name, area_identifier) FROM stdin;
 \.
 
 
@@ -2470,15 +2473,15 @@ DEPLETED
 -- Data for Name: inventory_type; Type: TABLE DATA; Schema: lcb_ref; Owner: app
 --
 
-COPY lcb_ref.inventory_type (id, name, description) FROM stdin;
-BF	Bulk Flower	\N
-UM	Usable Marijuana	\N
-PM	Packaged Marijuana	\N
-PR	Pre-roll Joints	\N
-CL	Clones	\N
-SD	Seeds	\N
-IS	Infused Solid Edible	\N
-IL	Infused Liquid Edible	\N
+COPY lcb_ref.inventory_type (id, name, description, units) FROM stdin;
+BF	Bulk Flower	\N	g
+UM	Usable Marijuana	\N	g
+PM	Packaged Marijuana	\N	g
+PR	Pre-roll Joints	\N	ct
+CL	Clones	\N	ct
+SD	Seeds	\N	ct
+IS	Infused Solid Edible	\N	ct
+IL	Infused Liquid Edible	\N	ct
 \.
 
 
@@ -3471,6 +3474,13 @@ GRANT USAGE ON SCHEMA lcb_hist TO app_user;
 
 
 --
+-- Name: SCHEMA lcb_ref; Type: ACL; Schema: -; Owner: app
+--
+
+GRANT USAGE ON SCHEMA lcb_ref TO app_user;
+
+
+--
 -- Name: SCHEMA org; Type: ACL; Schema: -; Owner: app
 --
 
@@ -3667,11 +3677,11 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE lcb.inventory_lot TO app_user;
 
 
 --
--- Name: FUNCTION obtain_ids(_inventory_type text, _number_requested integer); Type: ACL; Schema: lcb_fn; Owner: app
+-- Name: FUNCTION provision_inventory_lot_ids(_inventory_type text, _number_requested integer); Type: ACL; Schema: lcb_fn; Owner: app
 --
 
-REVOKE ALL ON FUNCTION lcb_fn.obtain_ids(_inventory_type text, _number_requested integer) FROM PUBLIC;
-GRANT ALL ON FUNCTION lcb_fn.obtain_ids(_inventory_type text, _number_requested integer) TO app_user;
+REVOKE ALL ON FUNCTION lcb_fn.provision_inventory_lot_ids(_inventory_type text, _number_requested integer) FROM PUBLIC;
+GRANT ALL ON FUNCTION lcb_fn.provision_inventory_lot_ids(_inventory_type text, _number_requested integer) TO app_user;
 
 
 --
@@ -3897,6 +3907,50 @@ GRANT SELECT ON TABLE lcb.lcb_license_holder TO app_user;
 --
 
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE lcb_hist.hist_inventory_lot TO app_user;
+
+
+--
+-- Name: TABLE inventory_lot_reporting_status; Type: ACL; Schema: lcb_ref; Owner: app
+--
+
+GRANT DELETE ON TABLE lcb_ref.inventory_lot_reporting_status TO app_super_admin;
+GRANT SELECT ON TABLE lcb_ref.inventory_lot_reporting_status TO app_user;
+
+
+--
+-- Name: COLUMN inventory_lot_reporting_status.id; Type: ACL; Schema: lcb_ref; Owner: app
+--
+
+GRANT INSERT(id),UPDATE(id) ON TABLE lcb_ref.inventory_lot_reporting_status TO app_super_admin;
+
+
+--
+-- Name: TABLE inventory_type; Type: ACL; Schema: lcb_ref; Owner: app
+--
+
+GRANT DELETE ON TABLE lcb_ref.inventory_type TO app_super_admin;
+GRANT SELECT ON TABLE lcb_ref.inventory_type TO app_user;
+
+
+--
+-- Name: COLUMN inventory_type.id; Type: ACL; Schema: lcb_ref; Owner: app
+--
+
+GRANT INSERT(id),UPDATE(id) ON TABLE lcb_ref.inventory_type TO app_super_admin;
+
+
+--
+-- Name: COLUMN inventory_type.name; Type: ACL; Schema: lcb_ref; Owner: app
+--
+
+GRANT INSERT(name),UPDATE(name) ON TABLE lcb_ref.inventory_type TO app_super_admin;
+
+
+--
+-- Name: COLUMN inventory_type.description; Type: ACL; Schema: lcb_ref; Owner: app
+--
+
+GRANT INSERT(description),UPDATE(description) ON TABLE lcb_ref.inventory_type TO app_super_admin;
 
 
 --

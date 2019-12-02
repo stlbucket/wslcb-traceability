@@ -1,0 +1,10 @@
+query LcbLookupSets{
+  inventoryTypes: allInventoryTypes {
+    nodes {
+      id
+      name
+      description
+      units
+    }
+  }
+}

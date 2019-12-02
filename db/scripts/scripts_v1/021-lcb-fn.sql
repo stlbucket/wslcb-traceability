@@ -21,7 +21,7 @@ RETURNS auth.app_user
   $$;
 
 
-CREATE OR REPLACE FUNCTION lcb_fn.obtain_ids(
+CREATE OR REPLACE FUNCTION lcb_fn.provision_inventory_lot_ids(
   _inventory_type text, 
   _number_requested integer
 ) 

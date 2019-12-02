@@ -55,7 +55,6 @@ CREATE TABLE lcb.inventory_lot (
     inventory_type text not null,
     description text,
     quantity numeric(10,2),
-    units text,
     strain_name text,
     area_identifier text,
     CONSTRAINT ck_inventory_lot_id_origin CHECK ((id_origin <> ''::text)),
@@ -147,7 +146,6 @@ CREATE FUNCTION lcb_hist.fn_capture_hist_inventory_lot() RETURNS trigger
         inventory_type,
         description,
         quantity,
-        units,
         strain_name,
         area_identifier
     )
@@ -164,7 +162,6 @@ CREATE FUNCTION lcb_hist.fn_capture_hist_inventory_lot() RETURNS trigger
         OLD.inventory_type,
         OLD.description,
         OLD.quantity,
-        OLD.units,
         OLD.strain_name,
         OLD.area_identifier
     )

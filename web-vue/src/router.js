@@ -20,6 +20,8 @@ import FacilityDetail from './views/Org/FacilityDetailView/FacilityDetailViewVue
 import ProjectManager from './views/ProjectManager/TheProjectManagerVuetify.vue'
 import ProjectDetail from './views/Prj/ProjectDetailView/ProjectDetailViewVuetify.vue'
 
+import LcbTraceability from './views/LcbTraceability/LcbTraceability.vue'
+
 Vue.use(Router)
 
 export default new Router({
@@ -89,6 +91,11 @@ export default new Router({
       name: 'facility-detail',
       component: FacilityDetail,
       props: true
+    },
+    {
+      path: '/lcb-traceability',
+      name: 'lcb-traceability',
+      component: LcbTraceability
     },
     {
       path: '/about',
