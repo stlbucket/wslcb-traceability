@@ -24,6 +24,13 @@
             v-model="licenseeIdentifier"
           ></v-text-field>
         </v-col>
+        <v-col cols="2">
+          <v-text-field
+            label="Reporting Status"
+            v-model="reportingStatus"
+            disabled
+          ></v-text-field>
+        </v-col>
       </v-row>
       <v-row>
         <v-col cols="3">
@@ -150,6 +157,11 @@
       </template>
 
     </v-data-table>
+    <v-switch
+      label="safe mode"
+      v-model="safeMode"
+    >
+    </v-switch>
   </v-container>
 </template>
 
@@ -291,6 +303,7 @@ export default {
         value: il.inventoryType.id
       } : this.selectedInventoryType
       this.ulid = il ? il.id : this.nextUlid
+      this.reportingStatus = il ? il.reportingStatus : null
       this.licenseeIdentifier = il ? il.licenseeIdentifier : null
       this.strainName = il ? il.strainName : this.strainName
       this.description = il ? il.description : this.description
@@ -346,8 +359,9 @@ export default {
       }
     },
     reportDisabled () {
+      if (!this.safeMode) return false
       if (this.selectedInventoryLot) {
-        return !this.dataIsDirty
+        return !this.dataIsDirty || ['ACTIVE', 'PROVISIONED'].indexOf(this.selectedInventoryLot.reportingStatus) === -1
       } else if (this.selectedInventoryType && this.ulid) {
         const quantity = parseFloat(this.quantity)
         const notNum = isNaN(quantity)
@@ -373,15 +387,19 @@ export default {
       }
     },
     destroyDisabled () {
+      if (!this.safeMode) return false
       return this.selectedInventoryLot === null || this.selectedInventoryLot.reportingStatus !== 'ACTIVE'
     },
     invalidateDisabled () {
+      if (!this.safeMode) return false
       return this.selectedInventoryLot === null || this.selectedInventoryLot.reportingStatus !== 'PROVISIONED'
     },
     inventoryTypeSelectDisabled () {
+      if (!this.safeMode) return false
       return this.selectedInventoryLot !== null
     },
     provisionDisabled () {
+      if (!this.safeMode) return false
       return !this.selectedInventoryType || this.provisionCount < 1
     },
     quantityLabel () {
@@ -396,6 +414,7 @@ export default {
   data () {
     return {
       ulid: null,
+      reportingStatus: null,
       licenseeIdentifier: null,
       strainName: null,
       description: null,
@@ -411,6 +430,7 @@ export default {
       singleExpand: false,
       provisionCount: 0,
       nextUlid: null,
+      safeMode: true,
       headers: [
         {
           text: 'Updated At',
