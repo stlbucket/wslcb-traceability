@@ -70,15 +70,6 @@ CREATE SCHEMA lcb_hist;
 ALTER SCHEMA lcb_hist OWNER TO app;
 
 --
--- Name: lcb_ref; Type: SCHEMA; Schema: -; Owner: app
---
-
-CREATE SCHEMA lcb_ref;
-
-
-ALTER SCHEMA lcb_ref OWNER TO app;
-
---
 -- Name: org; Type: SCHEMA; Schema: -; Owner: app
 --
 
@@ -155,23 +146,6 @@ CREATE TYPE auth.permission_key AS ENUM (
 
 
 ALTER TYPE auth.permission_key OWNER TO app;
-
---
--- Name: report_inventory_lot_input; Type: TYPE; Schema: lcb_fn; Owner: app
---
-
-CREATE TYPE lcb_fn.report_inventory_lot_input AS (
-	id text,
-	licensee_identifier text,
-	inventory_type text,
-	description text,
-	quantity numeric(10,2),
-	strain_name text,
-	area_identifier text
-);
-
-
-ALTER TYPE lcb_fn.report_inventory_lot_input OWNER TO app;
 
 --
 -- Name: fn_timestamp_update_application(); Type: FUNCTION; Schema: app; Owner: app
@@ -784,10 +758,8 @@ ALTER FUNCTION lcb.fn_timestamp_update_lcb_license_holder() OWNER TO app;
 
 CREATE TABLE lcb.inventory_lot (
     id text DEFAULT util_fn.generate_ulid() NOT NULL,
-    licensee_identifier text,
     app_tenant_id text NOT NULL,
     lcb_license_holder_id text NOT NULL,
-    reporting_status text NOT NULL,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at timestamp with time zone NOT NULL,
     deleted_at timestamp with time zone,
@@ -795,6 +767,7 @@ CREATE TABLE lcb.inventory_lot (
     inventory_type text NOT NULL,
     description text,
     quantity numeric(10,2),
+    units text,
     strain_name text,
     area_identifier text,
     CONSTRAINT ck_inventory_lot_id CHECK ((id <> ''::text)),
@@ -804,104 +777,6 @@ CREATE TABLE lcb.inventory_lot (
 
 
 ALTER TABLE lcb.inventory_lot OWNER TO app;
-
---
--- Name: deplete_inventory_lot_ids(text[]); Type: FUNCTION; Schema: lcb_fn; Owner: app
---
-
-CREATE FUNCTION lcb_fn.deplete_inventory_lot_ids(_ids text[]) RETURNS SETOF lcb.inventory_lot
-    LANGUAGE plpgsql STRICT
-    AS $$
-  DECLARE
-    _current_app_user auth.app_user;
-    _lcb_license_holder_id text;
-    _inventory_lot_input lcb_fn.report_inventory_lot_input;
-    _inventory_lot lcb.inventory_lot;
-    _inventory_lot_id text;
-  BEGIN
-    _current_app_user := auth_fn.current_app_user();
-
-    -- only active ids can be locked
-    if 0 < (select count(*) from lcb.inventory_lot where id = ANY(_ids) and reporting_status != 'ACTIVE') then
-      raise exception 'illegal operation - batch cancelled: only active ids can be depleted.';
-    end if;
-
-    update lcb.inventory_lot set
-      reporting_status = 'DEPLETED',
-      quantity = 0
-    where id = ANY(_ids);
-
-    RETURN QUERY SELECT * FROM lcb.inventory_lot WHERE id = ANY(_ids);
-  END;
-  $$;
-
-
-ALTER FUNCTION lcb_fn.deplete_inventory_lot_ids(_ids text[]) OWNER TO app;
-
---
--- Name: destroy_inventory_lot_ids(text[]); Type: FUNCTION; Schema: lcb_fn; Owner: app
---
-
-CREATE FUNCTION lcb_fn.destroy_inventory_lot_ids(_ids text[]) RETURNS SETOF lcb.inventory_lot
-    LANGUAGE plpgsql STRICT
-    AS $$
-  DECLARE
-    _current_app_user auth.app_user;
-    _lcb_license_holder_id text;
-    _inventory_lot_input lcb_fn.report_inventory_lot_input;
-    _inventory_lot lcb.inventory_lot;
-    _inventory_lot_id text;
-  BEGIN
-    _current_app_user := auth_fn.current_app_user();
-
-    -- only active ids can be locked
-    if 0 < (select count(*) from lcb.inventory_lot where id = ANY(_ids) and reporting_status != 'ACTIVE') then
-      raise exception 'illegal operation - batch cancelled: only active ids can be destroyed.';
-    end if;
-
-    update lcb.inventory_lot set
-      reporting_status = 'DESTROYED',
-      quantity = 0
-    where id = ANY(_ids);
-
-    RETURN QUERY SELECT * FROM lcb.inventory_lot WHERE id = ANY(_ids);
-  END;
-  $$;
-
-
-ALTER FUNCTION lcb_fn.destroy_inventory_lot_ids(_ids text[]) OWNER TO app;
-
---
--- Name: invalidate_inventory_lot_ids(text[]); Type: FUNCTION; Schema: lcb_fn; Owner: app
---
-
-CREATE FUNCTION lcb_fn.invalidate_inventory_lot_ids(_ids text[]) RETURNS SETOF lcb.inventory_lot
-    LANGUAGE plpgsql STRICT
-    AS $$
-  DECLARE
-    _current_app_user auth.app_user;
-    _lcb_license_holder_id text;
-    _inventory_lot_input lcb_fn.report_inventory_lot_input;
-    _inventory_lot lcb.inventory_lot;
-    _inventory_lot_id text;
-  BEGIN
-    _current_app_user := auth_fn.current_app_user();
-
-    -- only provisioned ids can be invalidated
-    if 0 < (select count(*) from lcb.inventory_lot where id = ANY(_ids) and reporting_status != 'PROVISIONED') then
-      raise exception 'illegal operation - batch cancelled: only provisioned ids can be invalidated.';
-    end if;
-
-    update lcb.inventory_lot set
-      reporting_status = 'INVALIDATED'
-    where id = ANY(_ids);
-
-    RETURN QUERY SELECT * FROM lcb.inventory_lot WHERE id = ANY(_ids);
-  END;
-  $$;
-
-
-ALTER FUNCTION lcb_fn.invalidate_inventory_lot_ids(_ids text[]) OWNER TO app;
 
 --
 -- Name: provision_inventory_lot_ids(text, integer); Type: FUNCTION; Schema: lcb_fn; Owner: app
@@ -914,10 +789,12 @@ CREATE FUNCTION lcb_fn.provision_inventory_lot_ids(_inventory_type text, _number
     _current_app_user auth.app_user;
     _lcb_license_holder_id text;
     _inventory_lot lcb.inventory_lot;
+    _created_count integer;
   BEGIN
+    _created_count := 0;
     _current_app_user := auth_fn.current_app_user();
 
-    -- this is not really correct.  need mechanism to switch between licenses
+    -- this is not reall correct.  need mechanism to switch between licenses
     select id
     into _lcb_license_holder_id
     from lcb.lcb_license_holder
@@ -929,14 +806,12 @@ CREATE FUNCTION lcb_fn.provision_inventory_lot_ids(_inventory_type text, _number
       app_tenant_id,
       lcb_license_holder_id,
       id_origin,
-      reporting_status,
       inventory_type
     )
     SELECT
       _current_app_user.app_tenant_id,
       _lcb_license_holder_id,
       'WSLCB',
-      'PROVISIONED',
       _inventory_type
     FROM
       generate_series(1, _number_requested)
@@ -947,188 +822,6 @@ CREATE FUNCTION lcb_fn.provision_inventory_lot_ids(_inventory_type text, _number
 
 
 ALTER FUNCTION lcb_fn.provision_inventory_lot_ids(_inventory_type text, _number_requested integer) OWNER TO app;
-
---
--- Name: report_inventory_lot(lcb_fn.report_inventory_lot_input[]); Type: FUNCTION; Schema: lcb_fn; Owner: app
---
-
-CREATE FUNCTION lcb_fn.report_inventory_lot(_input lcb_fn.report_inventory_lot_input[]) RETURNS SETOF lcb.inventory_lot
-    LANGUAGE plpgsql STRICT
-    AS $$
-  DECLARE
-    _current_app_user auth.app_user;
-    _lcb_license_holder_id text;
-    _inventory_lot_input lcb_fn.report_inventory_lot_input;
-    _inventory_lot lcb.inventory_lot;
-    _inventory_lot_id text;
-  BEGIN
-    _current_app_user := auth_fn.current_app_user();
-
-    -- this is not really correct.  need mechanism to switch between licenses
-    select id
-    into _lcb_license_holder_id
-    from lcb.lcb_license_holder
-    where app_tenant_id = _current_app_user.app_tenant_id;
-
-    foreach _inventory_lot_input in ARRAY _input
-    loop
-
-      -- if _inventory_lot_input.id is null or _inventory_lot_input.id = '' then
-      --   raise exception 'illegal operation - batch cancelled:  all inventory lots must have id defined.';
-      -- end if;
-
-      -- make sure this lot can be identified later
-      if _inventory_lot_input.id is null or _inventory_lot_input.id = '' then
-        if _inventory_lot_input.licensee_identifier is null or _inventory_lot_input.licensee_identifier = '' then
-          raise exception 'illegal operation - batch cancelled:  all inventory lots must have id OR licensee_identifier defined.';
-        end if;
-        _inventory_lot_id := util_fn.generate_ulid();
-      else
-        -- _inventory_lot_input.id should be verified as a valid ulid here
-        _inventory_lot_id := _inventory_lot_input.id;
-      end if;
-      
-      -- find existing lot if it's there
-      select *
-      into _inventory_lot
-      from lcb.inventory_lot
-      where id = _inventory_lot_id;
-
-      if _inventory_lot.id is null then
-        insert into lcb.inventory_lot(
-          id,
-          licensee_identifier,
-          app_tenant_id,
-          lcb_license_holder_id,
-          id_origin,
-          reporting_status,
-          inventory_type,
-          description,
-          quantity,
-          strain_name,
-          area_identifier
-        )
-        SELECT
-          COALESCE(_inventory_lot_input.id, util_fn.generate_ulid()),
-          _inventory_lot_input.licensee_identifier,
-          _current_app_user.app_tenant_id,
-          _lcb_license_holder_id,
-          case when _inventory_lot_input.id is null then 'WSLCB' else 'LICENSEE' end,
-          case when _inventory_lot_input.quantity > 0 then 'ACTIVE' else 'DEPLETED' end,
-          _inventory_lot_input.inventory_type::text,
-          _inventory_lot_input.description::text,
-          _inventory_lot_input.quantity::numeric(10,2),
-          _inventory_lot_input.strain_name::text,
-          _inventory_lot_input.area_identifier::text
-        RETURNING * INTO _inventory_lot;
-      else
-        if _inventory_lot.reporting_status != 'ACTIVE' and _inventory_lot.reporting_status != 'PROVISIONED' then
-          raise exception 'illegal operation - batch cancelled:  can only report on ACTIVE or PROVISIONED inventory lots: %', _inventory_lot.id;
-        end if;
-
-        if _inventory_lot_input.inventory_type != _inventory_lot.inventory_type then
-          raise exception 'illegal operation - batch cancelled:  cannot change inventory type of an existing inventory lot: %', _inventory_lot.id;
-        end if;
-
-        -- update lcb.inventory_lot set
-        --   licensee_identifier = _inventory_lot_input.licensee_identifier::text,
-        --   description = _inventory_lot_input.description::text,
-        --   quantity = _inventory_lot_input.quantity::numeric(10,2),
-        --   strain_name = _inventory_lot_input.strain_name::text,
-        --   area_identifier = _inventory_lot_input.area_identifier::text,
-        --   reporting_status = case when _inventory_lot_input.quantity::numeric(10,2) > 0 then 'ACTIVE' else 'DEPLETED' end
-        -- where id = _inventory_lot_id
-        -- and (
-        --   _inventory_lot_input.licensee_identifier::text != licensee_identifier
-        --   OR _inventory_lot_input.description::text != description
-        --   OR _inventory_lot_input.quantity::numeric(20,2) != quantity
-        --   OR _inventory_lot_input.strain_name::text != strain_name
-        --   OR _inventory_lot_input.area_identifier::text != area_identifier
-        -- )
-        -- returning * into _inventory_lot
-        -- ;
-        if   coalesce(_inventory_lot_input.licensee_identifier::text, '') != coalesce(_inventory_lot.licensee_identifier, '')
-          OR coalesce(_inventory_lot_input.description::text, '')         != coalesce(_inventory_lot.description, '')
-          OR coalesce(_inventory_lot_input.quantity::numeric(20,2), -1)   != coalesce(_inventory_lot.quantity, -1)
-          OR coalesce(_inventory_lot_input.strain_name::text, '')         != coalesce(_inventory_lot.strain_name, '')
-          OR coalesce(_inventory_lot_input.area_identifier::text, '')     != coalesce(_inventory_lot.area_identifier, '')
-        then
-          update lcb.inventory_lot set
-            licensee_identifier = _inventory_lot_input.licensee_identifier::text,
-            description = _inventory_lot_input.description::text,
-            quantity = _inventory_lot_input.quantity::numeric(10,2),
-            strain_name = _inventory_lot_input.strain_name::text,
-            area_identifier = _inventory_lot_input.area_identifier::text,
-            reporting_status = case when _inventory_lot_input.quantity::numeric(10,2) > 0 then 'ACTIVE' else 'DEPLETED' end
-          where id = _inventory_lot_id
-          returning * into _inventory_lot
-          ;
-        end if;
-
--- raise exception 'wtf %', _inventory_lot_input.quantity::numeric(10,2);
-        SELECT * INTO _inventory_lot FROM lcb.inventory_lot WHERE id = _inventory_lot_id;
-      end if;
-
-      return next _inventory_lot;
-
-    end loop;
-
-    RETURN;
-
-
-  end;
-  $$;
-
-
-ALTER FUNCTION lcb_fn.report_inventory_lot(_input lcb_fn.report_inventory_lot_input[]) OWNER TO app;
-
---
--- Name: fn_capture_hist_inventory_lot(); Type: FUNCTION; Schema: lcb_hist; Owner: app
---
-
-CREATE FUNCTION lcb_hist.fn_capture_hist_inventory_lot() RETURNS trigger
-    LANGUAGE plpgsql
-    AS $$
-  BEGIN
-    insert into lcb_hist.hist_inventory_lot(
-        inventory_lot_id,
-        licensee_identifier,
-        app_tenant_id,
-        lcb_license_holder_id,
-        created_at,
-        updated_at,
-        deleted_at,
-        id_origin,
-        reporting_status,
-        inventory_type,
-        description,
-        quantity,
-        strain_name,
-        area_identifier
-    )
-    values (
-        OLD.id,
-        OLD.licensee_identifier,
-        OLD.app_tenant_id,
-        OLD.lcb_license_holder_id,
-        OLD.created_at,
-        OLD.updated_at,
-        OLD.deleted_at,
-        OLD.id_origin,
-        OLD.reporting_status,
-        OLD.inventory_type,
-        OLD.description,
-        OLD.quantity,
-        OLD.strain_name,
-        OLD.area_identifier
-    )
-    ;
-
-    RETURN OLD;
-  END; $$;
-
-
-ALTER FUNCTION lcb_hist.fn_capture_hist_inventory_lot() OWNER TO app;
 
 --
 -- Name: fn_timestamp_update_contact(); Type: FUNCTION; Schema: org; Owner: app
@@ -2231,59 +1924,6 @@ CREATE TABLE lcb.lcb_license_holder (
 ALTER TABLE lcb.lcb_license_holder OWNER TO app;
 
 --
--- Name: hist_inventory_lot; Type: TABLE; Schema: lcb_hist; Owner: app
---
-
-CREATE TABLE lcb_hist.hist_inventory_lot (
-    id text DEFAULT util_fn.generate_ulid() NOT NULL,
-    licensee_identifier text,
-    inventory_lot_id text NOT NULL,
-    app_tenant_id text NOT NULL,
-    lcb_license_holder_id text NOT NULL,
-    created_at timestamp with time zone NOT NULL,
-    updated_at timestamp with time zone NOT NULL,
-    deleted_at timestamp with time zone,
-    id_origin text NOT NULL,
-    reporting_status text NOT NULL,
-    inventory_type text NOT NULL,
-    description text,
-    quantity numeric(10,2),
-    units text,
-    strain_name text,
-    area_identifier text
-);
-
-
-ALTER TABLE lcb_hist.hist_inventory_lot OWNER TO app;
-
---
--- Name: inventory_lot_reporting_status; Type: TABLE; Schema: lcb_ref; Owner: app
---
-
-CREATE TABLE lcb_ref.inventory_lot_reporting_status (
-    id text NOT NULL,
-    CONSTRAINT ck_inventory_lot_reporting_status_id CHECK ((id <> ''::text))
-);
-
-
-ALTER TABLE lcb_ref.inventory_lot_reporting_status OWNER TO app;
-
---
--- Name: inventory_type; Type: TABLE; Schema: lcb_ref; Owner: app
---
-
-CREATE TABLE lcb_ref.inventory_type (
-    id text NOT NULL,
-    name text NOT NULL,
-    description text,
-    units text NOT NULL,
-    CONSTRAINT ck_inventory_type_id CHECK ((id <> ''::text))
-);
-
-
-ALTER TABLE lcb_ref.inventory_type OWNER TO app;
-
---
 -- Name: config_org; Type: TABLE; Schema: org; Owner: app
 --
 
@@ -2368,10 +2008,6 @@ ALTER TABLE shard_1.global_id_sequence OWNER TO app;
 --
 
 COPY app.application (id, created_at, updated_at, external_id, name, key) FROM stdin;
-01DV71ATGEXT4HHC5C5A3H1MGP	2019-12-03 23:25:40.238033+00	2019-12-03 23:25:40.238033+00	\N	Tenant Manager	tenant-manager
-01DV71ATGEF74FJNYWXQ4E0BYC	2019-12-03 23:25:40.238033+00	2019-12-03 23:25:40.238033+00	\N	License Manager	license-manager
-01DV71ATGE274NJQZC095WTXJN	2019-12-03 23:25:40.238033+00	2019-12-03 23:25:40.238033+00	\N	address book	address-book
-01DV71ATGEZ2KJ620R0BVJ8PBS	2019-12-03 23:25:40.238033+00	2019-12-03 23:25:40.238033+00	\N	LCB Traceability	lcb-traceability
 \.
 
 
@@ -2380,25 +2016,6 @@ COPY app.application (id, created_at, updated_at, external_id, name, key) FROM s
 --
 
 COPY app.license (id, app_tenant_id, created_at, updated_at, external_id, name, license_type_id, assigned_to_app_user_id) FROM stdin;
-01DV71ATGE59SXK3K815NPSPFW	01DTWX2GRYZHFNB9XW2RNJHZKT	2019-12-03 23:25:40.238033+00	2019-12-03 23:25:40.238033+00	\N	appsuperadmin - Tenant Manager	01DV71ATGE85387YDHA7F9QTSZ	01DTWX2GRYN5BAAYRY78KEWDYD
-01DV71ATGE92QCRQ9TAGEZ5NBQ	01DTWX2GRYZHFNB9XW2RNJHZKT	2019-12-03 23:25:40.238033+00	2019-12-03 23:25:40.238033+00	\N	appsuperadmin - License Manager	01DV71ATGE3DBK0HGNCWNWWCSF	01DTWX2GRYN5BAAYRY78KEWDYD
-01DV71ATGE23QQFGDTPQRR312E	01DV71AT0WB8HFF2ND8ED079Y6	2019-12-03 23:25:40.238033+00	2019-12-03 23:25:40.238033+00	\N	lcb_producer_admin - License Manager	01DV71ATGE3DBK0HGNCWNWWCSF	01DV71AT0W5JZV9ETZ1FCWFP3G
-01DV71ATGE3DMFT0Q2NJ4NQQR7	01DV71AT0WVNSXMAA30QVJ8ESK	2019-12-03 23:25:40.238033+00	2019-12-03 23:25:40.238033+00	\N	lcb_processor_admin - License Manager	01DV71ATGE3DBK0HGNCWNWWCSF	01DV71AT0W8SAQ6KRBKCST16Q4
-01DV71ATGE3R3AQTX1NBSS02FX	01DV71AT0WSSAE1K5304FMEANS	2019-12-03 23:25:40.238033+00	2019-12-03 23:25:40.238033+00	\N	lcb_retail_admin - License Manager	01DV71ATGE3DBK0HGNCWNWWCSF	01DV71AT0WCNP0W82X26JVHWPA
-01DV71ATGEJFN082ZZTJH1FJ17	01DTWX2GRYZHFNB9XW2RNJHZKT	2019-12-03 23:25:40.238033+00	2019-12-03 23:25:40.238033+00	\N	appsuperadmin - Address Book	01DV71ATGEJCEEB5TQ86ZXXPFP	01DTWX2GRYN5BAAYRY78KEWDYD
-01DV71ATGE7PEBCFQ3351CC583	01DV71AT0WB8HFF2ND8ED079Y6	2019-12-03 23:25:40.238033+00	2019-12-03 23:25:40.238033+00	\N	lcb_producer_admin - Address Book	01DV71ATGEJCEEB5TQ86ZXXPFP	01DV71AT0W5JZV9ETZ1FCWFP3G
-01DV71ATGE1FFKAXN1YM2XFZFN	01DV71AT0WB8HFF2ND8ED079Y6	2019-12-03 23:25:40.238033+00	2019-12-03 23:25:40.238033+00	\N	lcb_producer_user - Address Book	01DV71ATGEJCEEB5TQ86ZXXPFP	01DV71AT0WNE5F7RHTT8XARG0H
-01DV71ATGEVB2PEFVF0W4ZK2BA	01DV71AT0WVNSXMAA30QVJ8ESK	2019-12-03 23:25:40.238033+00	2019-12-03 23:25:40.238033+00	\N	lcb_processor_admin - Address Book	01DV71ATGEJCEEB5TQ86ZXXPFP	01DV71AT0W8SAQ6KRBKCST16Q4
-01DV71ATGEBDJFX7JD67QCG2NA	01DV71AT0WVNSXMAA30QVJ8ESK	2019-12-03 23:25:40.238033+00	2019-12-03 23:25:40.238033+00	\N	lcb_processor_user - Address Book	01DV71ATGEJCEEB5TQ86ZXXPFP	01DV71AT0WCQPPRYWREJJ80ZB4
-01DV71ATGEN76T73AW18CQVQSA	01DV71AT0WSSAE1K5304FMEANS	2019-12-03 23:25:40.238033+00	2019-12-03 23:25:40.238033+00	\N	lcb_retail_admin - Address Book	01DV71ATGEJCEEB5TQ86ZXXPFP	01DV71AT0WCNP0W82X26JVHWPA
-01DV71ATGEW4KR032YQ04ZDTFD	01DV71AT0WSSAE1K5304FMEANS	2019-12-03 23:25:40.238033+00	2019-12-03 23:25:40.238033+00	\N	lcb_retail_user - Address Book	01DV71ATGEJCEEB5TQ86ZXXPFP	01DV71AT0W8R2TGCZ5KCZ8Y7SJ
-01DV71ATGE5GDKVGSZNC3KWJWH	01DTWX2GRYZHFNB9XW2RNJHZKT	2019-12-03 23:25:40.238033+00	2019-12-03 23:25:40.238033+00	\N	appsuperadmin - LCB Traceability	01DV71ATGEZW15Z6FSWYPG8GH2	01DTWX2GRYN5BAAYRY78KEWDYD
-01DV71ATGEQ2MJEJKKR4FPXB8C	01DV71AT0WB8HFF2ND8ED079Y6	2019-12-03 23:25:40.238033+00	2019-12-03 23:25:40.238033+00	\N	lcb_producer_admin - LCB Traceability	01DV71ATGEZW15Z6FSWYPG8GH2	01DV71AT0W5JZV9ETZ1FCWFP3G
-01DV71ATGENEVSN5C6A0A7E8C2	01DV71AT0WB8HFF2ND8ED079Y6	2019-12-03 23:25:40.238033+00	2019-12-03 23:25:40.238033+00	\N	lcb_producer_user - LCB Traceability	01DV71ATGEZW15Z6FSWYPG8GH2	01DV71AT0WNE5F7RHTT8XARG0H
-01DV71ATGEHY1TYNJEHD3XA3EH	01DV71AT0WVNSXMAA30QVJ8ESK	2019-12-03 23:25:40.238033+00	2019-12-03 23:25:40.238033+00	\N	lcb_processor_admin - LCB Traceability	01DV71ATGEZW15Z6FSWYPG8GH2	01DV71AT0W8SAQ6KRBKCST16Q4
-01DV71ATGEB6ZENPA16H0V79SF	01DV71AT0WVNSXMAA30QVJ8ESK	2019-12-03 23:25:40.238033+00	2019-12-03 23:25:40.238033+00	\N	lcb_processor_user - LCB Traceability	01DV71ATGEZW15Z6FSWYPG8GH2	01DV71AT0WCQPPRYWREJJ80ZB4
-01DV71ATGER0XBVYKJ65T152CP	01DV71AT0WSSAE1K5304FMEANS	2019-12-03 23:25:40.238033+00	2019-12-03 23:25:40.238033+00	\N	lcb_retail_admin - LCB Traceability	01DV71ATGEZW15Z6FSWYPG8GH2	01DV71AT0WCNP0W82X26JVHWPA
-01DV71ATGEFBTAVK8VCC3634SZ	01DV71AT0WSSAE1K5304FMEANS	2019-12-03 23:25:40.238033+00	2019-12-03 23:25:40.238033+00	\N	lcb_retail_user - LCB Traceability	01DV71ATGEZW15Z6FSWYPG8GH2	01DV71AT0W8R2TGCZ5KCZ8Y7SJ
 \.
 
 
@@ -2415,10 +2032,6 @@ COPY app.license_permission (id, app_tenant_id, created_at, updated_at, license_
 --
 
 COPY app.license_type (id, created_at, updated_at, external_id, name, key, application_id) FROM stdin;
-01DV71ATGE85387YDHA7F9QTSZ	2019-12-03 23:25:40.238033+00	2019-12-03 23:25:40.238033+00	\N	Tenant Manager	tenant-manager	01DV71ATGEXT4HHC5C5A3H1MGP
-01DV71ATGE3DBK0HGNCWNWWCSF	2019-12-03 23:25:40.238033+00	2019-12-03 23:25:40.238033+00	\N	License Manager	license-manager	01DV71ATGEF74FJNYWXQ4E0BYC
-01DV71ATGEJCEEB5TQ86ZXXPFP	2019-12-03 23:25:40.238033+00	2019-12-03 23:25:40.238033+00	\N	Address Book	address-book	01DV71ATGE274NJQZC095WTXJN
-01DV71ATGEZW15Z6FSWYPG8GH2	2019-12-03 23:25:40.238033+00	2019-12-03 23:25:40.238033+00	\N	LCB Traceability	lcb-traceability	01DV71ATGEZ2KJ620R0BVJ8PBS
 \.
 
 
@@ -2436,9 +2049,6 @@ COPY app.license_type_permission (id, created_at, updated_at, license_type_id, p
 
 COPY auth.app_tenant (id, created_at, updated_at, name, identifier) FROM stdin;
 01DTWX2GRYZHFNB9XW2RNJHZKT	2019-11-30 00:58:49.502291+00	2019-11-30 00:58:49.502291+00	Anchor Tenant	anchor
-01DV71AT0WB8HFF2ND8ED079Y6	2019-12-03 23:25:39.739569+00	2019-12-03 23:25:39.739569+00	Producer-1	G11111
-01DV71AT0WVNSXMAA30QVJ8ESK	2019-12-03 23:25:39.739569+00	2019-12-03 23:25:39.739569+00	Processor-1	M11111
-01DV71AT0WSSAE1K5304FMEANS	2019-12-03 23:25:39.739569+00	2019-12-03 23:25:39.739569+00	Retail-1	R11111
 \.
 
 
@@ -2448,12 +2058,6 @@ COPY auth.app_tenant (id, created_at, updated_at, name, identifier) FROM stdin;
 
 COPY auth.app_user (id, app_tenant_id, created_at, updated_at, username, recovery_email, password_hash, inactive, password_reset_required, permission_key) FROM stdin;
 01DTWX2GRYN5BAAYRY78KEWDYD	01DTWX2GRYZHFNB9XW2RNJHZKT	2019-11-30 00:58:49.502291+00	2019-11-30 00:58:49.502291+00	appsuperadmin	appsuperadmin@tst.tst	$2a$06$UFCeEuicGDM/b28Nz3w76OK3xtzDXg1L.s6zTTOVIzpoGsBfCz3f.	f	f	SuperAdmin
-01DV71AT0W5JZV9ETZ1FCWFP3G	01DV71AT0WB8HFF2ND8ED079Y6	2019-12-03 23:25:39.739569+00	2019-12-03 23:25:39.739569+00	lcb_producer_admin	lcb_producer_admin@blah.blah	$2a$06$gRUlTMSzY7rBnCT/lylJK.C3bbQm.7i0g8G.jCyWiQPSayl9pjGNi	f	f	Admin
-01DV71AT0WNE5F7RHTT8XARG0H	01DV71AT0WB8HFF2ND8ED079Y6	2019-12-03 23:25:39.739569+00	2019-12-03 23:25:39.739569+00	lcb_producer_user	lcb_producer_user@blah.blah	$2a$06$lx7tBFmSgUR7GlkwBUaj.Oc2uCg59WrkjHa4L5rhntZwYMvyZje7e	f	f	User
-01DV71AT0W8SAQ6KRBKCST16Q4	01DV71AT0WVNSXMAA30QVJ8ESK	2019-12-03 23:25:39.739569+00	2019-12-03 23:25:39.739569+00	lcb_processor_admin	lcb_processor_admin@blah.blah	$2a$06$tXKaCRnJnkZey8REuJVa2u0JyMeVZ1xm1sj8.pMPicu8kF808vR66	f	f	Admin
-01DV71AT0WCQPPRYWREJJ80ZB4	01DV71AT0WVNSXMAA30QVJ8ESK	2019-12-03 23:25:39.739569+00	2019-12-03 23:25:39.739569+00	lcb_processor_user	lcb_processor_user@blah.blah	$2a$06$lS2LbmOiJPysxsBe07fg7uXilo5rXwdWQ38GhOncP48y6QyH74UY.	f	f	User
-01DV71AT0WCNP0W82X26JVHWPA	01DV71AT0WSSAE1K5304FMEANS	2019-12-03 23:25:39.739569+00	2019-12-03 23:25:39.739569+00	lcb_retail_admin	lcb_retail_admin003@blah.blah	$2a$06$QuAGpx/QHr/YtLJoE5Akk.iMF64NJc1lsEs7gRaJ6HBKVhi88qwfy	f	f	Admin
-01DV71AT0W8R2TGCZ5KCZ8Y7SJ	01DV71AT0WSSAE1K5304FMEANS	2019-12-03 23:25:39.739569+00	2019-12-03 23:25:39.739569+00	lcb_retail_user	lcb_retail_user@blah.blah	$2a$06$4ouPn.zymP0/c8Nm5HXTo.KS/DwZVApNTaQKFF23KO4x6BEwYz2Xq	f	f	User
 \.
 
 
@@ -2485,7 +2089,7 @@ COPY auth.token (id, app_user_id, created_at, expires_at) FROM stdin;
 -- Data for Name: inventory_lot; Type: TABLE DATA; Schema: lcb; Owner: app
 --
 
-COPY lcb.inventory_lot (id, licensee_identifier, app_tenant_id, lcb_license_holder_id, reporting_status, created_at, updated_at, deleted_at, id_origin, inventory_type, description, quantity, strain_name, area_identifier) FROM stdin;
+COPY lcb.inventory_lot (id, app_tenant_id, lcb_license_holder_id, created_at, updated_at, deleted_at, id_origin, inventory_type, description, quantity, units, strain_name, area_identifier) FROM stdin;
 \.
 
 
@@ -2494,9 +2098,6 @@ COPY lcb.inventory_lot (id, licensee_identifier, app_tenant_id, lcb_license_hold
 --
 
 COPY lcb.lcb_license (id, created_at, updated_at, code) FROM stdin;
-01DV71ATDQ3MZ4VKEHYBRF6SYK	2019-12-03 23:25:40.151433+00	2019-12-03 23:25:40.151433+00	G11111
-01DV71ATDQJ3K9R1D7KCAFCESE	2019-12-03 23:25:40.151433+00	2019-12-03 23:25:40.151433+00	M11111
-01DV71ATDQWMHBMZTM08E43DVM	2019-12-03 23:25:40.151433+00	2019-12-03 23:25:40.151433+00	R11111
 \.
 
 
@@ -2505,46 +2106,6 @@ COPY lcb.lcb_license (id, created_at, updated_at, code) FROM stdin;
 --
 
 COPY lcb.lcb_license_holder (id, app_tenant_id, created_at, updated_at, lcb_license_id, organization_id, acquisition_date, relinquish_date) FROM stdin;
-01DV71ATDQPR5EZJT7MWHEDQJ6	01DV71AT0WB8HFF2ND8ED079Y6	2019-12-03 23:25:40.151433+00	2019-12-03 23:25:40.151433+00	01DV71ATDQ3MZ4VKEHYBRF6SYK	01DV71AT0WT2XM5CJJNHK51J19	2019-12-03 23:25:40.151433+00	\N
-01DV71ATDQ49GGEWG2N851NGRH	01DV71AT0WVNSXMAA30QVJ8ESK	2019-12-03 23:25:40.151433+00	2019-12-03 23:25:40.151433+00	01DV71ATDQJ3K9R1D7KCAFCESE	01DV71AT0W0JF5HGAAJR4ZGEEA	2019-12-03 23:25:40.151433+00	\N
-01DV71ATDQRNMDYYYR8K0K9Q8C	01DV71AT0WSSAE1K5304FMEANS	2019-12-03 23:25:40.151433+00	2019-12-03 23:25:40.151433+00	01DV71ATDQWMHBMZTM08E43DVM	01DV71AT0W5DN25YMHQPX0AFAP	2019-12-03 23:25:40.151433+00	\N
-\.
-
-
---
--- Data for Name: hist_inventory_lot; Type: TABLE DATA; Schema: lcb_hist; Owner: app
---
-
-COPY lcb_hist.hist_inventory_lot (id, licensee_identifier, inventory_lot_id, app_tenant_id, lcb_license_holder_id, created_at, updated_at, deleted_at, id_origin, reporting_status, inventory_type, description, quantity, units, strain_name, area_identifier) FROM stdin;
-\.
-
-
---
--- Data for Name: inventory_lot_reporting_status; Type: TABLE DATA; Schema: lcb_ref; Owner: app
---
-
-COPY lcb_ref.inventory_lot_reporting_status (id) FROM stdin;
-PROVISIONED
-INVALIDATED
-ACTIVE
-DESTROYED
-DEPLETED
-\.
-
-
---
--- Data for Name: inventory_type; Type: TABLE DATA; Schema: lcb_ref; Owner: app
---
-
-COPY lcb_ref.inventory_type (id, name, description, units) FROM stdin;
-BF	Bulk Flower	\N	g
-UM	Usable Marijuana	\N	g
-PM	Packaged Marijuana	\N	g
-PR	Pre-roll Joints	\N	ct
-CL	Clones	\N	ct
-SD	Seeds	\N	ct
-IS	Infused Solid Edible	\N	ct
-IL	Infused Liquid Edible	\N	ct
 \.
 
 
@@ -2561,13 +2122,7 @@ COPY org.config_org (id, key, value) FROM stdin;
 --
 
 COPY org.contact (id, app_tenant_id, created_at, updated_at, organization_id, location_id, external_id, first_name, last_name, email, cell_phone, office_phone, title, nickname) FROM stdin;
-01DTWX2GRYRKYNC6B68CNP0JD3	01DTWX2GRYZHFNB9XW2RNJHZKT	2019-11-30 00:58:49.502291+00	2019-12-03 23:25:39.967081+00	01DTWX2GRYV6NTJYD2FNCN2HPK	01DV71AT7ZX1CH2QN7AYS7TMTW	appsuperadmin	Super	Admin	appsuperadmin@tst.tst	\N	\N	\N	\N
-01DV71AT0W347W7GJBM09CB5PG	01DV71AT0WB8HFF2ND8ED079Y6	2019-12-03 23:25:39.739569+00	2019-12-03 23:25:39.967081+00	01DV71AT0WT2XM5CJJNHK51J19	01DV71AT7ZWDRP6K57EBQK59CN	lcb_producer_admin	lcb_producer_admin	Test	lcb_producer_admin@blah.blah	\N	\N	\N	\N
-01DV71AT0W36JJ9JV039YK80PZ	01DV71AT0WB8HFF2ND8ED079Y6	2019-12-03 23:25:39.739569+00	2019-12-03 23:25:39.967081+00	01DV71AT0WT2XM5CJJNHK51J19	01DV71AT7ZY9PSJK4BZFJFGPNB	lcb_producer_user	lcb_producer_user	Test	lcb_producer_user@blah.blah	\N	\N	\N	\N
-01DV71AT0W57Y760MFRH4TBJWX	01DV71AT0WVNSXMAA30QVJ8ESK	2019-12-03 23:25:39.739569+00	2019-12-03 23:25:39.967081+00	01DV71AT0W0JF5HGAAJR4ZGEEA	01DV71AT7Z7GK4FWR1TDAVXXV4	lcb_processor_admin	lcb_processor_admin	Test	lcb_processor_admin@blah.blah	\N	\N	\N	\N
-01DV71AT0WA1EKX40129FRC3T0	01DV71AT0WVNSXMAA30QVJ8ESK	2019-12-03 23:25:39.739569+00	2019-12-03 23:25:39.967081+00	01DV71AT0W0JF5HGAAJR4ZGEEA	01DV71AT7Z804JS60FDFBD8ZR4	lcb_processor_user	lcb_processor_user	Test	lcb_processor_user@blah.blah	\N	\N	\N	\N
-01DV71AT0WB1J8C4TG33HKE7KW	01DV71AT0WSSAE1K5304FMEANS	2019-12-03 23:25:39.739569+00	2019-12-03 23:25:39.967081+00	01DV71AT0W5DN25YMHQPX0AFAP	01DV71AT7Z5YGRRA0ZNXCXGMZ1	lcb_retail_admin	lcb_retail_admin	Test	lcb_retail_admin003@blah.blah	\N	\N	\N	\N
-01DV71AT0WBFZNTZMB5V79E50V	01DV71AT0WSSAE1K5304FMEANS	2019-12-03 23:25:39.739569+00	2019-12-03 23:25:39.967081+00	01DV71AT0W5DN25YMHQPX0AFAP	01DV71AT7ZQZ52R18SJB5PTZR8	lcb_retail_user	lcb_retail_user	Test	lcb_retail_user@blah.blah	\N	\N	\N	\N
+01DTWX2GRYRKYNC6B68CNP0JD3	01DTWX2GRYZHFNB9XW2RNJHZKT	2019-11-30 00:58:49.502291+00	2019-11-30 00:58:49.502291+00	01DTWX2GRYV6NTJYD2FNCN2HPK	\N	appsuperadmin	Super	Admin	appsuperadmin@tst.tst	\N	\N	\N	\N
 \.
 
 
@@ -2577,12 +2132,6 @@ COPY org.contact (id, app_tenant_id, created_at, updated_at, organization_id, lo
 
 COPY org.contact_app_user (id, app_tenant_id, created_at, updated_at, contact_id, app_user_id, username) FROM stdin;
 01DTWX2GRYNM1J522ZX2JS0N3R	01DTWX2GRYZHFNB9XW2RNJHZKT	2019-11-30 00:58:49.502291+00	2019-11-30 00:58:49.502291+00	01DTWX2GRYRKYNC6B68CNP0JD3	01DTWX2GRYN5BAAYRY78KEWDYD	appsuperadmin
-01DV71AT0WQ2B99976V6101DRA	01DV71AT0WB8HFF2ND8ED079Y6	2019-12-03 23:25:39.739569+00	2019-12-03 23:25:39.739569+00	01DV71AT0W347W7GJBM09CB5PG	01DV71AT0W5JZV9ETZ1FCWFP3G	lcb_producer_admin
-01DV71AT0WDACRQEMQ4EM0HDES	01DV71AT0WB8HFF2ND8ED079Y6	2019-12-03 23:25:39.739569+00	2019-12-03 23:25:39.739569+00	01DV71AT0W36JJ9JV039YK80PZ	01DV71AT0WNE5F7RHTT8XARG0H	lcb_producer_user
-01DV71AT0W7EPYNSPH9R613VV1	01DV71AT0WVNSXMAA30QVJ8ESK	2019-12-03 23:25:39.739569+00	2019-12-03 23:25:39.739569+00	01DV71AT0W57Y760MFRH4TBJWX	01DV71AT0W8SAQ6KRBKCST16Q4	lcb_processor_admin
-01DV71AT0WSSWWX92F8H74DTE2	01DV71AT0WVNSXMAA30QVJ8ESK	2019-12-03 23:25:39.739569+00	2019-12-03 23:25:39.739569+00	01DV71AT0WA1EKX40129FRC3T0	01DV71AT0WCQPPRYWREJJ80ZB4	lcb_processor_user
-01DV71AT0WAZQJHQZ6J6AZJX49	01DV71AT0WSSAE1K5304FMEANS	2019-12-03 23:25:39.739569+00	2019-12-03 23:25:39.739569+00	01DV71AT0WB1J8C4TG33HKE7KW	01DV71AT0WCNP0W82X26JVHWPA	lcb_retail_admin
-01DV71AT0WQ9PHGVREASXM44GF	01DV71AT0WSSAE1K5304FMEANS	2019-12-03 23:25:39.739569+00	2019-12-03 23:25:39.739569+00	01DV71AT0WBFZNTZMB5V79E50V	01DV71AT0W8R2TGCZ5KCZ8Y7SJ	lcb_retail_user
 \.
 
 
@@ -2599,17 +2148,6 @@ COPY org.facility (id, app_tenant_id, created_at, updated_at, organization_id, l
 --
 
 COPY org.location (id, app_tenant_id, created_at, updated_at, external_id, name, address1, address2, city, state, zip, lat, lon) FROM stdin;
-01DV71AT7Z63JZQ9BR89W9FPNX	01DTWX2GRYZHFNB9XW2RNJHZKT	2019-12-03 23:25:39.967081+00	2019-12-03 23:25:39.967081+00	anchor-org	Anchor Tenant Location	addy 1	addy 2	a city	??	?????	43.5489393	-96.7226838
-01DV71AT7ZH2J063NZSMMYQA0K	01DV71AT0WB8HFF2ND8ED079Y6	2019-12-03 23:25:39.967081+00	2019-12-03 23:25:39.967081+00	G11111-org	Producer-1 Location	addy 1	addy 2	a city	??	?????	43.6897074	-104.1681667
-01DV71AT7ZCH96REYSWZX4DD79	01DV71AT0WVNSXMAA30QVJ8ESK	2019-12-03 23:25:39.967081+00	2019-12-03 23:25:39.967081+00	M11111-org	Processor-1 Location	addy 1	addy 2	a city	??	?????	42.5829863	-100.2943205
-01DV71AT7ZVB2G9VVE9V9HA39J	01DV71AT0WSSAE1K5304FMEANS	2019-12-03 23:25:39.967081+00	2019-12-03 23:25:39.967081+00	R11111-org	Retail-1 Location	addy 1	addy 2	a city	??	?????	44.5348270	-102.4863551
-01DV71AT7ZX1CH2QN7AYS7TMTW	01DTWX2GRYZHFNB9XW2RNJHZKT	2019-12-03 23:25:39.967081+00	2019-12-03 23:25:39.967081+00	appsuperadmin	appsuperadmin Location	addy 1	addy 2	a city	??	?????	44.3284550	-98.4342562
-01DV71AT7ZWDRP6K57EBQK59CN	01DV71AT0WB8HFF2ND8ED079Y6	2019-12-03 23:25:39.967081+00	2019-12-03 23:25:39.967081+00	lcb_producer_admin	lcb_producer_admin Location	addy 1	addy 2	a city	??	?????	42.7385524	-102.1975053
-01DV71AT7ZY9PSJK4BZFJFGPNB	01DV71AT0WB8HFF2ND8ED079Y6	2019-12-03 23:25:39.967081+00	2019-12-03 23:25:39.967081+00	lcb_producer_user	lcb_producer_user Location	addy 1	addy 2	a city	??	?????	43.7789795	-101.5653664
-01DV71AT7Z7GK4FWR1TDAVXXV4	01DV71AT0WVNSXMAA30QVJ8ESK	2019-12-03 23:25:39.967081+00	2019-12-03 23:25:39.967081+00	lcb_processor_admin	lcb_processor_admin Location	addy 1	addy 2	a city	??	?????	43.0563195	-95.6997999
-01DV71AT7Z804JS60FDFBD8ZR4	01DV71AT0WVNSXMAA30QVJ8ESK	2019-12-03 23:25:39.967081+00	2019-12-03 23:25:39.967081+00	lcb_processor_user	lcb_processor_user Location	addy 1	addy 2	a city	??	?????	35.9142054	-96.0979271
-01DV71AT7Z5YGRRA0ZNXCXGMZ1	01DV71AT0WSSAE1K5304FMEANS	2019-12-03 23:25:39.967081+00	2019-12-03 23:25:39.967081+00	lcb_retail_admin	lcb_retail_admin Location	addy 1	addy 2	a city	??	?????	40.8346009	-95.9794793
-01DV71AT7ZQZ52R18SJB5PTZR8	01DV71AT0WSSAE1K5304FMEANS	2019-12-03 23:25:39.967081+00	2019-12-03 23:25:39.967081+00	lcb_retail_user	lcb_retail_user Location	addy 1	addy 2	a city	??	?????	44.8656787	-108.9961373
 \.
 
 
@@ -2618,10 +2156,7 @@ COPY org.location (id, app_tenant_id, created_at, updated_at, external_id, name,
 --
 
 COPY org.organization (id, app_tenant_id, actual_app_tenant_id, created_at, updated_at, external_id, name, location_id, primary_contact_id) FROM stdin;
-01DTWX2GRYV6NTJYD2FNCN2HPK	01DTWX2GRYZHFNB9XW2RNJHZKT	01DTWX2GRYZHFNB9XW2RNJHZKT	2019-11-30 00:58:49.502291+00	2019-12-03 23:25:39.967081+00	anchor-org	Anchor Tenant	01DV71AT7Z63JZQ9BR89W9FPNX	01DTWX2GRYRKYNC6B68CNP0JD3
-01DV71AT0WT2XM5CJJNHK51J19	01DV71AT0WB8HFF2ND8ED079Y6	01DV71AT0WB8HFF2ND8ED079Y6	2019-12-03 23:25:39.739569+00	2019-12-03 23:25:39.967081+00	G11111-org	Producer-1	01DV71AT7ZH2J063NZSMMYQA0K	01DV71AT0W347W7GJBM09CB5PG
-01DV71AT0W0JF5HGAAJR4ZGEEA	01DV71AT0WVNSXMAA30QVJ8ESK	01DV71AT0WVNSXMAA30QVJ8ESK	2019-12-03 23:25:39.739569+00	2019-12-03 23:25:39.967081+00	M11111-org	Processor-1	01DV71AT7ZCH96REYSWZX4DD79	01DV71AT0W57Y760MFRH4TBJWX
-01DV71AT0W5DN25YMHQPX0AFAP	01DV71AT0WSSAE1K5304FMEANS	01DV71AT0WSSAE1K5304FMEANS	2019-12-03 23:25:39.739569+00	2019-12-03 23:25:39.967081+00	R11111-org	Retail-1	01DV71AT7ZVB2G9VVE9V9HA39J	01DV71AT0WB1J8C4TG33HKE7KW
+01DTWX2GRYV6NTJYD2FNCN2HPK	01DTWX2GRYZHFNB9XW2RNJHZKT	01DTWX2GRYZHFNB9XW2RNJHZKT	2019-11-30 00:58:49.502291+00	2019-11-30 00:58:49.502291+00	anchor-org	Anchor Tenant	\N	\N
 \.
 
 
@@ -2777,14 +2312,6 @@ ALTER TABLE ONLY auth.token
 
 
 --
--- Name: inventory_lot inventory_lot_id_key; Type: CONSTRAINT; Schema: lcb; Owner: app
---
-
-ALTER TABLE ONLY lcb.inventory_lot
-    ADD CONSTRAINT inventory_lot_id_key UNIQUE (id);
-
-
---
 -- Name: lcb_license lcb_license_code_key; Type: CONSTRAINT; Schema: lcb; Owner: app
 --
 
@@ -2822,46 +2349,6 @@ ALTER TABLE ONLY lcb.lcb_license
 
 ALTER TABLE ONLY lcb.lcb_license_holder
     ADD CONSTRAINT pk_lcb_license_holder PRIMARY KEY (id);
-
-
---
--- Name: hist_inventory_lot hist_inventory_lot_id_key; Type: CONSTRAINT; Schema: lcb_hist; Owner: app
---
-
-ALTER TABLE ONLY lcb_hist.hist_inventory_lot
-    ADD CONSTRAINT hist_inventory_lot_id_key UNIQUE (id);
-
-
---
--- Name: inventory_lot_reporting_status inventory_lot_reporting_status_id_key; Type: CONSTRAINT; Schema: lcb_ref; Owner: app
---
-
-ALTER TABLE ONLY lcb_ref.inventory_lot_reporting_status
-    ADD CONSTRAINT inventory_lot_reporting_status_id_key UNIQUE (id);
-
-
---
--- Name: inventory_type inventory_type_id_key; Type: CONSTRAINT; Schema: lcb_ref; Owner: app
---
-
-ALTER TABLE ONLY lcb_ref.inventory_type
-    ADD CONSTRAINT inventory_type_id_key UNIQUE (id);
-
-
---
--- Name: inventory_type inventory_type_name_key; Type: CONSTRAINT; Schema: lcb_ref; Owner: app
---
-
-ALTER TABLE ONLY lcb_ref.inventory_type
-    ADD CONSTRAINT inventory_type_name_key UNIQUE (name);
-
-
---
--- Name: inventory_type pk_inventory_type; Type: CONSTRAINT; Schema: lcb_ref; Owner: app
---
-
-ALTER TABLE ONLY lcb_ref.inventory_type
-    ADD CONSTRAINT pk_inventory_type PRIMARY KEY (id);
 
 
 --
@@ -3041,13 +2528,6 @@ CREATE TRIGGER tg_timestamp_update_permission BEFORE INSERT OR UPDATE ON auth.pe
 
 
 --
--- Name: inventory_lot tg_capture_hist_inventory_lot; Type: TRIGGER; Schema: lcb; Owner: app
---
-
-CREATE TRIGGER tg_capture_hist_inventory_lot AFTER UPDATE ON lcb.inventory_lot FOR EACH ROW EXECUTE PROCEDURE lcb_hist.fn_capture_hist_inventory_lot();
-
-
---
 -- Name: inventory_lot tg_timestamp_update_inventory_lot; Type: TRIGGER; Schema: lcb; Owner: app
 --
 
@@ -3200,27 +2680,11 @@ ALTER TABLE ONLY lcb.inventory_lot
 
 
 --
--- Name: inventory_lot fk_inventory_lot_inventory_type; Type: FK CONSTRAINT; Schema: lcb; Owner: app
---
-
-ALTER TABLE ONLY lcb.inventory_lot
-    ADD CONSTRAINT fk_inventory_lot_inventory_type FOREIGN KEY (inventory_type) REFERENCES lcb_ref.inventory_type(id);
-
-
---
 -- Name: inventory_lot fk_inventory_lot_lcb_license_holder; Type: FK CONSTRAINT; Schema: lcb; Owner: app
 --
 
 ALTER TABLE ONLY lcb.inventory_lot
     ADD CONSTRAINT fk_inventory_lot_lcb_license_holder FOREIGN KEY (lcb_license_holder_id) REFERENCES lcb.lcb_license_holder(id);
-
-
---
--- Name: inventory_lot fk_inventory_lot_reporting_status; Type: FK CONSTRAINT; Schema: lcb; Owner: app
---
-
-ALTER TABLE ONLY lcb.inventory_lot
-    ADD CONSTRAINT fk_inventory_lot_reporting_status FOREIGN KEY (reporting_status) REFERENCES lcb_ref.inventory_lot_reporting_status(id);
 
 
 --
@@ -3245,22 +2709,6 @@ ALTER TABLE ONLY lcb.lcb_license_holder
 
 ALTER TABLE ONLY lcb.lcb_license_holder
     ADD CONSTRAINT fk_lcb_license_holder_organization FOREIGN KEY (organization_id) REFERENCES org.organization(id);
-
-
---
--- Name: hist_inventory_lot fk_hist_inventory_lot_app_tenant_id; Type: FK CONSTRAINT; Schema: lcb_hist; Owner: app
---
-
-ALTER TABLE ONLY lcb_hist.hist_inventory_lot
-    ADD CONSTRAINT fk_hist_inventory_lot_app_tenant_id FOREIGN KEY (app_tenant_id) REFERENCES auth.app_tenant(id);
-
-
---
--- Name: hist_inventory_lot fk_hist_inventory_lot_inventory_lot; Type: FK CONSTRAINT; Schema: lcb_hist; Owner: app
---
-
-ALTER TABLE ONLY lcb_hist.hist_inventory_lot
-    ADD CONSTRAINT fk_hist_inventory_lot_inventory_lot FOREIGN KEY (inventory_lot_id) REFERENCES lcb.inventory_lot(id);
 
 
 --
@@ -3441,19 +2889,6 @@ CREATE POLICY rls_app_user_default_lcb_inventory_lot ON lcb.inventory_lot TO app
 
 
 --
--- Name: hist_inventory_lot; Type: ROW SECURITY; Schema: lcb_hist; Owner: app
---
-
-ALTER TABLE lcb_hist.hist_inventory_lot ENABLE ROW LEVEL SECURITY;
-
---
--- Name: hist_inventory_lot rls_app_user_default_org_contact_app_user; Type: POLICY; Schema: lcb_hist; Owner: app
---
-
-CREATE POLICY rls_app_user_default_org_contact_app_user ON lcb_hist.hist_inventory_lot TO app_user USING ((auth_fn.app_user_has_access(app_tenant_id) = true));
-
-
---
 -- Name: contact; Type: ROW SECURITY; Schema: org; Owner: app
 --
 
@@ -3563,13 +2998,6 @@ GRANT USAGE ON SCHEMA lcb_hist TO app_user;
 
 
 --
--- Name: SCHEMA lcb_ref; Type: ACL; Schema: -; Owner: app
---
-
-GRANT USAGE ON SCHEMA lcb_ref TO app_user;
-
-
---
 -- Name: SCHEMA org; Type: ACL; Schema: -; Owner: app
 --
 
@@ -3595,7 +3023,6 @@ GRANT USAGE ON SCHEMA shard_1 TO app_user;
 --
 
 GRANT USAGE ON SCHEMA util_fn TO app_demon;
-GRANT USAGE ON SCHEMA util_fn TO app_user;
 
 
 --
@@ -3771,14 +3198,6 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE lcb.inventory_lot TO app_user;
 
 REVOKE ALL ON FUNCTION lcb_fn.provision_inventory_lot_ids(_inventory_type text, _number_requested integer) FROM PUBLIC;
 GRANT ALL ON FUNCTION lcb_fn.provision_inventory_lot_ids(_inventory_type text, _number_requested integer) TO app_user;
-
-
---
--- Name: FUNCTION report_inventory_lot(_input lcb_fn.report_inventory_lot_input[]); Type: ACL; Schema: lcb_fn; Owner: app
---
-
-REVOKE ALL ON FUNCTION lcb_fn.report_inventory_lot(_input lcb_fn.report_inventory_lot_input[]) FROM PUBLIC;
-GRANT ALL ON FUNCTION lcb_fn.report_inventory_lot(_input lcb_fn.report_inventory_lot_input[]) TO app_user;
 
 
 --
@@ -3989,57 +3408,6 @@ GRANT SELECT ON TABLE lcb.lcb_license TO app_user;
 
 GRANT INSERT,DELETE,UPDATE ON TABLE lcb.lcb_license_holder TO app_super_admin;
 GRANT SELECT ON TABLE lcb.lcb_license_holder TO app_user;
-
-
---
--- Name: TABLE hist_inventory_lot; Type: ACL; Schema: lcb_hist; Owner: app
---
-
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE lcb_hist.hist_inventory_lot TO app_user;
-
-
---
--- Name: TABLE inventory_lot_reporting_status; Type: ACL; Schema: lcb_ref; Owner: app
---
-
-GRANT DELETE ON TABLE lcb_ref.inventory_lot_reporting_status TO app_super_admin;
-GRANT SELECT ON TABLE lcb_ref.inventory_lot_reporting_status TO app_user;
-
-
---
--- Name: COLUMN inventory_lot_reporting_status.id; Type: ACL; Schema: lcb_ref; Owner: app
---
-
-GRANT INSERT(id),UPDATE(id) ON TABLE lcb_ref.inventory_lot_reporting_status TO app_super_admin;
-
-
---
--- Name: TABLE inventory_type; Type: ACL; Schema: lcb_ref; Owner: app
---
-
-GRANT DELETE ON TABLE lcb_ref.inventory_type TO app_super_admin;
-GRANT SELECT ON TABLE lcb_ref.inventory_type TO app_user;
-
-
---
--- Name: COLUMN inventory_type.id; Type: ACL; Schema: lcb_ref; Owner: app
---
-
-GRANT INSERT(id),UPDATE(id) ON TABLE lcb_ref.inventory_type TO app_super_admin;
-
-
---
--- Name: COLUMN inventory_type.name; Type: ACL; Schema: lcb_ref; Owner: app
---
-
-GRANT INSERT(name),UPDATE(name) ON TABLE lcb_ref.inventory_type TO app_super_admin;
-
-
---
--- Name: COLUMN inventory_type.description; Type: ACL; Schema: lcb_ref; Owner: app
---
-
-GRANT INSERT(description),UPDATE(description) ON TABLE lcb_ref.inventory_type TO app_super_admin;
 
 
 --
