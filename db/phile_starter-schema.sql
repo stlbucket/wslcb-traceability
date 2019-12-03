@@ -43,33 +43,6 @@ CREATE SCHEMA auth_fn;
 ALTER SCHEMA auth_fn OWNER TO app;
 
 --
--- Name: lcb; Type: SCHEMA; Schema: -; Owner: app
---
-
-CREATE SCHEMA lcb;
-
-
-ALTER SCHEMA lcb OWNER TO app;
-
---
--- Name: lcb_fn; Type: SCHEMA; Schema: -; Owner: app
---
-
-CREATE SCHEMA lcb_fn;
-
-
-ALTER SCHEMA lcb_fn OWNER TO app;
-
---
--- Name: lcb_hist; Type: SCHEMA; Schema: -; Owner: app
---
-
-CREATE SCHEMA lcb_hist;
-
-
-ALTER SCHEMA lcb_hist OWNER TO app;
-
---
 -- Name: org; Type: SCHEMA; Schema: -; Owner: app
 --
 
@@ -88,6 +61,22 @@ CREATE SCHEMA org_fn;
 ALTER SCHEMA org_fn OWNER TO app;
 
 --
+-- Name: public; Type: SCHEMA; Schema: -; Owner: postgres
+--
+
+CREATE SCHEMA public;
+
+
+ALTER SCHEMA public OWNER TO postgres;
+
+--
+-- Name: SCHEMA public; Type: COMMENT; Schema: -; Owner: postgres
+--
+
+COMMENT ON SCHEMA public IS 'standard public schema';
+
+
+--
 -- Name: shard_1; Type: SCHEMA; Schema: -; Owner: app
 --
 
@@ -104,20 +93,6 @@ CREATE SCHEMA util_fn;
 
 
 ALTER SCHEMA util_fn OWNER TO app;
-
---
--- Name: pgcrypto; Type: EXTENSION; Schema: -; Owner: 
---
-
-CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA public;
-
-
---
--- Name: EXTENSION pgcrypto; Type: COMMENT; Schema: -; Owner: 
---
-
-COMMENT ON EXTENSION pgcrypto IS 'cryptographic functions';
-
 
 --
 -- Name: jwt_token; Type: TYPE; Schema: auth; Owner: app
@@ -706,122 +681,6 @@ ALTER FUNCTION auth_fn.current_app_user_id() OWNER TO app;
 
 COMMENT ON FUNCTION auth_fn.current_app_user_id() IS '@omit';
 
-
---
--- Name: fn_timestamp_update_inventory_lot(); Type: FUNCTION; Schema: lcb; Owner: app
---
-
-CREATE FUNCTION lcb.fn_timestamp_update_inventory_lot() RETURNS trigger
-    LANGUAGE plpgsql
-    AS $$
-  BEGIN
-    NEW.updated_at = current_timestamp;
-    RETURN NEW;
-  END; $$;
-
-
-ALTER FUNCTION lcb.fn_timestamp_update_inventory_lot() OWNER TO app;
-
---
--- Name: fn_timestamp_update_lcb_license(); Type: FUNCTION; Schema: lcb; Owner: app
---
-
-CREATE FUNCTION lcb.fn_timestamp_update_lcb_license() RETURNS trigger
-    LANGUAGE plpgsql
-    AS $$
-  BEGIN
-    NEW.updated_at = current_timestamp;
-    RETURN NEW;
-  END; $$;
-
-
-ALTER FUNCTION lcb.fn_timestamp_update_lcb_license() OWNER TO app;
-
---
--- Name: fn_timestamp_update_lcb_license_holder(); Type: FUNCTION; Schema: lcb; Owner: app
---
-
-CREATE FUNCTION lcb.fn_timestamp_update_lcb_license_holder() RETURNS trigger
-    LANGUAGE plpgsql
-    AS $$
-  BEGIN
-    NEW.updated_at = current_timestamp;
-    RETURN NEW;
-  END; $$;
-
-
-ALTER FUNCTION lcb.fn_timestamp_update_lcb_license_holder() OWNER TO app;
-
---
--- Name: inventory_lot; Type: TABLE; Schema: lcb; Owner: app
---
-
-CREATE TABLE lcb.inventory_lot (
-    id text DEFAULT util_fn.generate_ulid() NOT NULL,
-    app_tenant_id text NOT NULL,
-    lcb_license_holder_id text NOT NULL,
-    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_at timestamp with time zone NOT NULL,
-    deleted_at timestamp with time zone,
-    id_origin text NOT NULL,
-    inventory_type text NOT NULL,
-    description text,
-    quantity numeric(10,2),
-    units text,
-    strain_name text,
-    area_identifier text,
-    CONSTRAINT ck_inventory_lot_id CHECK ((id <> ''::text)),
-    CONSTRAINT ck_inventory_lot_id_origin CHECK ((id_origin <> ''::text)),
-    CONSTRAINT ck_inventory_lot_inventory_type CHECK ((inventory_type <> ''::text))
-);
-
-
-ALTER TABLE lcb.inventory_lot OWNER TO app;
-
---
--- Name: provision_inventory_lot_ids(text, integer); Type: FUNCTION; Schema: lcb_fn; Owner: app
---
-
-CREATE FUNCTION lcb_fn.provision_inventory_lot_ids(_inventory_type text, _number_requested integer) RETURNS SETOF lcb.inventory_lot
-    LANGUAGE plpgsql STRICT
-    AS $$
-  DECLARE
-    _current_app_user auth.app_user;
-    _lcb_license_holder_id text;
-    _inventory_lot lcb.inventory_lot;
-    _created_count integer;
-  BEGIN
-    _created_count := 0;
-    _current_app_user := auth_fn.current_app_user();
-
-    -- this is not reall correct.  need mechanism to switch between licenses
-    select id
-    into _lcb_license_holder_id
-    from lcb.lcb_license_holder
-    where app_tenant_id = _current_app_user.app_tenant_id;
-
-    -- raise exception '%, %', _current_app_user.app_tenant_id, _lcb_license_holder_id;
-
-    RETURN QUERY INSERT INTO lcb.inventory_lot(
-      app_tenant_id,
-      lcb_license_holder_id,
-      id_origin,
-      inventory_type
-    )
-    SELECT
-      _current_app_user.app_tenant_id,
-      _lcb_license_holder_id,
-      'WSLCB',
-      _inventory_type
-    FROM
-      generate_series(1, _number_requested)
-    RETURNING *
-    ;
-  end;
-  $$;
-
-
-ALTER FUNCTION lcb_fn.provision_inventory_lot_ids(_inventory_type text, _number_requested integer) OWNER TO app;
 
 --
 -- Name: fn_timestamp_update_contact(); Type: FUNCTION; Schema: org; Owner: app
@@ -1890,40 +1749,6 @@ COMMENT ON COLUMN auth.token.expires_at IS '@omit create,update';
 
 
 --
--- Name: lcb_license; Type: TABLE; Schema: lcb; Owner: app
---
-
-CREATE TABLE lcb.lcb_license (
-    id text DEFAULT util_fn.generate_ulid() NOT NULL,
-    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_at timestamp with time zone NOT NULL,
-    code text NOT NULL,
-    CONSTRAINT ck_lcb_license_code CHECK ((code <> ''::text)),
-    CONSTRAINT lcb_license_code_check CHECK ((code <> ''::text))
-);
-
-
-ALTER TABLE lcb.lcb_license OWNER TO app;
-
---
--- Name: lcb_license_holder; Type: TABLE; Schema: lcb; Owner: app
---
-
-CREATE TABLE lcb.lcb_license_holder (
-    id text DEFAULT util_fn.generate_ulid() NOT NULL,
-    app_tenant_id text NOT NULL,
-    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_at timestamp with time zone NOT NULL,
-    lcb_license_id text NOT NULL,
-    organization_id text NOT NULL,
-    acquisition_date timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    relinquish_date timestamp with time zone
-);
-
-
-ALTER TABLE lcb.lcb_license_holder OWNER TO app;
-
---
 -- Name: config_org; Type: TABLE; Schema: org; Owner: app
 --
 
@@ -2002,170 +1827,6 @@ CREATE SEQUENCE shard_1.global_id_sequence
 
 
 ALTER TABLE shard_1.global_id_sequence OWNER TO app;
-
---
--- Data for Name: application; Type: TABLE DATA; Schema: app; Owner: app
---
-
-COPY app.application (id, created_at, updated_at, external_id, name, key) FROM stdin;
-\.
-
-
---
--- Data for Name: license; Type: TABLE DATA; Schema: app; Owner: app
---
-
-COPY app.license (id, app_tenant_id, created_at, updated_at, external_id, name, license_type_id, assigned_to_app_user_id) FROM stdin;
-\.
-
-
---
--- Data for Name: license_permission; Type: TABLE DATA; Schema: app; Owner: app
---
-
-COPY app.license_permission (id, app_tenant_id, created_at, updated_at, license_id, permission_id) FROM stdin;
-\.
-
-
---
--- Data for Name: license_type; Type: TABLE DATA; Schema: app; Owner: app
---
-
-COPY app.license_type (id, created_at, updated_at, external_id, name, key, application_id) FROM stdin;
-\.
-
-
---
--- Data for Name: license_type_permission; Type: TABLE DATA; Schema: app; Owner: app
---
-
-COPY app.license_type_permission (id, created_at, updated_at, license_type_id, permission_id, key) FROM stdin;
-\.
-
-
---
--- Data for Name: app_tenant; Type: TABLE DATA; Schema: auth; Owner: app
---
-
-COPY auth.app_tenant (id, created_at, updated_at, name, identifier) FROM stdin;
-01DTWX2GRYZHFNB9XW2RNJHZKT	2019-11-30 00:58:49.502291+00	2019-11-30 00:58:49.502291+00	Anchor Tenant	anchor
-\.
-
-
---
--- Data for Name: app_user; Type: TABLE DATA; Schema: auth; Owner: app
---
-
-COPY auth.app_user (id, app_tenant_id, created_at, updated_at, username, recovery_email, password_hash, inactive, password_reset_required, permission_key) FROM stdin;
-01DTWX2GRYN5BAAYRY78KEWDYD	01DTWX2GRYZHFNB9XW2RNJHZKT	2019-11-30 00:58:49.502291+00	2019-11-30 00:58:49.502291+00	appsuperadmin	appsuperadmin@tst.tst	$2a$06$UFCeEuicGDM/b28Nz3w76OK3xtzDXg1L.s6zTTOVIzpoGsBfCz3f.	f	f	SuperAdmin
-\.
-
-
---
--- Data for Name: config_auth; Type: TABLE DATA; Schema: auth; Owner: app
---
-
-COPY auth.config_auth (id, key, value) FROM stdin;
-\.
-
-
---
--- Data for Name: permission; Type: TABLE DATA; Schema: auth; Owner: app
---
-
-COPY auth.permission (id, created_at, key) FROM stdin;
-\.
-
-
---
--- Data for Name: token; Type: TABLE DATA; Schema: auth; Owner: app
---
-
-COPY auth.token (id, app_user_id, created_at, expires_at) FROM stdin;
-\.
-
-
---
--- Data for Name: inventory_lot; Type: TABLE DATA; Schema: lcb; Owner: app
---
-
-COPY lcb.inventory_lot (id, app_tenant_id, lcb_license_holder_id, created_at, updated_at, deleted_at, id_origin, inventory_type, description, quantity, units, strain_name, area_identifier) FROM stdin;
-\.
-
-
---
--- Data for Name: lcb_license; Type: TABLE DATA; Schema: lcb; Owner: app
---
-
-COPY lcb.lcb_license (id, created_at, updated_at, code) FROM stdin;
-\.
-
-
---
--- Data for Name: lcb_license_holder; Type: TABLE DATA; Schema: lcb; Owner: app
---
-
-COPY lcb.lcb_license_holder (id, app_tenant_id, created_at, updated_at, lcb_license_id, organization_id, acquisition_date, relinquish_date) FROM stdin;
-\.
-
-
---
--- Data for Name: config_org; Type: TABLE DATA; Schema: org; Owner: app
---
-
-COPY org.config_org (id, key, value) FROM stdin;
-\.
-
-
---
--- Data for Name: contact; Type: TABLE DATA; Schema: org; Owner: app
---
-
-COPY org.contact (id, app_tenant_id, created_at, updated_at, organization_id, location_id, external_id, first_name, last_name, email, cell_phone, office_phone, title, nickname) FROM stdin;
-01DTWX2GRYRKYNC6B68CNP0JD3	01DTWX2GRYZHFNB9XW2RNJHZKT	2019-11-30 00:58:49.502291+00	2019-11-30 00:58:49.502291+00	01DTWX2GRYV6NTJYD2FNCN2HPK	\N	appsuperadmin	Super	Admin	appsuperadmin@tst.tst	\N	\N	\N	\N
-\.
-
-
---
--- Data for Name: contact_app_user; Type: TABLE DATA; Schema: org; Owner: app
---
-
-COPY org.contact_app_user (id, app_tenant_id, created_at, updated_at, contact_id, app_user_id, username) FROM stdin;
-01DTWX2GRYNM1J522ZX2JS0N3R	01DTWX2GRYZHFNB9XW2RNJHZKT	2019-11-30 00:58:49.502291+00	2019-11-30 00:58:49.502291+00	01DTWX2GRYRKYNC6B68CNP0JD3	01DTWX2GRYN5BAAYRY78KEWDYD	appsuperadmin
-\.
-
-
---
--- Data for Name: facility; Type: TABLE DATA; Schema: org; Owner: app
---
-
-COPY org.facility (id, app_tenant_id, created_at, updated_at, organization_id, location_id, name, external_id) FROM stdin;
-\.
-
-
---
--- Data for Name: location; Type: TABLE DATA; Schema: org; Owner: app
---
-
-COPY org.location (id, app_tenant_id, created_at, updated_at, external_id, name, address1, address2, city, state, zip, lat, lon) FROM stdin;
-\.
-
-
---
--- Data for Name: organization; Type: TABLE DATA; Schema: org; Owner: app
---
-
-COPY org.organization (id, app_tenant_id, actual_app_tenant_id, created_at, updated_at, external_id, name, location_id, primary_contact_id) FROM stdin;
-01DTWX2GRYV6NTJYD2FNCN2HPK	01DTWX2GRYZHFNB9XW2RNJHZKT	01DTWX2GRYZHFNB9XW2RNJHZKT	2019-11-30 00:58:49.502291+00	2019-11-30 00:58:49.502291+00	anchor-org	Anchor Tenant	\N	\N
-\.
-
-
---
--- Name: global_id_sequence; Type: SEQUENCE SET; Schema: shard_1; Owner: app
---
-
-SELECT pg_catalog.setval('shard_1.global_id_sequence', 91, true);
-
 
 --
 -- Name: application application_key_key; Type: CONSTRAINT; Schema: app; Owner: app
@@ -2309,46 +1970,6 @@ ALTER TABLE ONLY auth.token
 
 ALTER TABLE ONLY auth.token
     ADD CONSTRAINT token_app_user_id_key UNIQUE (app_user_id);
-
-
---
--- Name: lcb_license lcb_license_code_key; Type: CONSTRAINT; Schema: lcb; Owner: app
---
-
-ALTER TABLE ONLY lcb.lcb_license
-    ADD CONSTRAINT lcb_license_code_key UNIQUE (code);
-
-
---
--- Name: lcb_license_holder lcb_license_holder_lcb_license_id_key; Type: CONSTRAINT; Schema: lcb; Owner: app
---
-
-ALTER TABLE ONLY lcb.lcb_license_holder
-    ADD CONSTRAINT lcb_license_holder_lcb_license_id_key UNIQUE (lcb_license_id);
-
-
---
--- Name: inventory_lot pk_inventory_lot; Type: CONSTRAINT; Schema: lcb; Owner: app
---
-
-ALTER TABLE ONLY lcb.inventory_lot
-    ADD CONSTRAINT pk_inventory_lot PRIMARY KEY (id);
-
-
---
--- Name: lcb_license pk_lcb_license; Type: CONSTRAINT; Schema: lcb; Owner: app
---
-
-ALTER TABLE ONLY lcb.lcb_license
-    ADD CONSTRAINT pk_lcb_license PRIMARY KEY (id);
-
-
---
--- Name: lcb_license_holder pk_lcb_license_holder; Type: CONSTRAINT; Schema: lcb; Owner: app
---
-
-ALTER TABLE ONLY lcb.lcb_license_holder
-    ADD CONSTRAINT pk_lcb_license_holder PRIMARY KEY (id);
 
 
 --
@@ -2528,27 +2149,6 @@ CREATE TRIGGER tg_timestamp_update_permission BEFORE INSERT OR UPDATE ON auth.pe
 
 
 --
--- Name: inventory_lot tg_timestamp_update_inventory_lot; Type: TRIGGER; Schema: lcb; Owner: app
---
-
-CREATE TRIGGER tg_timestamp_update_inventory_lot BEFORE INSERT OR UPDATE ON lcb.inventory_lot FOR EACH ROW EXECUTE PROCEDURE lcb.fn_timestamp_update_inventory_lot();
-
-
---
--- Name: lcb_license tg_timestamp_update_lcb_license; Type: TRIGGER; Schema: lcb; Owner: app
---
-
-CREATE TRIGGER tg_timestamp_update_lcb_license BEFORE INSERT OR UPDATE ON lcb.lcb_license FOR EACH ROW EXECUTE PROCEDURE lcb.fn_timestamp_update_lcb_license();
-
-
---
--- Name: lcb_license_holder tg_timestamp_update_lcb_license_holder; Type: TRIGGER; Schema: lcb; Owner: app
---
-
-CREATE TRIGGER tg_timestamp_update_lcb_license_holder BEFORE INSERT OR UPDATE ON lcb.lcb_license_holder FOR EACH ROW EXECUTE PROCEDURE lcb.fn_timestamp_update_lcb_license_holder();
-
-
---
 -- Name: contact tg_timestamp_update_contact; Type: TRIGGER; Schema: org; Owner: app
 --
 
@@ -2669,46 +2269,6 @@ ALTER TABLE ONLY auth.app_user
 
 ALTER TABLE ONLY auth.token
     ADD CONSTRAINT fk_token_user FOREIGN KEY (app_user_id) REFERENCES auth.app_user(id);
-
-
---
--- Name: inventory_lot fk_inventory_lot_app_tenant_id; Type: FK CONSTRAINT; Schema: lcb; Owner: app
---
-
-ALTER TABLE ONLY lcb.inventory_lot
-    ADD CONSTRAINT fk_inventory_lot_app_tenant_id FOREIGN KEY (app_tenant_id) REFERENCES auth.app_tenant(id);
-
-
---
--- Name: inventory_lot fk_inventory_lot_lcb_license_holder; Type: FK CONSTRAINT; Schema: lcb; Owner: app
---
-
-ALTER TABLE ONLY lcb.inventory_lot
-    ADD CONSTRAINT fk_inventory_lot_lcb_license_holder FOREIGN KEY (lcb_license_holder_id) REFERENCES lcb.lcb_license_holder(id);
-
-
---
--- Name: lcb_license_holder fk_lcb_license_holder_app_tenant_id; Type: FK CONSTRAINT; Schema: lcb; Owner: app
---
-
-ALTER TABLE ONLY lcb.lcb_license_holder
-    ADD CONSTRAINT fk_lcb_license_holder_app_tenant_id FOREIGN KEY (app_tenant_id) REFERENCES auth.app_tenant(id);
-
-
---
--- Name: lcb_license_holder fk_lcb_license_holder_license; Type: FK CONSTRAINT; Schema: lcb; Owner: app
---
-
-ALTER TABLE ONLY lcb.lcb_license_holder
-    ADD CONSTRAINT fk_lcb_license_holder_license FOREIGN KEY (lcb_license_id) REFERENCES lcb.lcb_license(id);
-
-
---
--- Name: lcb_license_holder fk_lcb_license_holder_organization; Type: FK CONSTRAINT; Schema: lcb; Owner: app
---
-
-ALTER TABLE ONLY lcb.lcb_license_holder
-    ADD CONSTRAINT fk_lcb_license_holder_organization FOREIGN KEY (organization_id) REFERENCES org.organization(id);
 
 
 --
@@ -2876,19 +2436,6 @@ CREATE POLICY rls_auth_app_tenant_auth_app_tenant ON auth.app_tenant TO app_user
 
 
 --
--- Name: inventory_lot; Type: ROW SECURITY; Schema: lcb; Owner: app
---
-
-ALTER TABLE lcb.inventory_lot ENABLE ROW LEVEL SECURITY;
-
---
--- Name: inventory_lot rls_app_user_default_lcb_inventory_lot; Type: POLICY; Schema: lcb; Owner: app
---
-
-CREATE POLICY rls_app_user_default_lcb_inventory_lot ON lcb.inventory_lot TO app_user USING ((auth_fn.app_user_has_access(app_tenant_id) = true));
-
-
---
 -- Name: contact; Type: ROW SECURITY; Schema: org; Owner: app
 --
 
@@ -2977,27 +2524,6 @@ GRANT USAGE ON SCHEMA auth_fn TO app_anonymous;
 
 
 --
--- Name: SCHEMA lcb; Type: ACL; Schema: -; Owner: app
---
-
-GRANT USAGE ON SCHEMA lcb TO app_user;
-
-
---
--- Name: SCHEMA lcb_fn; Type: ACL; Schema: -; Owner: app
---
-
-GRANT USAGE ON SCHEMA lcb_fn TO app_user;
-
-
---
--- Name: SCHEMA lcb_hist; Type: ACL; Schema: -; Owner: app
---
-
-GRANT USAGE ON SCHEMA lcb_hist TO app_user;
-
-
---
 -- Name: SCHEMA org; Type: ACL; Schema: -; Owner: app
 --
 
@@ -3023,6 +2549,7 @@ GRANT USAGE ON SCHEMA shard_1 TO app_user;
 --
 
 GRANT USAGE ON SCHEMA util_fn TO app_demon;
+GRANT USAGE ON SCHEMA util_fn TO app_user;
 
 
 --
@@ -3159,45 +2686,6 @@ GRANT ALL ON FUNCTION auth_fn.current_app_user() TO app_user;
 
 REVOKE ALL ON FUNCTION auth_fn.current_app_user_id() FROM PUBLIC;
 GRANT ALL ON FUNCTION auth_fn.current_app_user_id() TO app_user;
-
-
---
--- Name: FUNCTION fn_timestamp_update_inventory_lot(); Type: ACL; Schema: lcb; Owner: app
---
-
-REVOKE ALL ON FUNCTION lcb.fn_timestamp_update_inventory_lot() FROM PUBLIC;
-GRANT ALL ON FUNCTION lcb.fn_timestamp_update_inventory_lot() TO app_user;
-
-
---
--- Name: FUNCTION fn_timestamp_update_lcb_license(); Type: ACL; Schema: lcb; Owner: app
---
-
-REVOKE ALL ON FUNCTION lcb.fn_timestamp_update_lcb_license() FROM PUBLIC;
-GRANT ALL ON FUNCTION lcb.fn_timestamp_update_lcb_license() TO app_user;
-
-
---
--- Name: FUNCTION fn_timestamp_update_lcb_license_holder(); Type: ACL; Schema: lcb; Owner: app
---
-
-REVOKE ALL ON FUNCTION lcb.fn_timestamp_update_lcb_license_holder() FROM PUBLIC;
-GRANT ALL ON FUNCTION lcb.fn_timestamp_update_lcb_license_holder() TO app_user;
-
-
---
--- Name: TABLE inventory_lot; Type: ACL; Schema: lcb; Owner: app
---
-
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE lcb.inventory_lot TO app_user;
-
-
---
--- Name: FUNCTION provision_inventory_lot_ids(_inventory_type text, _number_requested integer); Type: ACL; Schema: lcb_fn; Owner: app
---
-
-REVOKE ALL ON FUNCTION lcb_fn.provision_inventory_lot_ids(_inventory_type text, _number_requested integer) FROM PUBLIC;
-GRANT ALL ON FUNCTION lcb_fn.provision_inventory_lot_ids(_inventory_type text, _number_requested integer) TO app_user;
 
 
 --
@@ -3392,22 +2880,6 @@ GRANT SELECT ON TABLE app.license_type_permission TO app_user;
 
 GRANT INSERT,DELETE,UPDATE ON TABLE auth.permission TO app_super_admin;
 GRANT SELECT ON TABLE auth.permission TO app_user;
-
-
---
--- Name: TABLE lcb_license; Type: ACL; Schema: lcb; Owner: app
---
-
-GRANT INSERT,DELETE,UPDATE ON TABLE lcb.lcb_license TO app_super_admin;
-GRANT SELECT ON TABLE lcb.lcb_license TO app_user;
-
-
---
--- Name: TABLE lcb_license_holder; Type: ACL; Schema: lcb; Owner: app
---
-
-GRANT INSERT,DELETE,UPDATE ON TABLE lcb.lcb_license_holder TO app_super_admin;
-GRANT SELECT ON TABLE lcb.lcb_license_holder TO app_user;
 
 
 --

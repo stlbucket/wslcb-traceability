@@ -2408,7 +2408,6 @@ COPY app.license_type_permission (id, created_at, updated_at, license_type_id, p
 --
 
 COPY auth.app_tenant (id, created_at, updated_at, name, identifier) FROM stdin;
-01DTWX2GRYZHFNB9XW2RNJHZKT	2019-11-30 00:58:49.502291+00	2019-11-30 00:58:49.502291+00	Anchor Tenant	anchor
 \.
 
 
@@ -2417,7 +2416,6 @@ COPY auth.app_tenant (id, created_at, updated_at, name, identifier) FROM stdin;
 --
 
 COPY auth.app_user (id, app_tenant_id, created_at, updated_at, username, recovery_email, password_hash, inactive, password_reset_required, permission_key) FROM stdin;
-01DTWX2GRYN5BAAYRY78KEWDYD	01DTWX2GRYZHFNB9XW2RNJHZKT	2019-11-30 00:58:49.502291+00	2019-11-30 00:58:49.502291+00	appsuperadmin	appsuperadmin@tst.tst	$2a$06$UFCeEuicGDM/b28Nz3w76OK3xtzDXg1L.s6zTTOVIzpoGsBfCz3f.	f	f	SuperAdmin
 \.
 
 
@@ -2519,7 +2517,6 @@ COPY org.config_org (id, key, value) FROM stdin;
 --
 
 COPY org.contact (id, app_tenant_id, created_at, updated_at, organization_id, location_id, external_id, first_name, last_name, email, cell_phone, office_phone, title, nickname) FROM stdin;
-01DTWX2GRYRKYNC6B68CNP0JD3	01DTWX2GRYZHFNB9XW2RNJHZKT	2019-11-30 00:58:49.502291+00	2019-11-30 00:58:49.502291+00	01DTWX2GRYV6NTJYD2FNCN2HPK	\N	appsuperadmin	Super	Admin	appsuperadmin@tst.tst	\N	\N	\N	\N
 \.
 
 
@@ -2528,7 +2525,6 @@ COPY org.contact (id, app_tenant_id, created_at, updated_at, organization_id, lo
 --
 
 COPY org.contact_app_user (id, app_tenant_id, created_at, updated_at, contact_id, app_user_id, username) FROM stdin;
-01DTWX2GRYNM1J522ZX2JS0N3R	01DTWX2GRYZHFNB9XW2RNJHZKT	2019-11-30 00:58:49.502291+00	2019-11-30 00:58:49.502291+00	01DTWX2GRYRKYNC6B68CNP0JD3	01DTWX2GRYN5BAAYRY78KEWDYD	appsuperadmin
 \.
 
 
@@ -2553,7 +2549,6 @@ COPY org.location (id, app_tenant_id, created_at, updated_at, external_id, name,
 --
 
 COPY org.organization (id, app_tenant_id, actual_app_tenant_id, created_at, updated_at, external_id, name, location_id, primary_contact_id) FROM stdin;
-01DTWX2GRYV6NTJYD2FNCN2HPK	01DTWX2GRYZHFNB9XW2RNJHZKT	01DTWX2GRYZHFNB9XW2RNJHZKT	2019-11-30 00:58:49.502291+00	2019-11-30 00:58:49.502291+00	anchor-org	Anchor Tenant	\N	\N
 \.
 
 
@@ -2561,7 +2556,7 @@ COPY org.organization (id, app_tenant_id, actual_app_tenant_id, created_at, upda
 -- Name: global_id_sequence; Type: SEQUENCE SET; Schema: shard_1; Owner: app
 --
 
-SELECT pg_catalog.setval('shard_1.global_id_sequence', 91, true);
+SELECT pg_catalog.setval('shard_1.global_id_sequence', 1, false);
 
 
 --
