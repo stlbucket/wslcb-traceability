@@ -3,7 +3,7 @@
     <h1>WSLCB TRACEABILITY</h1>
     <v-card>
       <v-row>
-        <v-col cols="3">
+        <v-col cols="2">
           <v-combobox
             v-model="selectedInventoryType"
             :items="mappedInventoryTypes"
@@ -11,18 +11,17 @@
             :disabled="inventoryTypeSelectDisabled"
           ></v-combobox>
         </v-col>
-        <v-col cols="3">
-          <v-text-field
-            label="ULID"
-            v-model="ulid"
-          ></v-text-field>
-          <v-btn @click="generateUlid">Generate</v-btn>
-        </v-col>
-        <v-col cols="3">
-          <v-text-field
-            label="Licensee Identifier"
-            v-model="licenseeIdentifier"
-          ></v-text-field>
+        <v-col cols="6">
+          <v-toolbar>
+            <v-spacer></v-spacer>
+            <dialog-inventory-sublot :disabled="sublotDisabled"></dialog-inventory-sublot>
+            <dialog-inventory-conversion :disabled="conversionDisabled"></dialog-inventory-conversion>
+            <dialog-inventory-sample :disabled="sampleDisabled"></dialog-inventory-sample>
+            <dialog-inventory-destroy :disabled="destroyDisabled" :inventoryLot="selectedInventoryLot"></dialog-inventory-destroy>
+            <dialog-inventory-invalidate :disabled="invalidateDisabled"></dialog-inventory-invalidate>
+            <dialog-inventory-provision :disabled="provisionDisabled" :mappedInventoryTypes="mappedInventoryTypes"></dialog-inventory-provision>
+            <v-spacer></v-spacer>
+          </v-toolbar>
         </v-col>
         <v-col cols="2">
           <v-text-field
@@ -33,46 +32,48 @@
         </v-col>
       </v-row>
       <v-row>
-        <v-col cols="3">
+        <v-col cols="2">
           <v-text-field
             label="Strain"
             v-model="strainName"
           ></v-text-field>
         </v-col>
-        <v-col cols="8">
+        <v-col cols="6">
           <v-text-field
             label="Description"
             v-model="description"
+          ></v-text-field>
+        </v-col>
+        <v-col cols="2">
+          <v-text-field
+            label="Area"
+            v-model="areaIdentifier"
           ></v-text-field>
         </v-col>
       </v-row>
       <v-row>
         <v-col cols="3">
           <v-text-field
-            label="Area"
-            v-model="areaIdentifier"
+            label="Licensee Identifier"
+            v-model="licenseeIdentifier"
           ></v-text-field>
+        </v-col>
+        <v-col cols="3">
+          <v-text-field
+            label="ULID"
+            v-model="ulid"
+          ></v-text-field>
+          <v-btn @click="generateUlid">Generate</v-btn>
         </v-col>
         <v-col cols="2">
           <v-text-field
             :label="quantityLabel"
             v-model="quantity"
           ></v-text-field>
-        </v-col>
-        <v-col cols="2">
           <v-btn @click="reportInventory" :disabled="reportDisabled">Report</v-btn>
         </v-col>
-        <v-col cols="2">
-          <v-btn :disabled="destroyDisabled" @click="destroyInventoryLots">Destroy</v-btn>
-          <v-btn :disabled="invalidateDisabled" @click="invalidateInventoryLots">Invalidate</v-btn>
-        </v-col>
-        <v-col cols="2">
-          <v-text-field
-            label="Number of ULIDS"
-            v-model="provisionCount"
-          ></v-text-field>
-          <v-btn :disabled="provisionDisabled" @click="provisionInventoryLotIds">Provision</v-btn>
-        </v-col>
+      </v-row>
+      <v-row>
       </v-row>
     </v-card>
 
@@ -162,6 +163,7 @@
       v-model="safeMode"
     >
     </v-switch>
+    
   </v-container>
 </template>
 
@@ -169,18 +171,29 @@
 import allInventoryLots from '@/graphql/query/allInventoryLots.graphql'
 import lcbLookupSets from '@/graphql/query/lcbLookupSets.graphql'
 import reportInventoryLots from '@/graphql/mutation/reportInventoryLots.graphql'
-import provisionInventoryLotIds from '@/graphql/mutation/provisionInventoryLotIds.graphql'
 import invalidateInventoryLotIds from '@/graphql/mutation/invalidateInventoryLotIds.graphql'
-import destroyInventoryLotIds from '@/graphql/mutation/destroyInventoryLotIds.graphql'
 import {ulid} from 'ulid'
+import DialogInventoryConversion from './DialogInventoryConversion'
+import DialogInventoryDestroy from './DialogInventoryDestroy'
+import DialogInventoryInvalidate from './DialogInventoryInvalidate'
+import DialogInventoryProvision from './DialogInventoryProvision'
+import DialogInventorySample from './DialogInventorySample'
+import DialogInventorySublot from './DialogInventorySublot'
 
 export default {
   name: "WSLCBTraceability",
   components: {
+    DialogInventoryConversion,
+    DialogInventoryDestroy,
+    DialogInventoryInvalidate,
+    DialogInventoryProvision,
+    DialogInventorySample,
+    DialogInventorySublot,
   },
   methods: {
     generateUlid () {
       this.nextUlid = ulid()
+      this.ulid = this.nextUlid
       this.selectedInventoryLot = null
     },
     reportInventory () {
@@ -241,24 +254,6 @@ export default {
     clearRecentChanges () {
       this.$store.commit('clearRecentChanges')
     },
-    provisionInventoryLotIds () {
-      this.$apollo.mutate({
-        mutation: provisionInventoryLotIds,
-        variables: {
-          inventoryType: this.selectedInventoryType.value,
-          numberRequested: parseInt(this.provisionCount)
-        }
-      })
-      .then(result => {
-        this.$store.commit('addRecentInventoryLotChange', { newChanges: result.data.provisionInventoryLotIds.inventoryLots})
-        this.selectedInventoryLot = null
-        this.$apollo.queries.getInventoryLots.refetch()
-      })
-      .catch(error => {
-        alert(error.toString())
-        console.error(error)
-      })
-    },
     invalidateInventoryLots () {
       this.$apollo.mutate({
         mutation: invalidateInventoryLotIds,
@@ -276,22 +271,14 @@ export default {
         console.error(error)
       })
     },
-    destroyInventoryLots () {
-      this.$apollo.mutate({
-        mutation: destroyInventoryLotIds,
-        variables: {
-          ids: [this.selectedInventoryLot.id]
-        }
-      })
-      .then(result => {
-        this.$store.commit('addRecentInventoryLotChange', { newChanges: result.data.destroyInventoryLotIds.inventoryLots})
-        this.selectedInventoryLot = null
-        this.$apollo.queries.getInventoryLots.refetch()
-      })
-      .catch(error => {
-        alert(error.toString())
-        console.error(error)
-      })
+    sublotInventoryLots () {
+
+    },
+    convertInventoryLots () {
+
+    },
+    sampleInventoryLots () {
+
     }
 },
   watch: {
@@ -390,6 +377,18 @@ export default {
       if (!this.safeMode) return false
       return this.selectedInventoryLot === null || this.selectedInventoryLot.reportingStatus !== 'ACTIVE'
     },
+    sublotDisabled () {
+      if (!this.safeMode) return false
+      return this.selectedInventoryLot === null || this.selectedInventoryLot.reportingStatus !== 'ACTIVE'
+    },
+    sampleDisabled () {
+      if (!this.safeMode) return false
+      return this.selectedInventoryLot === null || this.selectedInventoryLot.reportingStatus !== 'ACTIVE'
+    },
+    conversionDisabled () {
+      if (!this.safeMode) return false
+      return this.selectedInventoryLot === null || this.selectedInventoryLot.reportingStatus !== 'ACTIVE'
+    },
     invalidateDisabled () {
       if (!this.safeMode) return false
       return this.selectedInventoryLot === null || this.selectedInventoryLot.reportingStatus !== 'PROVISIONED'
@@ -400,7 +399,8 @@ export default {
     },
     provisionDisabled () {
       if (!this.safeMode) return false
-      return !this.selectedInventoryType || this.provisionCount < 1
+      return false
+      // return !this.selectedInventoryType || this.provisionCount < 1
     },
     quantityLabel () {
       if (this.selectedInventoryType) {
@@ -428,7 +428,7 @@ export default {
       expanded: [],
       recentExpanded: [],
       singleExpand: false,
-      provisionCount: 0,
+      // provisionCount: 0,
       nextUlid: null,
       safeMode: true,
       headers: [

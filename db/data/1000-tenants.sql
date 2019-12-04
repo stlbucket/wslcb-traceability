@@ -5,6 +5,7 @@ BEGIN;
       ('Producer-1', 'G11111')
       ,('Processor-1', 'M11111')
       ,('Retail-1', 'R11111')
+      ,('QA-Lab-1', 'Q11111')
     on conflict (identifier)
     do nothing
     ;
@@ -62,6 +63,20 @@ BEGIN;
       (select id from auth.app_tenant where identifier = 'R11111')
       ,'lcb_retail_user'
       ,'lcb_retail_user@blah.blah'
+      ,public.crypt('badpassword', public.gen_salt('bf'))
+      ,'User'
+    )
+    ,(
+      (select id from auth.app_tenant where identifier = 'Q11111')
+      ,'lcb_qa_lab_admin'
+      ,'lcb_qa_lab_admin003@blah.blah'
+      ,public.crypt('badpassword', public.gen_salt('bf'))
+      ,'Admin'
+    )
+    ,(
+      (select id from auth.app_tenant where identifier = 'Q11111')
+      ,'lcb_qa_lab_user'
+      ,'lcb_qa_lab_user@blah.blah'
       ,public.crypt('badpassword', public.gen_salt('bf'))
       ,'User'
     )

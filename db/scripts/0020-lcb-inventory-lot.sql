@@ -44,6 +44,8 @@ ALTER TABLE ONLY lcb.lcb_license_holder
 
 CREATE TABLE lcb.inventory_lot (
     id text DEFAULT util_fn.generate_ulid() NOT NULL unique,
+    updated_by_app_user_id text NOT NULL,
+    parent_id text NULL,
     licensee_identifier text null,
     app_tenant_id text NOT NULL,
     lcb_license_holder_id text not null,
@@ -53,6 +55,7 @@ CREATE TABLE lcb.inventory_lot (
     deleted_at timestamptz NULL,
     id_origin text not null,
     inventory_type text not null,
+    lot_type text not null,
     description text,
     quantity numeric(10,2),
     strain_name text,
@@ -73,6 +76,12 @@ ALTER TABLE ONLY lcb.inventory_lot
     ADD CONSTRAINT fk_inventory_lot_inventory_type FOREIGN KEY (inventory_type) REFERENCES lcb_ref.inventory_type (id);
 ALTER TABLE ONLY lcb.inventory_lot
     ADD CONSTRAINT fk_inventory_lot_reporting_status FOREIGN KEY (reporting_status) REFERENCES lcb_ref.inventory_lot_reporting_status (id);
+ALTER TABLE ONLY lcb.inventory_lot
+    ADD CONSTRAINT fk_inventory_lot_updated_by_app_user FOREIGN KEY (updated_by_app_user_id) REFERENCES auth.app_user (id);
+ALTER TABLE ONLY lcb.inventory_lot
+    ADD CONSTRAINT fk_inventory_lot_parent FOREIGN KEY (parent_id) REFERENCES lcb.inventory_lot (id);
+ALTER TABLE ONLY lcb.inventory_lot
+    ADD CONSTRAINT fk_inventory_lot_type FOREIGN KEY (lot_type) REFERENCES lcb_ref.inventory_lot_type (id);
 
 CREATE FUNCTION lcb.fn_timestamp_update_lcb_license() RETURNS trigger
     LANGUAGE plpgsql
@@ -105,9 +114,89 @@ ALTER FUNCTION lcb.fn_timestamp_update_inventory_lot() OWNER TO app;
 CREATE TRIGGER tg_timestamp_update_inventory_lot BEFORE INSERT OR UPDATE ON lcb.inventory_lot FOR EACH ROW EXECUTE PROCEDURE lcb.fn_timestamp_update_inventory_lot();
 
 
+CREATE TABLE lcb.conversion (
+    id text NOT NULL UNIQUE default util_fn.generate_ulid(),
+    created_at timestamptz DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at timestamptz NOT NULL,
+    app_tenant_id text NOT NULL,
+    sourced_quantity numeric(10,2) NOT NULL
+);
+ALTER TABLE lcb.conversion OWNER TO app;
+ALTER TABLE ONLY lcb.conversion
+    ADD CONSTRAINT pk_conversion PRIMARY KEY (id);
+ALTER TABLE ONLY lcb.conversion
+    ADD CONSTRAINT fk_conversion_app_tenant FOREIGN KEY (app_tenant_id) REFERENCES auth.app_tenant (id);
+CREATE FUNCTION lcb.fn_timestamp_update_conversion() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+  BEGIN
+    NEW.updated_at = current_timestamp;
+    RETURN NEW;
+  END; $$;
+ALTER FUNCTION lcb.fn_timestamp_update_conversion() OWNER TO app;
+CREATE TRIGGER tg_timestamp_update_conversion BEFORE INSERT OR UPDATE ON lcb.conversion FOR EACH ROW EXECUTE PROCEDURE lcb.fn_timestamp_update_conversion();
+
+
+CREATE TABLE lcb.conversion_result (
+    id text NOT NULL UNIQUE default util_fn.generate_ulid(),
+    created_at timestamptz DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at timestamptz NOT NULL,
+    app_tenant_id text NOT NULL,
+    conversion_id text NOT NULL,
+    inventory_lot_id text NOT NULL
+);
+ALTER TABLE lcb.conversion_result OWNER TO app;
+ALTER TABLE ONLY lcb.conversion_result
+    ADD CONSTRAINT pk_conversion_result PRIMARY KEY (id);
+ALTER TABLE ONLY lcb.conversion_result
+    ADD CONSTRAINT fk_conversion_app_tenant FOREIGN KEY (app_tenant_id) REFERENCES auth.app_tenant (id);
+ALTER TABLE ONLY lcb.conversion_result
+    ADD CONSTRAINT fk_conversion_result_conversion FOREIGN KEY (conversion_id) REFERENCES lcb.conversion (id);
+ALTER TABLE ONLY lcb.conversion_result
+    ADD CONSTRAINT fk_conversion_result_to_inventory_lot FOREIGN KEY (inventory_lot_id) REFERENCES lcb.inventory_lot (id);
+CREATE FUNCTION lcb.fn_timestamp_update_conversion_result() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+  BEGIN
+    NEW.updated_at = current_timestamp;
+    RETURN NEW;
+  END; $$;
+ALTER FUNCTION lcb.fn_timestamp_update_conversion_result() OWNER TO app;
+CREATE TRIGGER tg_timestamp_update_conversion_result BEFORE INSERT OR UPDATE ON lcb.conversion_result FOR EACH ROW EXECUTE PROCEDURE lcb.fn_timestamp_update_conversion_result();
+
+CREATE TABLE lcb.conversion_source (
+    id text NOT NULL UNIQUE default util_fn.generate_ulid(),
+    created_at timestamptz DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at timestamptz NOT NULL,
+    app_tenant_id text NOT NULL,
+    conversion_id text NOT NULL,
+    inventory_lot_id text NOT NULL
+);
+ALTER TABLE lcb.conversion_source OWNER TO app;
+ALTER TABLE ONLY lcb.conversion_source
+    ADD CONSTRAINT pk_conversion_source PRIMARY KEY (id);
+ALTER TABLE ONLY lcb.conversion_source
+    ADD CONSTRAINT fk_conversion_app_tenant FOREIGN KEY (app_tenant_id) REFERENCES auth.app_tenant (id);
+ALTER TABLE ONLY lcb.conversion_source
+    ADD CONSTRAINT fk_conversion_source_conversion FOREIGN KEY (conversion_id) REFERENCES lcb.conversion (id);
+ALTER TABLE ONLY lcb.conversion_source
+    ADD CONSTRAINT fk_conversion_source_to_inventory_lot FOREIGN KEY (inventory_lot_id) REFERENCES lcb.inventory_lot (id);
+CREATE FUNCTION lcb.fn_timestamp_update_conversion_source() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+  BEGIN
+    NEW.updated_at = current_timestamp;
+    RETURN NEW;
+  END; $$;
+ALTER FUNCTION lcb.fn_timestamp_update_conversion_source() OWNER TO app;
+CREATE TRIGGER tg_timestamp_update_conversion_source BEFORE INSERT OR UPDATE ON lcb.conversion_source FOR EACH ROW EXECUTE PROCEDURE lcb.fn_timestamp_update_conversion_source();
+
+
 ------------------------------------------------------------------------------------------------  lcb_hist
 CREATE TABLE lcb_hist.hist_inventory_lot (
     id text DEFAULT util_fn.generate_ulid() NOT NULL unique,
+    parent_id text null,
+    updated_by_app_user_id text NOT NULL,
     licensee_identifier text null,
     inventory_lot_id text not null,
     app_tenant_id text NOT NULL,
@@ -118,6 +207,7 @@ CREATE TABLE lcb_hist.hist_inventory_lot (
     id_origin text not null,
     reporting_status text not null,
     inventory_type text not null,
+    lot_type text not null,
     description text,
     quantity numeric(10,2),
     units text,
@@ -135,6 +225,8 @@ CREATE FUNCTION lcb_hist.fn_capture_hist_inventory_lot() RETURNS trigger
   BEGIN
     insert into lcb_hist.hist_inventory_lot(
         inventory_lot_id,
+        parent_id,
+        updated_by_app_user_id,
         licensee_identifier,
         app_tenant_id,
         lcb_license_holder_id,
@@ -144,6 +236,7 @@ CREATE FUNCTION lcb_hist.fn_capture_hist_inventory_lot() RETURNS trigger
         id_origin,
         reporting_status,
         inventory_type,
+        lot_type,
         description,
         quantity,
         strain_name,
@@ -151,6 +244,8 @@ CREATE FUNCTION lcb_hist.fn_capture_hist_inventory_lot() RETURNS trigger
     )
     values (
         OLD.id,
+        OLD.parent_id,
+        OLD.updated_by_app_user_id,
         OLD.licensee_identifier,
         OLD.app_tenant_id,
         OLD.lcb_license_holder_id,
@@ -160,6 +255,7 @@ CREATE FUNCTION lcb_hist.fn_capture_hist_inventory_lot() RETURNS trigger
         OLD.id_origin,
         OLD.reporting_status,
         OLD.inventory_type,
+        OLD.lot_type,
         OLD.description,
         OLD.quantity,
         OLD.strain_name,

@@ -4,7 +4,8 @@ BEGIN;
   values
     ('G11111'),
     ('M11111'),
-    ('R11111')
+    ('R11111'),
+    ('Q11111')
   on conflict do nothing
   ;
 

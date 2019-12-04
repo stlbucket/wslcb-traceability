@@ -734,6 +734,36 @@ COMMENT ON FUNCTION auth_fn.current_app_user_id() IS '@omit';
 
 
 --
+-- Name: fn_timestamp_update_conversion(); Type: FUNCTION; Schema: lcb; Owner: app
+--
+
+CREATE FUNCTION lcb.fn_timestamp_update_conversion() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+  BEGIN
+    NEW.updated_at = current_timestamp;
+    RETURN NEW;
+  END; $$;
+
+
+ALTER FUNCTION lcb.fn_timestamp_update_conversion() OWNER TO app;
+
+--
+-- Name: fn_timestamp_update_conversion_result(); Type: FUNCTION; Schema: lcb; Owner: app
+--
+
+CREATE FUNCTION lcb.fn_timestamp_update_conversion_result() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+  BEGIN
+    NEW.updated_at = current_timestamp;
+    RETURN NEW;
+  END; $$;
+
+
+ALTER FUNCTION lcb.fn_timestamp_update_conversion_result() OWNER TO app;
+
+--
 -- Name: fn_timestamp_update_inventory_lot(); Type: FUNCTION; Schema: lcb; Owner: app
 --
 
@@ -784,6 +814,7 @@ ALTER FUNCTION lcb.fn_timestamp_update_lcb_license_holder() OWNER TO app;
 
 CREATE TABLE lcb.inventory_lot (
     id text DEFAULT util_fn.generate_ulid() NOT NULL,
+    parent_id text,
     licensee_identifier text,
     app_tenant_id text NOT NULL,
     lcb_license_holder_id text NOT NULL,
@@ -1081,54 +1112,6 @@ CREATE FUNCTION lcb_fn.report_inventory_lot(_input lcb_fn.report_inventory_lot_i
 
 
 ALTER FUNCTION lcb_fn.report_inventory_lot(_input lcb_fn.report_inventory_lot_input[]) OWNER TO app;
-
---
--- Name: fn_capture_hist_inventory_lot(); Type: FUNCTION; Schema: lcb_hist; Owner: app
---
-
-CREATE FUNCTION lcb_hist.fn_capture_hist_inventory_lot() RETURNS trigger
-    LANGUAGE plpgsql
-    AS $$
-  BEGIN
-    insert into lcb_hist.hist_inventory_lot(
-        inventory_lot_id,
-        licensee_identifier,
-        app_tenant_id,
-        lcb_license_holder_id,
-        created_at,
-        updated_at,
-        deleted_at,
-        id_origin,
-        reporting_status,
-        inventory_type,
-        description,
-        quantity,
-        strain_name,
-        area_identifier
-    )
-    values (
-        OLD.id,
-        OLD.licensee_identifier,
-        OLD.app_tenant_id,
-        OLD.lcb_license_holder_id,
-        OLD.created_at,
-        OLD.updated_at,
-        OLD.deleted_at,
-        OLD.id_origin,
-        OLD.reporting_status,
-        OLD.inventory_type,
-        OLD.description,
-        OLD.quantity,
-        OLD.strain_name,
-        OLD.area_identifier
-    )
-    ;
-
-    RETURN OLD;
-  END; $$;
-
-
-ALTER FUNCTION lcb_hist.fn_capture_hist_inventory_lot() OWNER TO app;
 
 --
 -- Name: fn_timestamp_update_contact(); Type: FUNCTION; Schema: org; Owner: app
@@ -2197,6 +2180,38 @@ COMMENT ON COLUMN auth.token.expires_at IS '@omit create,update';
 
 
 --
+-- Name: conversion; Type: TABLE; Schema: lcb; Owner: app
+--
+
+CREATE TABLE lcb.conversion (
+    id text DEFAULT util_fn.generate_ulid() NOT NULL,
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at timestamp with time zone NOT NULL,
+    app_tenant_id text NOT NULL,
+    from_inventory_lot_id text NOT NULL,
+    sourced_quantity numeric(10,2) NOT NULL
+);
+
+
+ALTER TABLE lcb.conversion OWNER TO app;
+
+--
+-- Name: conversion_result; Type: TABLE; Schema: lcb; Owner: app
+--
+
+CREATE TABLE lcb.conversion_result (
+    id text DEFAULT util_fn.generate_ulid() NOT NULL,
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at timestamp with time zone NOT NULL,
+    app_tenant_id text NOT NULL,
+    conversion_id text NOT NULL,
+    inventory_lot_id text NOT NULL
+);
+
+
+ALTER TABLE lcb.conversion_result OWNER TO app;
+
+--
 -- Name: lcb_license; Type: TABLE; Schema: lcb; Owner: app
 --
 
@@ -2236,6 +2251,7 @@ ALTER TABLE lcb.lcb_license_holder OWNER TO app;
 
 CREATE TABLE lcb_hist.hist_inventory_lot (
     id text DEFAULT util_fn.generate_ulid() NOT NULL,
+    parent_id text,
     licensee_identifier text,
     inventory_lot_id text NOT NULL,
     app_tenant_id text NOT NULL,
@@ -2255,6 +2271,19 @@ CREATE TABLE lcb_hist.hist_inventory_lot (
 
 
 ALTER TABLE lcb_hist.hist_inventory_lot OWNER TO app;
+
+--
+-- Name: conversion_rule; Type: TABLE; Schema: lcb_ref; Owner: app
+--
+
+CREATE TABLE lcb_ref.conversion_rule (
+    id text DEFAULT util_fn.generate_ulid() NOT NULL,
+    from_type_id text NOT NULL,
+    to_type_id text NOT NULL
+);
+
+
+ALTER TABLE lcb_ref.conversion_rule OWNER TO app;
 
 --
 -- Name: inventory_lot_reporting_status; Type: TABLE; Schema: lcb_ref; Owner: app
@@ -2282,6 +2311,18 @@ CREATE TABLE lcb_ref.inventory_type (
 
 
 ALTER TABLE lcb_ref.inventory_type OWNER TO app;
+
+--
+-- Name: transfer_status; Type: TABLE; Schema: lcb_ref; Owner: app
+--
+
+CREATE TABLE lcb_ref.transfer_status (
+    id text NOT NULL,
+    CONSTRAINT ck_transfer_status_id CHECK ((id <> ''::text))
+);
+
+
+ALTER TABLE lcb_ref.transfer_status OWNER TO app;
 
 --
 -- Name: config_org; Type: TABLE; Schema: org; Owner: app
@@ -2444,10 +2485,26 @@ COPY auth.token (id, app_user_id, created_at, expires_at) FROM stdin;
 
 
 --
+-- Data for Name: conversion; Type: TABLE DATA; Schema: lcb; Owner: app
+--
+
+COPY lcb.conversion (id, created_at, updated_at, app_tenant_id, from_inventory_lot_id, sourced_quantity) FROM stdin;
+\.
+
+
+--
+-- Data for Name: conversion_result; Type: TABLE DATA; Schema: lcb; Owner: app
+--
+
+COPY lcb.conversion_result (id, created_at, updated_at, app_tenant_id, conversion_id, inventory_lot_id) FROM stdin;
+\.
+
+
+--
 -- Data for Name: inventory_lot; Type: TABLE DATA; Schema: lcb; Owner: app
 --
 
-COPY lcb.inventory_lot (id, licensee_identifier, app_tenant_id, lcb_license_holder_id, reporting_status, created_at, updated_at, deleted_at, id_origin, inventory_type, description, quantity, strain_name, area_identifier) FROM stdin;
+COPY lcb.inventory_lot (id, parent_id, licensee_identifier, app_tenant_id, lcb_license_holder_id, reporting_status, created_at, updated_at, deleted_at, id_origin, inventory_type, description, quantity, strain_name, area_identifier) FROM stdin;
 \.
 
 
@@ -2471,7 +2528,24 @@ COPY lcb.lcb_license_holder (id, app_tenant_id, created_at, updated_at, lcb_lice
 -- Data for Name: hist_inventory_lot; Type: TABLE DATA; Schema: lcb_hist; Owner: app
 --
 
-COPY lcb_hist.hist_inventory_lot (id, licensee_identifier, inventory_lot_id, app_tenant_id, lcb_license_holder_id, created_at, updated_at, deleted_at, id_origin, reporting_status, inventory_type, description, quantity, units, strain_name, area_identifier) FROM stdin;
+COPY lcb_hist.hist_inventory_lot (id, parent_id, licensee_identifier, inventory_lot_id, app_tenant_id, lcb_license_holder_id, created_at, updated_at, deleted_at, id_origin, reporting_status, inventory_type, description, quantity, units, strain_name, area_identifier) FROM stdin;
+\.
+
+
+--
+-- Data for Name: conversion_rule; Type: TABLE DATA; Schema: lcb_ref; Owner: app
+--
+
+COPY lcb_ref.conversion_rule (id, from_type_id, to_type_id) FROM stdin;
+01DV777KN09DH2E7BDK0QEQ9MN	SD	CL
+01DV777KN02C4C2XS9502NWBA9	CL	PL
+01DV777KN0047KEQ1K8AWQB6ZH	PL	WF
+01DV777KN0MT24RN7A00TJ3893	WF	BF
+01DV777KN004RW77QD560EKZPH	BF	LF
+01DV777KN0W24AQMYC7SBHQ1V8	LF	UM
+01DV777KN0ZNBN6AEK106W5JGH	LF	PM
+01DV777KN0B2V3FTKY1N1RASPC	LF	PR
+01DV777KN0BH3NYG37F4XCBDTN	LF	UM
 \.
 
 
@@ -2493,14 +2567,31 @@ DEPLETED
 --
 
 COPY lcb_ref.inventory_type (id, name, description, units) FROM stdin;
+WF	Wet Flower	\N	g
 BF	Bulk Flower	\N	g
+LF	Lot Flower	\N	g
 UM	Usable Marijuana	\N	g
 PM	Packaged Marijuana	\N	g
 PR	Pre-roll Joints	\N	ct
 CL	Clones	\N	ct
 SD	Seeds	\N	ct
+PL	Plants	\N	ct
 IS	Infused Solid Edible	\N	ct
 IL	Infused Liquid Edible	\N	ct
+\.
+
+
+--
+-- Data for Name: transfer_status; Type: TABLE DATA; Schema: lcb_ref; Owner: app
+--
+
+COPY lcb_ref.transfer_status (id) FROM stdin;
+SCHEDULED
+DEPARTED
+DELIVERED
+RECEIVED
+REJECTED
+CANCELLED
 \.
 
 
@@ -2704,6 +2795,22 @@ ALTER TABLE ONLY auth.token
 
 
 --
+-- Name: conversion conversion_id_key; Type: CONSTRAINT; Schema: lcb; Owner: app
+--
+
+ALTER TABLE ONLY lcb.conversion
+    ADD CONSTRAINT conversion_id_key UNIQUE (id);
+
+
+--
+-- Name: conversion_result conversion_result_id_key; Type: CONSTRAINT; Schema: lcb; Owner: app
+--
+
+ALTER TABLE ONLY lcb.conversion_result
+    ADD CONSTRAINT conversion_result_id_key UNIQUE (id);
+
+
+--
 -- Name: inventory_lot inventory_lot_id_key; Type: CONSTRAINT; Schema: lcb; Owner: app
 --
 
@@ -2725,6 +2832,22 @@ ALTER TABLE ONLY lcb.lcb_license
 
 ALTER TABLE ONLY lcb.lcb_license_holder
     ADD CONSTRAINT lcb_license_holder_lcb_license_id_key UNIQUE (lcb_license_id);
+
+
+--
+-- Name: conversion pk_conversion; Type: CONSTRAINT; Schema: lcb; Owner: app
+--
+
+ALTER TABLE ONLY lcb.conversion
+    ADD CONSTRAINT pk_conversion PRIMARY KEY (id);
+
+
+--
+-- Name: conversion_result pk_conversion_result; Type: CONSTRAINT; Schema: lcb; Owner: app
+--
+
+ALTER TABLE ONLY lcb.conversion_result
+    ADD CONSTRAINT pk_conversion_result PRIMARY KEY (id);
 
 
 --
@@ -2760,6 +2883,30 @@ ALTER TABLE ONLY lcb_hist.hist_inventory_lot
 
 
 --
+-- Name: conversion_rule conversion_rule_id_key; Type: CONSTRAINT; Schema: lcb_ref; Owner: app
+--
+
+ALTER TABLE ONLY lcb_ref.conversion_rule
+    ADD CONSTRAINT conversion_rule_id_key UNIQUE (id);
+
+
+--
+-- Name: inventory_lot_reporting_status fk_inventory_lot_reporting_status; Type: CONSTRAINT; Schema: lcb_ref; Owner: app
+--
+
+ALTER TABLE ONLY lcb_ref.inventory_lot_reporting_status
+    ADD CONSTRAINT fk_inventory_lot_reporting_status PRIMARY KEY (id);
+
+
+--
+-- Name: transfer_status fk_transfer_status; Type: CONSTRAINT; Schema: lcb_ref; Owner: app
+--
+
+ALTER TABLE ONLY lcb_ref.transfer_status
+    ADD CONSTRAINT fk_transfer_status PRIMARY KEY (id);
+
+
+--
 -- Name: inventory_lot_reporting_status inventory_lot_reporting_status_id_key; Type: CONSTRAINT; Schema: lcb_ref; Owner: app
 --
 
@@ -2784,11 +2931,27 @@ ALTER TABLE ONLY lcb_ref.inventory_type
 
 
 --
+-- Name: conversion_rule pk_conversion_rule; Type: CONSTRAINT; Schema: lcb_ref; Owner: app
+--
+
+ALTER TABLE ONLY lcb_ref.conversion_rule
+    ADD CONSTRAINT pk_conversion_rule PRIMARY KEY (id);
+
+
+--
 -- Name: inventory_type pk_inventory_type; Type: CONSTRAINT; Schema: lcb_ref; Owner: app
 --
 
 ALTER TABLE ONLY lcb_ref.inventory_type
     ADD CONSTRAINT pk_inventory_type PRIMARY KEY (id);
+
+
+--
+-- Name: transfer_status transfer_status_id_key; Type: CONSTRAINT; Schema: lcb_ref; Owner: app
+--
+
+ALTER TABLE ONLY lcb_ref.transfer_status
+    ADD CONSTRAINT transfer_status_id_key UNIQUE (id);
 
 
 --
@@ -2968,10 +3131,17 @@ CREATE TRIGGER tg_timestamp_update_permission BEFORE INSERT OR UPDATE ON auth.pe
 
 
 --
--- Name: inventory_lot tg_capture_hist_inventory_lot; Type: TRIGGER; Schema: lcb; Owner: app
+-- Name: conversion tg_timestamp_update_conversion; Type: TRIGGER; Schema: lcb; Owner: app
 --
 
-CREATE TRIGGER tg_capture_hist_inventory_lot AFTER UPDATE ON lcb.inventory_lot FOR EACH ROW EXECUTE PROCEDURE lcb_hist.fn_capture_hist_inventory_lot();
+CREATE TRIGGER tg_timestamp_update_conversion BEFORE INSERT OR UPDATE ON lcb.conversion FOR EACH ROW EXECUTE PROCEDURE lcb.fn_timestamp_update_conversion();
+
+
+--
+-- Name: conversion_result tg_timestamp_update_conversion_result; Type: TRIGGER; Schema: lcb; Owner: app
+--
+
+CREATE TRIGGER tg_timestamp_update_conversion_result BEFORE INSERT OR UPDATE ON lcb.conversion_result FOR EACH ROW EXECUTE PROCEDURE lcb.fn_timestamp_update_conversion_result();
 
 
 --
@@ -3119,6 +3289,38 @@ ALTER TABLE ONLY auth.token
 
 
 --
+-- Name: conversion fk_conversion_app_tenant; Type: FK CONSTRAINT; Schema: lcb; Owner: app
+--
+
+ALTER TABLE ONLY lcb.conversion
+    ADD CONSTRAINT fk_conversion_app_tenant FOREIGN KEY (app_tenant_id) REFERENCES auth.app_tenant(id);
+
+
+--
+-- Name: conversion_result fk_conversion_app_tenant; Type: FK CONSTRAINT; Schema: lcb; Owner: app
+--
+
+ALTER TABLE ONLY lcb.conversion_result
+    ADD CONSTRAINT fk_conversion_app_tenant FOREIGN KEY (app_tenant_id) REFERENCES auth.app_tenant(id);
+
+
+--
+-- Name: conversion fk_conversion_from_inventory_lot; Type: FK CONSTRAINT; Schema: lcb; Owner: app
+--
+
+ALTER TABLE ONLY lcb.conversion
+    ADD CONSTRAINT fk_conversion_from_inventory_lot FOREIGN KEY (from_inventory_lot_id) REFERENCES lcb.inventory_lot(id);
+
+
+--
+-- Name: conversion_result fk_conversion_result_to_inventory_lot; Type: FK CONSTRAINT; Schema: lcb; Owner: app
+--
+
+ALTER TABLE ONLY lcb.conversion_result
+    ADD CONSTRAINT fk_conversion_result_to_inventory_lot FOREIGN KEY (inventory_lot_id) REFERENCES lcb.inventory_lot(id);
+
+
+--
 -- Name: inventory_lot fk_inventory_lot_app_tenant_id; Type: FK CONSTRAINT; Schema: lcb; Owner: app
 --
 
@@ -3188,6 +3390,22 @@ ALTER TABLE ONLY lcb_hist.hist_inventory_lot
 
 ALTER TABLE ONLY lcb_hist.hist_inventory_lot
     ADD CONSTRAINT fk_hist_inventory_lot_inventory_lot FOREIGN KEY (inventory_lot_id) REFERENCES lcb.inventory_lot(id);
+
+
+--
+-- Name: conversion_rule fk_conversion_rule_from; Type: FK CONSTRAINT; Schema: lcb_ref; Owner: app
+--
+
+ALTER TABLE ONLY lcb_ref.conversion_rule
+    ADD CONSTRAINT fk_conversion_rule_from FOREIGN KEY (from_type_id) REFERENCES lcb_ref.inventory_type(id);
+
+
+--
+-- Name: conversion_rule fk_conversion_rule_to; Type: FK CONSTRAINT; Schema: lcb_ref; Owner: app
+--
+
+ALTER TABLE ONLY lcb_ref.conversion_rule
+    ADD CONSTRAINT fk_conversion_rule_to FOREIGN KEY (to_type_id) REFERENCES lcb_ref.inventory_type(id);
 
 
 --

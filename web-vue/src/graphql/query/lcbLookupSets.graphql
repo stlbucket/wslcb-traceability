@@ -1,5 +1,7 @@
 query LcbLookupSets{
-  inventoryTypes: allInventoryTypes {
+  inventoryTypes: allInventoryTypes(
+    orderBy: ID_ASC
+  ) {
     nodes {
       id
       name

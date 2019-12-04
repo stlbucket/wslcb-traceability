@@ -26,18 +26,22 @@ RETURNS setof lcb.inventory_lot
     -- raise exception '%, %', _current_app_user.app_tenant_id, _lcb_license_holder_id;
 
     RETURN QUERY INSERT INTO lcb.inventory_lot(
+      updated_by_app_user_id,
       app_tenant_id,
       lcb_license_holder_id,
       id_origin,
       reporting_status,
-      inventory_type
+      inventory_type,
+      lot_type
     )
     SELECT
+      _current_app_user.id,
       _current_app_user.app_tenant_id,
       _lcb_license_holder_id,
       'WSLCB',
       'PROVISIONED',
-      _inventory_type
+      _inventory_type,
+      'INVENTORY'
     FROM
       generate_series(1, _number_requested)
     RETURNING *
@@ -103,12 +107,14 @@ RETURNS setof lcb.inventory_lot
       if _inventory_lot.id is null then
         insert into lcb.inventory_lot(
           id,
+          updated_by_app_user_id,
           licensee_identifier,
           app_tenant_id,
           lcb_license_holder_id,
           id_origin,
           reporting_status,
           inventory_type,
+          lot_type,
           description,
           quantity,
           strain_name,
@@ -116,12 +122,14 @@ RETURNS setof lcb.inventory_lot
         )
         SELECT
           COALESCE(_inventory_lot_input.id, util_fn.generate_ulid()),
+          _current_app_user.id,
           _inventory_lot_input.licensee_identifier,
           _current_app_user.app_tenant_id,
           _lcb_license_holder_id,
           case when _inventory_lot_input.id is null then 'WSLCB' else 'LICENSEE' end,
           case when _inventory_lot_input.quantity > 0 then 'ACTIVE' else 'DEPLETED' end,
           _inventory_lot_input.inventory_type::text,
+          'INVENTORY',
           _inventory_lot_input.description::text,
           _inventory_lot_input.quantity::numeric(10,2),
           _inventory_lot_input.strain_name::text,
@@ -160,6 +168,7 @@ RETURNS setof lcb.inventory_lot
           OR coalesce(_inventory_lot_input.area_identifier::text, '')     != coalesce(_inventory_lot.area_identifier, '')
         then
           update lcb.inventory_lot set
+            updated_by_app_user_id = _current_app_user.id,
             licensee_identifier = _inventory_lot_input.licensee_identifier::text,
             description = _inventory_lot_input.description::text,
             quantity = _inventory_lot_input.quantity::numeric(10,2),
