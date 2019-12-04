@@ -1,7 +1,7 @@
 
 <template>
     <div>
-      <v-dialog v-model="dialog" persistent width="600">
+      <v-dialog v-model="dialog" persistent width="800">
         <template v-slot:activator="{ on }">
           <v-btn
             small
@@ -11,11 +11,11 @@
             :hidden="hidden"
             class="text-none"
           >
-            Sublot
+            QA Sample
           </v-btn>
         </template>
         <v-card>
-          <v-card-title class="headline">Create Sublots</v-card-title>
+          <v-card-title class="headline">Create Samples</v-card-title>
           <h3>Parent Lot: {{parentLotDisplay}}</h3>
           <v-row>
             <v-col cols="3">
@@ -23,6 +23,7 @@
                 label="Licensee Identifier"
                 v-model="licenseeIdentifier"
               ></v-text-field>
+              <v-btn :hidden="disabled" @click="dialog=false">Cancel</v-btn>
             </v-col>
             <v-col cols="3">
               <v-text-field
@@ -33,18 +34,12 @@
             </v-col>
             <v-col cols="2">
               <v-text-field
-                :label="sublotConfig.quantityLabel"
+                :label="qaSampleConfig.quantityLabel"
                 v-model="quantity"
               ></v-text-field>
-              <v-btn @click="sublot" :disabled="sublotDisabled">Create Sublots</v-btn>
+              <v-btn @click="qaSample" :disabled="sampleDisabled">Make Samples</v-btn>
             </v-col>
           </v-row>
-          <v-card-actions>
-            <v-spacer></v-spacer>
-            <v-btn :hidden="disabled" @click="dialog=false">Cancel</v-btn>
-            <v-btn :hidden="!disabled" @click="dialog=false">OK</v-btn>
-            <v-spacer></v-spacer>
-          </v-card-actions>
         </v-card>
       </v-dialog>
     </div>
@@ -52,16 +47,16 @@
 
 <script>
   import {ulid} from 'ulid'
-  import sublotInventory from '@/graphql/mutation/sublotInventory.graphql'
+  import qaSampleInventory from '@/graphql/mutation/qaSampleInventory.graphql'
 
   export default {
-    name: 'DialogInventorySublot',
+    name: 'DialogInventoryQaSample',
     props: {
       disabled: {
         type: Boolean,
         default: false
       },
-      sublotConfig: {
+      qaSampleConfig: {
         type: Object,
         required: true
       }
@@ -77,7 +72,7 @@
     },
     computed: {
       parentLotDisplay () {
-        const parentLot = this.sublotConfig.parentLot
+        const parentLot = this.qaSampleConfig.parentLot
         return parentLot ? `${parentLot.id } - ${parentLot.description}` : 'NO PARENT LOT'
       },
       hidden () {
@@ -86,29 +81,29 @@
       btnDisabled () {
         return this.disabled
       },
-      sublotDisabled () {
+      sampleDisabled () {
         return false
       }
     },
     watch: {
     },
     methods: {
-      sublot () {
-        const sublotInventoryInput = {
+      qaSample () {
+        const sampleInventoryInput = {
           id: this.ulid,
           licenseeIdentifier: this.licenseeIdentifier,
           quantity: this.quantity
         }
 
         this.$apollo.mutate({
-          mutation: sublotInventory,
+          mutation: qaSampleInventory,
           variables: {
-            parentLotId: this.sublotConfig.parentLot.id,
-            sublotsInfo: [sublotInventoryInput]
+            parentLotId: this.qaSampleConfig.parentLot.id,
+            samplesInfo: [sampleInventoryInput]
           }
         })
         .then(result => {
-          this.$store.commit('addRecentInventoryLotChange', { newChanges: result.data.sublotInventory.inventoryLots})
+          this.$store.commit('addRecentInventoryLotChange', { newChanges: result.data.qaSampleInventory.inventoryLots})
           this.dialog = false
         })
         .catch(error => {

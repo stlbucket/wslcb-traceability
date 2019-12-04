@@ -5,6 +5,7 @@ query allInventoryLots{
       createdAt
       updatedAt
       reportingStatus
+      lotType
       inventoryType: inventoryTypeByInventoryType {
         id
         name
@@ -23,6 +24,7 @@ query allInventoryLots{
 		      reportingStatus
           createdAt
           updatedAt
+          lotType
           inventoryType
           strainName
           description

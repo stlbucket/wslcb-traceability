@@ -16,7 +16,7 @@
             <v-spacer></v-spacer>
             <dialog-inventory-sublot :disabled="sublotDisabled" :sublotConfig="sublotConfig"></dialog-inventory-sublot>
             <dialog-inventory-conversion :disabled="conversionDisabled" :parentLot="selectedInventoryLot"></dialog-inventory-conversion>
-            <dialog-inventory-sample :disabled="sampleDisabled" :parentLot="selectedInventoryLot"></dialog-inventory-sample>
+            <dialog-inventory-qa-sample :disabled="sampleDisabled" :qaSampleConfig="qaSampleConfig"></dialog-inventory-qa-sample>
             <dialog-inventory-destroy :disabled="destroyDisabled" :inventoryLot="selectedInventoryLot"></dialog-inventory-destroy>
             <dialog-inventory-invalidate :disabled="invalidateDisabled" :inventoryLot="selectedInventoryLot"></dialog-inventory-invalidate>
             <dialog-inventory-provision :disabled="provisionDisabled" :mappedInventoryTypes="mappedInventoryTypes" :initialInventoryType="selectedInventoryType"></dialog-inventory-provision>
@@ -175,7 +175,7 @@ import DialogInventoryConversion from './DialogInventoryConversion'
 import DialogInventoryDestroy from './DialogInventoryDestroy'
 import DialogInventoryInvalidate from './DialogInventoryInvalidate'
 import DialogInventoryProvision from './DialogInventoryProvision'
-import DialogInventorySample from './DialogInventorySample'
+import DialogInventoryQaSample from './DialogInventoryQaSample'
 import DialogInventorySublot from './DialogInventorySublot'
 
 export default {
@@ -185,7 +185,7 @@ export default {
     DialogInventoryDestroy,
     DialogInventoryInvalidate,
     DialogInventoryProvision,
-    DialogInventorySample,
+    DialogInventoryQaSample,
     DialogInventorySublot,
   },
   methods: {
@@ -417,7 +417,13 @@ export default {
         parentInventoryType: this.actualSelectedInventoryType,
         quantityLabel: this.quantityLabel
       }
-
+    },
+    qaSampleConfig () {
+      return {
+        parentLot: this.selectedInventoryLot,
+        parentInventoryType: this.actualSelectedInventoryType,
+        quantityLabel: this.quantityLabel
+      }
     },
     actualSelectedInventoryType () {
       if (this.selectedInventoryType) {
@@ -464,9 +470,14 @@ export default {
           value: 'id'
         },
         {
-          text: 'Identifier',
-          value: 'licenseeIdentifier'
+          text: 'Lot Type',
+          value: 'lotType'
+
         },
+        // {
+        //   text: 'Identifier',
+        //   value: 'licenseeIdentifier'
+        // },
         {
           text: 'status',
           value: 'reportingStatus'

@@ -9,6 +9,7 @@ mutation ReportInventoryLots(
       createdAt
       updatedAt
       reportingStatus
+      lotType
       inventoryType: inventoryTypeByInventoryType {
         id
         name
@@ -27,6 +28,7 @@ mutation ReportInventoryLots(
 		      reportingStatus
           createdAt
           updatedAt
+          lotType
           inventoryType
           strainName
           description

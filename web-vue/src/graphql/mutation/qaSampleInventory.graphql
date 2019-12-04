@@ -1,10 +1,10 @@
-mutation SublotInventory(
+mutation QaSampleInventory(
   $parentLotId: String!
-  $sublotsInfo: [SublotInventoryInputRecordInput]!
+  $samplesInfo: [QaSampleInventoryInputRecordInput]!
 ) {
-  sublotInventory(input: {
+  qaSampleInventory(input: {
     _parentLotId: $parentLotId
-    _sublotsInfo: $sublotsInfo
+    _samplesInfo: $samplesInfo
   }) {
     inventoryLots {
       id
