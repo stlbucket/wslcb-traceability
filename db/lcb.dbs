@@ -452,10 +452,8 @@ AS $function$
 			<column name="licensee_identifier" type="text" decimal="0" jt="12" />
 			<column name="app_tenant_id" type="text" decimal="0" jt="12" mandatory="y" />
 			<column name="reporting_status" type="text" decimal="0" jt="12" mandatory="y" />
-			<column name="parent_id" type="text" decimal="0" jt="12" />
 			<column name="updated_by_app_user_id" type="text" decimal="0" jt="12" mandatory="y" />
 			<column name="lot_type" type="text" decimal="0" jt="12" mandatory="y" />
-			<column name="qa_result_id" type="text" decimal="0" jt="12" mandatory="y" />
 			<index name="pk_inventory_lot" unique="PRIMARY_KEY" >
 				<column name="id" />
 			</index>
@@ -483,14 +481,8 @@ AS $function$
 			<fk name="fk_inventory_lot_updated_by_app_user" to_schema="lcb.auth" to_table="app_user" >
 				<fk_column name="updated_by_app_user_id" pk="id" />
 			</fk>
-			<fk name="fk_inventory_lot_parent" to_schema="lcb.lcb" to_table="inventory_lot" >
-				<fk_column name="parent_id" pk="id" />
-			</fk>
 			<fk name="fk_inventory_lot_type" to_schema="lcb.lcb_ref" to_table="inventory_lot_type" >
 				<fk_column name="lot_type" pk="id" />
-			</fk>
-			<fk name="fk_inventory_lot_qa_result" to_schema="lcb.lcb" to_table="qa_result" >
-				<fk_column name="qa_result_id" pk="id" />
 			</fk>
 		</table>
 		<table name="lcb_license" >
@@ -544,33 +536,6 @@ AS $function$
 			</fk>
 			<fk name="fk_lcb_license_holder_app_tenant_id" to_schema="lcb.auth" to_table="app_tenant" >
 				<fk_column name="app_tenant_id" pk="id" />
-			</fk>
-		</table>
-		<table name="qa_result" >
-			<column name="id" type="text" decimal="0" jt="12" mandatory="y" >
-				<defo>util_fn.generate_ulid()</defo>
-			</column>
-			<column name="lab_app_tenant_id" type="text" decimal="0" jt="12" mandatory="y" />
-			<column name="licensee_app_tenant_id" type="text" decimal="0" jt="12" mandatory="y" />
-			<column name="created_at" type="timestamptz" length="35" decimal="6" jt="93" mandatory="y" >
-				<defo>CURRENT_TIMESTAMP</defo>
-			</column>
-			<column name="updated_at" type="timestamptz" length="35" decimal="6" jt="93" mandatory="y" />
-			<column name="lab_license_holder_id" type="text" decimal="0" jt="12" mandatory="y" />
-			<column name="inv_license_holder_id" type="text" decimal="0" jt="12" mandatory="y" />
-			<column name="results" type="jsonb" decimal="0" jt="1111" />
-			<column name="sample_inventory_lot_id" type="text" decimal="0" jt="12" mandatory="y" />
-			<index name="pk_qa_result" unique="PRIMARY_KEY" >
-				<column name="id" />
-			</index>
-			<fk name="fk_qa_result_lab_license_holder" to_schema="lcb.lcb" to_table="lcb_license_holder" >
-				<fk_column name="lab_license_holder_id" pk="id" />
-			</fk>
-			<fk name="fk_qa_result_inv_license_holder" to_schema="lcb.lcb" to_table="lcb_license_holder" >
-				<fk_column name="inv_license_holder_id" pk="id" />
-			</fk>
-			<fk name="fk_qa_result_sample_inventory_lot" to_schema="lcb.lcb" to_table="inventory_lot" >
-				<fk_column name="sample_inventory_lot_id" pk="id" />
 			</fk>
 		</table>
 		<table name="transfer" >
@@ -1096,20 +1061,19 @@ AS $function$
 		<entity schema="lcb.auth" name="token" color="BED3F4" x="608" y="48" />
 	</layout>
 	<layout name="lcb" id="Layout_387048f" show_relation="columns" >
-		<entity schema="lcb.lcb_ref" name="conversion_rule" color="3986C1" x="912" y="480" />
-		<entity schema="lcb.lcb_ref" name="inventory_lot_reporting_status" color="3986C1" x="736" y="80" />
-		<entity schema="lcb.lcb" name="transfer" color="3986C1" x="48" y="528" />
-		<entity schema="lcb.lcb_ref" name="transfer_status" color="3986C1" x="64" y="800" />
-		<entity schema="lcb.lcb" name="conversion_result" color="3986C1" x="704" y="624" />
-		<entity schema="lcb.lcb" name="conversion" color="3986C1" x="592" y="864" />
-		<entity schema="lcb.lcb" name="conversion_source" color="3986C1" x="512" y="624" />
+		<entity schema="lcb.lcb_ref" name="conversion_rule" color="3986C1" x="1024" y="512" />
+		<entity schema="lcb.lcb_ref" name="transfer_status" color="3986C1" x="96" y="800" />
+		<entity schema="lcb.lcb" name="conversion_result" color="3986C1" x="736" y="624" />
+		<entity schema="lcb.lcb" name="conversion" color="3986C1" x="624" y="864" />
+		<entity schema="lcb.lcb" name="conversion_source" color="3986C1" x="544" y="624" />
+		<entity schema="lcb.lcb" name="lcb_license_holder" color="BED3F4" x="80" y="240" />
+		<entity schema="lcb.lcb" name="lcb_license" color="BED3F4" x="80" y="48" />
+		<entity schema="lcb.lcb" name="inventory_lot" color="3986C1" x="592" y="160" />
+		<entity schema="lcb.lcb_ref" name="inventory_lot_type" color="3986C1" x="336" y="48" />
+		<entity schema="lcb.lcb_ref" name="inventory_type" color="3986C1" x="1040" y="224" />
+		<entity schema="lcb.lcb_ref" name="inventory_lot_reporting_status" color="3986C1" x="768" y="80" />
 		<entity schema="lcb.lcb" name="transfer_item" color="3986C1" x="304" y="544" />
-		<entity schema="lcb.lcb" name="lcb_license_holder" color="BED3F4" x="48" y="240" />
-		<entity schema="lcb.lcb" name="lcb_license" color="BED3F4" x="48" y="48" />
-		<entity schema="lcb.lcb" name="inventory_lot" color="3986C1" x="560" y="160" />
-		<entity schema="lcb.lcb" name="qa_result" color="3986C1" x="272" y="240" />
-		<entity schema="lcb.lcb_ref" name="inventory_lot_type" color="3986C1" x="304" y="48" />
-		<entity schema="lcb.lcb_ref" name="inventory_type" color="3986C1" x="928" y="192" />
+		<entity schema="lcb.lcb" name="transfer" color="3986C1" x="48" y="528" />
 	</layout>
 	<layout name="org" id="Layout_16ad517" show_relation="columns" >
 		<entity schema="lcb.org" name="config_org" color="3986C1" x="1072" y="48" />

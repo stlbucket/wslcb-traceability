@@ -10,7 +10,7 @@
             :disabled="btnDisabled"
             :hidden="hidden"
             class="text-none"
-            @click="activate"
+            @click="provision"
           >
             Provision
           </v-btn>
@@ -21,7 +21,6 @@
             v-model="selectedInventoryType"
             :items="mappedInventoryTypes"
             label="Select Inventory Type"
-            :disabled="inventoryTypeSelectDisabled"
           ></v-combobox>
           <v-text-field
             label="Number of ULIDS"
@@ -49,15 +48,20 @@
         default: false
       },
       mappedInventoryTypes: {
-        type: Object,
+        type: Array,
         required: true
+      },
+      initialInventoryType: {
+        type: Object,
+        required: false
       }
     },
     data () {
       return {
         toggleCompleted: false,
         dialog: false,
-        provisionCount: 1
+        provisionCount: 1,
+        selectedInventoryType: null
       }
     },
     computed: {
@@ -89,6 +93,12 @@
           this.dialog = false
         })
       },
+      provision () {
+
+      }
+    },
+    mounted () {
+      this.selectedInventoryType = this.initialInventoryType
     }
   }
 </script>

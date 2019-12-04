@@ -949,3 +949,179 @@ $body$;
 
 ----------  END TABLE POLICY: lcb_ref.inventory_type
 --==
+
+
+----------  BEGIN TABLE POLICY: lcb_ref.conversion_rule
+----------  POLICY NAME:  app_user  select only no rls  :::  app_super_admin manage
+----------
+
+----------  REMOVE EXISTING TABLE GRANTS
+
+  revoke all privileges 
+  on table lcb_ref.conversion_rule 
+  from public;
+
+  revoke all privileges 
+  on table lcb_ref.conversion_rule 
+  from app_super_admin, app_tenant_admin, app_admin, app_demon, app_user, app_anonymous;
+
+----------  DISABLE ROW LEVEL SECURITY
+
+  alter table lcb_ref.conversion_rule disable row level security;
+
+----------  CREATE NEW TABLE GRANTS
+
+----------  app_super_admin
+  grant 
+    insert, 
+        -- no excluded columns
+    update,
+        -- no excluded columns
+    delete  
+  on table lcb_ref.conversion_rule 
+  to app_super_admin;
+
+
+----------  app_user
+  grant 
+    select  
+  on table lcb_ref.conversion_rule 
+  to app_user;
+
+
+
+----------  END TABLE POLICY: lcb_ref.conversion_rule
+--==
+
+
+----------
+----------  BEGIN TABLE POLICY: lcb.conversion
+----------  POLICY NAME:  app_user  select only no rls  :::  app_super_admin manage
+----------
+
+----------  REMOVE EXISTING TABLE GRANTS
+
+  revoke all privileges 
+  on table lcb.conversion 
+  from public;
+
+  revoke all privileges 
+  on table lcb.conversion 
+  from app_super_admin, app_tenant_admin, app_admin, app_demon, app_user, app_anonymous;
+
+----------  DISABLE ROW LEVEL SECURITY
+
+  alter table lcb.conversion disable row level security;
+
+----------  CREATE NEW TABLE GRANTS
+
+----------  app_super_admin
+  grant 
+    insert, 
+        -- no excluded columns
+    update,
+        -- no excluded columns
+    delete  
+  on table lcb.conversion 
+  to app_super_admin;
+
+
+----------  app_user
+  grant 
+    select  
+  on table lcb.conversion 
+  to app_user;
+
+
+
+----------  END TABLE POLICY: lcb.conversion
+--==
+
+
+----------
+----------  BEGIN TABLE POLICY: lcb.conversion_source
+----------  POLICY NAME:  app_user  select only no rls  :::  app_super_admin manage
+----------
+
+----------  REMOVE EXISTING TABLE GRANTS
+
+  revoke all privileges 
+  on table lcb.conversion_source 
+  from public;
+
+  revoke all privileges 
+  on table lcb.conversion_source 
+  from app_super_admin, app_tenant_admin, app_admin, app_demon, app_user, app_anonymous;
+
+----------  DISABLE ROW LEVEL SECURITY
+
+  alter table lcb.conversion_source disable row level security;
+
+----------  CREATE NEW TABLE GRANTS
+
+----------  app_super_admin
+  grant 
+    insert, 
+        -- no excluded columns
+    update,
+        -- no excluded columns
+    delete  
+  on table lcb.conversion_source 
+  to app_super_admin;
+
+
+----------  app_user
+  grant 
+    select  
+  on table lcb.conversion_source 
+  to app_user;
+
+
+
+----------  END TABLE POLICY: lcb.conversion_source
+--==
+
+
+
+----------
+----------  BEGIN TABLE POLICY: lcb.conversion_result
+----------  POLICY NAME:  app_user  select only no rls  :::  app_super_admin manage
+----------
+
+----------  REMOVE EXISTING TABLE GRANTS
+
+  revoke all privileges 
+  on table lcb.conversion_result 
+  from public;
+
+  revoke all privileges 
+  on table lcb.conversion_result 
+  from app_super_admin, app_tenant_admin, app_admin, app_demon, app_user, app_anonymous;
+
+----------  DISABLE ROW LEVEL SECURITY
+
+  alter table lcb.conversion_result disable row level security;
+
+----------  CREATE NEW TABLE GRANTS
+
+----------  app_super_admin
+  grant 
+    insert, 
+        -- no excluded columns
+    update,
+        -- no excluded columns
+    delete  
+  on table lcb.conversion_result 
+  to app_super_admin;
+
+
+----------  app_user
+  grant 
+    select  
+  on table lcb.conversion_result 
+  to app_user;
+
+
+
+----------  END TABLE POLICY: lcb.conversion_result
+--==

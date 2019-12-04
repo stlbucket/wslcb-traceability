@@ -45,7 +45,6 @@ ALTER TABLE ONLY lcb.lcb_license_holder
 CREATE TABLE lcb.inventory_lot (
     id text DEFAULT util_fn.generate_ulid() NOT NULL unique,
     updated_by_app_user_id text NOT NULL,
-    parent_id text NULL,
     licensee_identifier text null,
     app_tenant_id text NOT NULL,
     lcb_license_holder_id text not null,
@@ -78,8 +77,6 @@ ALTER TABLE ONLY lcb.inventory_lot
     ADD CONSTRAINT fk_inventory_lot_reporting_status FOREIGN KEY (reporting_status) REFERENCES lcb_ref.inventory_lot_reporting_status (id);
 ALTER TABLE ONLY lcb.inventory_lot
     ADD CONSTRAINT fk_inventory_lot_updated_by_app_user FOREIGN KEY (updated_by_app_user_id) REFERENCES auth.app_user (id);
-ALTER TABLE ONLY lcb.inventory_lot
-    ADD CONSTRAINT fk_inventory_lot_parent FOREIGN KEY (parent_id) REFERENCES lcb.inventory_lot (id);
 ALTER TABLE ONLY lcb.inventory_lot
     ADD CONSTRAINT fk_inventory_lot_type FOREIGN KEY (lot_type) REFERENCES lcb_ref.inventory_lot_type (id);
 
@@ -118,8 +115,7 @@ CREATE TABLE lcb.conversion (
     id text NOT NULL UNIQUE default util_fn.generate_ulid(),
     created_at timestamptz DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at timestamptz NOT NULL,
-    app_tenant_id text NOT NULL,
-    sourced_quantity numeric(10,2) NOT NULL
+    app_tenant_id text NOT NULL
 );
 ALTER TABLE lcb.conversion OWNER TO app;
 ALTER TABLE ONLY lcb.conversion
@@ -170,7 +166,8 @@ CREATE TABLE lcb.conversion_source (
     updated_at timestamptz NOT NULL,
     app_tenant_id text NOT NULL,
     conversion_id text NOT NULL,
-    inventory_lot_id text NOT NULL
+    inventory_lot_id text NOT NULL,
+    sourced_quantity numeric(10,2) NOT NULL
 );
 ALTER TABLE lcb.conversion_source OWNER TO app;
 ALTER TABLE ONLY lcb.conversion_source
@@ -195,7 +192,6 @@ CREATE TRIGGER tg_timestamp_update_conversion_source BEFORE INSERT OR UPDATE ON 
 ------------------------------------------------------------------------------------------------  lcb_hist
 CREATE TABLE lcb_hist.hist_inventory_lot (
     id text DEFAULT util_fn.generate_ulid() NOT NULL unique,
-    parent_id text null,
     updated_by_app_user_id text NOT NULL,
     licensee_identifier text null,
     inventory_lot_id text not null,
@@ -225,7 +221,6 @@ CREATE FUNCTION lcb_hist.fn_capture_hist_inventory_lot() RETURNS trigger
   BEGIN
     insert into lcb_hist.hist_inventory_lot(
         inventory_lot_id,
-        parent_id,
         updated_by_app_user_id,
         licensee_identifier,
         app_tenant_id,
@@ -244,7 +239,6 @@ CREATE FUNCTION lcb_hist.fn_capture_hist_inventory_lot() RETURNS trigger
     )
     values (
         OLD.id,
-        OLD.parent_id,
         OLD.updated_by_app_user_id,
         OLD.licensee_identifier,
         OLD.app_tenant_id,

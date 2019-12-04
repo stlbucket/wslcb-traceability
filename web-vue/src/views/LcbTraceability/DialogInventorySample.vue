@@ -10,14 +10,13 @@
             :disabled="btnDisabled"
             :hidden="hidden"
             class="text-none"
-            @click="activate"
+            @click="sample"
           >
             Sample
           </v-btn>
         </template>
         <v-card>
           <v-card-title class="headline">Create Sample</v-card-title>
-          <v-text-field label="Name" v-model="currentName" :disabled="disabled"></v-text-field>
           <v-card-actions>
             <v-spacer></v-spacer>
             <v-btn :hidden="disabled" @click="dialog=false">Cancel</v-btn>
@@ -38,6 +37,10 @@
         type: Boolean,
         default: false
       },
+      parentLot: {
+        type: Object,
+        required: false
+      }
     },
     data () {
       return {
@@ -56,6 +59,9 @@
     watch: {
     },
     methods: {
+      sample () {
+        
+      }
     }
   }
 </script>

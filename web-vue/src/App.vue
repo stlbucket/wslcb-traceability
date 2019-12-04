@@ -1,5 +1,6 @@
 <template>
-  <v-app id="inspire">
+  <v-app id="inspire"
+  >
     <v-hover v-slot:default="{ hover }">
       <v-navigation-drawer
         v-model="drawer"
@@ -29,11 +30,12 @@
       <login-manager></login-manager>
     </v-app-bar>
 
-    <v-content>
+    <v-content
+    >
       <v-container
         justify-start
-         ma-0 
-         pa-0
+        ma-0
+        pa-0
       >
         <router-view></router-view>
       </v-container>
@@ -61,6 +63,9 @@ export default {
   computed: {
   },
   methods: {
+    closeDrawer () {
+      this.drawer = false
+    }
   },
   data () {
     return {
@@ -77,6 +82,12 @@ export default {
         this.$store.commit('setGraphqlTypes', schema.types)
       }
     }
+  },
+  created() {
+      this.$eventHub.$on('app-selected', this.closeDrawer);
+  },
+  beforeDestroy() {
+      this.$eventHub.$off('app-selected');
   }
 }
 </script>

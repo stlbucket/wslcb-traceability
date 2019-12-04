@@ -14,12 +14,12 @@
         <v-col cols="6">
           <v-toolbar>
             <v-spacer></v-spacer>
-            <dialog-inventory-sublot :disabled="sublotDisabled"></dialog-inventory-sublot>
-            <dialog-inventory-conversion :disabled="conversionDisabled"></dialog-inventory-conversion>
-            <dialog-inventory-sample :disabled="sampleDisabled"></dialog-inventory-sample>
+            <dialog-inventory-sublot :disabled="sublotDisabled" :sublotConfig="sublotConfig"></dialog-inventory-sublot>
+            <dialog-inventory-conversion :disabled="conversionDisabled" :parentLot="selectedInventoryLot"></dialog-inventory-conversion>
+            <dialog-inventory-sample :disabled="sampleDisabled" :parentLot="selectedInventoryLot"></dialog-inventory-sample>
             <dialog-inventory-destroy :disabled="destroyDisabled" :inventoryLot="selectedInventoryLot"></dialog-inventory-destroy>
-            <dialog-inventory-invalidate :disabled="invalidateDisabled"></dialog-inventory-invalidate>
-            <dialog-inventory-provision :disabled="provisionDisabled" :mappedInventoryTypes="mappedInventoryTypes"></dialog-inventory-provision>
+            <dialog-inventory-invalidate :disabled="invalidateDisabled" :inventoryLot="selectedInventoryLot"></dialog-inventory-invalidate>
+            <dialog-inventory-provision :disabled="provisionDisabled" :mappedInventoryTypes="mappedInventoryTypes" :initialInventoryType="selectedInventoryType"></dialog-inventory-provision>
             <v-spacer></v-spacer>
           </v-toolbar>
         </v-col>
@@ -72,8 +72,6 @@
           ></v-text-field>
           <v-btn @click="reportInventory" :disabled="reportDisabled">Report</v-btn>
         </v-col>
-      </v-row>
-      <v-row>
       </v-row>
     </v-card>
 
@@ -349,29 +347,40 @@ export default {
       if (!this.safeMode) return false
       if (this.selectedInventoryLot) {
         return !this.dataIsDirty || ['ACTIVE', 'PROVISIONED'].indexOf(this.selectedInventoryLot.reportingStatus) === -1
-      } else if (this.selectedInventoryType && this.ulid) {
-        const quantity = parseFloat(this.quantity)
-        const notNum = isNaN(quantity)
-        console.log(quantity, notNum, quantity >= 0)
-
-        if (notNum) {
-          return true
-        } else {
-          return quantity < 0
-        }
-      } else if (this.selectedInventoryType && this.licenseeIdentifier) {
-        const quantity = parseFloat(this.quantity)
-        const notNum = isNaN(quantity)
-        console.log(quantity, notNum, quantity >= 0)
-
-        if (notNum) {
-          return true
-        } else {
-          return quantity < 0
-        }
       } else {
-        return true
+        const quantity = parseFloat(this.quantity)
+        const notNum = isNaN(quantity)
+        console.log(quantity, notNum, quantity >= 0)
+
+        if (notNum) {
+          return true
+        } else {
+          return quantity < 0
+        }
       }
+      // } else if (this.selectedInventoryType && this.ulid) {
+      //   const quantity = parseFloat(this.quantity)
+      //   const notNum = isNaN(quantity)
+      //   console.log(quantity, notNum, quantity >= 0)
+
+      //   if (notNum) {
+      //     return true
+      //   } else {
+      //     return quantity < 0
+      //   }
+      // } else if (this.selectedInventoryType && this.licenseeIdentifier) {
+      //   const quantity = parseFloat(this.quantity)
+      //   const notNum = isNaN(quantity)
+      //   console.log(quantity, notNum, quantity >= 0)
+
+      //   if (notNum) {
+      //     return true
+      //   } else {
+      //     return quantity < 0
+      //   }
+      // } else {
+      //   return true
+      // }
     },
     destroyDisabled () {
       if (!this.safeMode) return false
@@ -402,10 +411,24 @@ export default {
       return false
       // return !this.selectedInventoryType || this.provisionCount < 1
     },
-    quantityLabel () {
+    sublotConfig () {
+      return {
+        parentLot: this.selectedInventoryLot,
+        parentInventoryType: this.actualSelectedInventoryType,
+        quantityLabel: this.quantityLabel
+      }
+
+    },
+    actualSelectedInventoryType () {
       if (this.selectedInventoryType) {
-        const inventoryType = this.inventoryTypes.find(it => it.id === this.selectedInventoryType.value)
-        return `Quantity: ${inventoryType.units}`
+        return this.inventoryTypes.find(it => it.id === this.selectedInventoryType.value)
+      } else {
+        return null
+      }
+    },
+    quantityLabel () {
+      if (this.actualSelectedInventoryType) {
+        return `Quantity: ${this.actualSelectedInventoryType.units}`
       } else {
         return 'Quantity'
       }
@@ -474,22 +497,22 @@ export default {
           text: 'Updated At',
           value: 'updatedAtDisplay'
         },
-        {
-          text: 'ULID',
-          value: 'inventoryLotId'
-        },
-        {
-          text: 'Identifier',
-          value: 'licenseeIdentifier'
-        },
+        // {
+        //   text: 'ULID',
+        //   value: 'inventoryLotId'
+        // },
+        // {
+        //   text: 'Identifier',
+        //   value: 'licenseeIdentifier'
+        // },
         {
           text: 'status',
           value: 'reportingStatus'
         },
-        {
-          text: 'inventory type',
-          value: 'inventoryType'
-        },
+        // {
+        //   text: 'inventory type',
+        //   value: 'inventoryType'
+        // },
         {
           text: 'strain',
           value: 'strainName'

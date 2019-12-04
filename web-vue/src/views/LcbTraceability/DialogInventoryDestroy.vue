@@ -10,7 +10,6 @@
             :disabled="btnDisabled"
             :hidden="hidden"
             class="text-none"
-            @click="activate"
           >
             Destroy
           </v-btn>
@@ -18,7 +17,7 @@
         <v-card>
           <v-card-title class="headline">Create Destroy</v-card-title>
           <h2>Are you sure you want to destroy this lot?</h2>
-          {{ inventoryLot.id }} - {{ inventoryLot.description }}
+          {{ lotDisplay }}
           <v-card-actions>
             <v-spacer></v-spacer>
             <v-btn @click="dialog=false">Cancel</v-btn>
@@ -52,6 +51,9 @@
       }
     },
     computed: {
+      lotDisplay () {
+        return this.inventoryLot ? `${this.inventoryLot.id } - ${this.inventoryLot.description}` : 'NO INVENTORY LOT'
+      },
       hidden () {
         return false
       },

@@ -10,18 +10,17 @@
             :disabled="btnDisabled"
             :hidden="hidden"
             class="text-none"
-            @click="activate"
+            @click="invalidate"
           >
             Invalidate
           </v-btn>
         </template>
         <v-card>
           <v-card-title class="headline">Create Invalidate</v-card-title>
-          <v-text-field label="Name" v-model="currentName" :disabled="disabled"></v-text-field>
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn :hidden="disabled" @click="dialog=false">Cancel</v-btn>
-            <v-btn :hidden="!disabled" @click="dialog=false">OK</v-btn>
+            <v-btn @click="dialog=false">Cancel</v-btn>
+            <v-btn @click="dialog=false">OK</v-btn>
             <v-spacer></v-spacer>
           </v-card-actions>
         </v-card>
@@ -38,6 +37,10 @@
         type: Boolean,
         default: false
       },
+      inventoryLot: {
+        type: Object,
+        required: false
+      }
     },
     data () {
       return {
@@ -56,6 +59,9 @@
     watch: {
     },
     methods: {
+      invalidate () {
+        
+      }
     }
   }
 </script>

@@ -89,9 +89,9 @@ RETURNS setof lcb.inventory_lot
 
       -- make sure this lot can be identified later
       if _inventory_lot_input.id is null or _inventory_lot_input.id = '' then
-        if _inventory_lot_input.licensee_identifier is null or _inventory_lot_input.licensee_identifier = '' then
-          raise exception 'illegal operation - batch cancelled:  all inventory lots must have id OR licensee_identifier defined.';
-        end if;
+        -- if _inventory_lot_input.licensee_identifier is null or _inventory_lot_input.licensee_identifier = '' then
+        --   raise exception 'illegal operation - batch cancelled:  all inventory lots must have id OR licensee_identifier defined.';
+        -- end if;
         _inventory_lot_id := util_fn.generate_ulid();
       else
         -- _inventory_lot_input.id should be verified as a valid ulid here
@@ -144,24 +144,7 @@ RETURNS setof lcb.inventory_lot
           raise exception 'illegal operation - batch cancelled:  cannot change inventory type of an existing inventory lot: %', _inventory_lot.id;
         end if;
 
-        -- update lcb.inventory_lot set
-        --   licensee_identifier = _inventory_lot_input.licensee_identifier::text,
-        --   description = _inventory_lot_input.description::text,
-        --   quantity = _inventory_lot_input.quantity::numeric(10,2),
-        --   strain_name = _inventory_lot_input.strain_name::text,
-        --   area_identifier = _inventory_lot_input.area_identifier::text,
-        --   reporting_status = case when _inventory_lot_input.quantity::numeric(10,2) > 0 then 'ACTIVE' else 'DEPLETED' end
-        -- where id = _inventory_lot_id
-        -- and (
-        --   _inventory_lot_input.licensee_identifier::text != licensee_identifier
-        --   OR _inventory_lot_input.description::text != description
-        --   OR _inventory_lot_input.quantity::numeric(20,2) != quantity
-        --   OR _inventory_lot_input.strain_name::text != strain_name
-        --   OR _inventory_lot_input.area_identifier::text != area_identifier
-        -- )
-        -- returning * into _inventory_lot
-        -- ;
-        if   coalesce(_inventory_lot_input.licensee_identifier::text, '') != coalesce(_inventory_lot.licensee_identifier, '')
+        if coalesce(_inventory_lot_input.licensee_identifier::text, '') != coalesce(_inventory_lot.licensee_identifier, '')
           OR coalesce(_inventory_lot_input.description::text, '')         != coalesce(_inventory_lot.description, '')
           OR coalesce(_inventory_lot_input.quantity::numeric(20,2), -1)   != coalesce(_inventory_lot.quantity, -1)
           OR coalesce(_inventory_lot_input.strain_name::text, '')         != coalesce(_inventory_lot.strain_name, '')

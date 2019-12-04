@@ -6,6 +6,7 @@ export default {
   methods: {
     appSelected (app) {
       this.$router.push({name: app.routeName})
+     this.$eventHub.$emit('app-selected');
     },
   },
   computed: {
