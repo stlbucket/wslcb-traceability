@@ -81,80 +81,30 @@
       <v-spacer></v-spacer>
       <v-btn @click="clearRecentChanges">Clear</v-btn>
     </v-toolbar>
-    <v-data-table
-      :headers="headers"
-      :items="mappedRecentChanges"
-      class="elevation-1"
-      dense
-      :single-expand="singleExpand"
-      :expanded.sync="recentExpanded"
-      item-key="id"
-      show-expand
-      hide-default-footer
-      :items-per-page="100"
-      @click:row="inventoryLotSelected"
-      :sort-by="'updatedAt'"
-      :sort-desc="true"
+    <inventory-lot-collection
+      :inventoryLots="recentChanges"
+      :onSelectInventoryLot="inventoryLotSelected"
     >
-      <template slot="expanded-item" slot-scope="props">
-        <td :colspan="headers.length + 1">
-          <h3>Lot History</h3>
-          <v-card>
-            <v-data-table
-              :headers="historyHeaders"
-              :items="props.item.histInventoryLots"
-              dense
-              hide-default-footer
-              :items-per-page="100"
-              :sort-by="'updatedAt'"
-              :sort-desc="true"
-            >
-            </v-data-table>
-          </v-card>
-        </td>
-      </template>
-
-    </v-data-table>
+    </inventory-lot-collection>
 
     <v-toolbar 
       class="blue-grey darken-4"
     >
       <h2>Inventory Lots</h2>
     </v-toolbar>
-    <v-data-table
-      :headers="headers"
-      :items="mappedInventoryLots"
-      class="elevation-1"
-      dense
-      :single-expand="singleExpand"
-      :expanded.sync="expanded"
-      item-key="id"
-      show-expand
-      hide-default-footer
-      :items-per-page="100"
-      @click:row="inventoryLotSelected"
-      :sort-by="'updatedAt'"
-      :sort-desc="true"
+    <v-tabs>
+      <v-tab>Active</v-tab>
+      
+      <v-tab>Provisioned</v-tab>
+      <v-tab>Depleted</v-tab>
+      <v-tab>Destroyed</v-tab>
+      <v-tab>Invalidated</v-tab>
+    </v-tabs>
+    <inventory-lot-collection
+      :inventoryLots="inventoryLots"
+      :onSelectInventoryLot="inventoryLotSelected"
     >
-      <template slot="expanded-item" slot-scope="props">
-        <td :colspan="headers.length + 1">
-          <h3>Lot History</h3>
-          <v-card>
-            <v-data-table
-              :headers="historyHeaders"
-              :items="props.item.histInventoryLots"
-              dense
-              hide-default-footer
-              :items-per-page="100"
-              :sort-by="'updatedAt'"
-              :sort-desc="true"
-            >
-            </v-data-table>
-          </v-card>
-        </td>
-      </template>
-
-    </v-data-table>
+    </inventory-lot-collection>
     <v-switch
       label="safe mode"
       v-model="safeMode"
@@ -177,6 +127,7 @@ import DialogInventoryProvision from './DialogInventoryProvision'
 import DialogInventoryQaSample from './DialogInventoryQaSample'
 import DialogInventoryRtSample from './DialogInventoryRtSample'
 import DialogInventorySublot from './DialogInventorySublot'
+import InventoryLotCollection from './InventoryLotCollection'
 
 export default {
   name: "WSLCBTraceability",
@@ -188,6 +139,7 @@ export default {
     DialogInventoryQaSample,
     DialogInventoryRtSample,
     DialogInventorySublot,
+    InventoryLotCollection
   },
   methods: {
     generateUlid () {
@@ -450,6 +402,9 @@ export default {
       } else {
         return 'Quantity'
       }
+    },
+    recentChanges () {
+      return this.$store.state.recentInventoryLotChanges
     }
   },
   data () {
@@ -463,7 +418,7 @@ export default {
       quantity: null,
       inventoryLots: [],
       inventoryTypes: [],
-      recentChanges: [],
+      // recentChanges: [],
       selectedInventoryType: null,
       selectedInventoryLot: null,
       expanded: [],

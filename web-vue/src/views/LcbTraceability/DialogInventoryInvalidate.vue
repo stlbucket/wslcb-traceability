@@ -10,17 +10,18 @@
             :disabled="btnDisabled"
             :hidden="hidden"
             class="text-none"
-            @click="invalidate"
           >
             Invalidate
           </v-btn>
         </template>
         <v-card>
-          <v-card-title class="headline">Create Invalidate</v-card-title>
+          <v-card-title class="headline">Invalidate Lots</v-card-title>
+          <h2>Are you sure you want to invalidate this lot?</h2>
+          {{ lotDisplay }}
           <v-card-actions>
             <v-spacer></v-spacer>
             <v-btn @click="dialog=false">Cancel</v-btn>
-            <v-btn @click="dialog=false">OK</v-btn>
+            <v-btn @click="invalidateInventoryLots">OK</v-btn>
             <v-spacer></v-spacer>
           </v-card-actions>
         </v-card>
@@ -29,6 +30,7 @@
 </template>
 
 <script>
+  import invalidateInventoryLotIds from '@/graphql/mutation/invalidateInventoryLotIds.graphql'
 
   export default {
     name: 'DialogInventoryInvalidate',
@@ -49,6 +51,9 @@
       }
     },
     computed: {
+      lotDisplay () {
+        return this.inventoryLot ? `${this.inventoryLot.id } - ${this.inventoryLot.description}` : 'NO INVENTORY LOT'
+      },
       hidden () {
         return false
       },
@@ -59,10 +64,23 @@
     watch: {
     },
     methods: {
-      invalidate () {
-        
-      }
-    }
+      invalidateInventoryLots () {
+      this.$apollo.mutate({
+        mutation: invalidateInventoryLotIds,
+        variables: {
+          ids: [this.inventoryLot.id]
+        }
+      })
+      .then(result => {
+        this.$store.commit('addRecentInventoryLotChange', { newChanges: result.data.invalidateInventoryLotIds.inventoryLots})
+        this.dialog = false
+      })
+      .catch(error => {
+        alert(error.toString())
+        console.error(error)
+      })
+    },
+  }
   }
 </script>
 
