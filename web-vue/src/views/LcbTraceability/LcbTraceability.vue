@@ -2,26 +2,25 @@
   <v-container>
     <h1>WSLCB TRACEABILITY</h1>
     <v-card>
+      <v-toolbar>
+        <v-spacer></v-spacer>
+        <dialog-inventory-sublot :disabled="sublotDisabled" :sublotConfig="sublotConfig"></dialog-inventory-sublot>
+        <dialog-inventory-conversion :disabled="conversionDisabled" :parentLot="selectedInventoryLot"></dialog-inventory-conversion>
+        <dialog-inventory-qa-sample :disabled="qaSampleDisabled" :qaSampleConfig="qaSampleConfig"></dialog-inventory-qa-sample>
+        <dialog-inventory-rt-sample :disabled="rtSampleDisabled" :rtSampleConfig="rtSampleConfig"></dialog-inventory-rt-sample>
+        <dialog-inventory-destroy :disabled="destroyDisabled" :inventoryLot="selectedInventoryLot"></dialog-inventory-destroy>
+        <dialog-inventory-invalidate :disabled="invalidateDisabled" :inventoryLot="selectedInventoryLot"></dialog-inventory-invalidate>
+        <dialog-inventory-provision :disabled="provisionDisabled" :mappedInventoryTypes="mappedInventoryTypes" :initialInventoryType="selectedInventoryType"></dialog-inventory-provision>
+        <v-spacer></v-spacer>
+      </v-toolbar>
       <v-row>
         <v-col cols="2">
           <v-combobox
             v-model="selectedInventoryType"
             :items="mappedInventoryTypes"
-            label="Select Inventory Type"
+            label="Inventory Type"
             :disabled="inventoryTypeSelectDisabled"
           ></v-combobox>
-        </v-col>
-        <v-col cols="6">
-          <v-toolbar>
-            <v-spacer></v-spacer>
-            <dialog-inventory-sublot :disabled="sublotDisabled" :sublotConfig="sublotConfig"></dialog-inventory-sublot>
-            <dialog-inventory-conversion :disabled="conversionDisabled" :parentLot="selectedInventoryLot"></dialog-inventory-conversion>
-            <dialog-inventory-qa-sample :disabled="sampleDisabled" :qaSampleConfig="qaSampleConfig"></dialog-inventory-qa-sample>
-            <dialog-inventory-destroy :disabled="destroyDisabled" :inventoryLot="selectedInventoryLot"></dialog-inventory-destroy>
-            <dialog-inventory-invalidate :disabled="invalidateDisabled" :inventoryLot="selectedInventoryLot"></dialog-inventory-invalidate>
-            <dialog-inventory-provision :disabled="provisionDisabled" :mappedInventoryTypes="mappedInventoryTypes" :initialInventoryType="selectedInventoryType"></dialog-inventory-provision>
-            <v-spacer></v-spacer>
-          </v-toolbar>
         </v-col>
         <v-col cols="2">
           <v-text-field
@@ -176,6 +175,7 @@ import DialogInventoryDestroy from './DialogInventoryDestroy'
 import DialogInventoryInvalidate from './DialogInventoryInvalidate'
 import DialogInventoryProvision from './DialogInventoryProvision'
 import DialogInventoryQaSample from './DialogInventoryQaSample'
+import DialogInventoryRtSample from './DialogInventoryRtSample'
 import DialogInventorySublot from './DialogInventorySublot'
 
 export default {
@@ -186,6 +186,7 @@ export default {
     DialogInventoryInvalidate,
     DialogInventoryProvision,
     DialogInventoryQaSample,
+    DialogInventoryRtSample,
     DialogInventorySublot,
   },
   methods: {
@@ -390,7 +391,11 @@ export default {
       if (!this.safeMode) return false
       return this.selectedInventoryLot === null || this.selectedInventoryLot.reportingStatus !== 'ACTIVE'
     },
-    sampleDisabled () {
+    qaSampleDisabled () {
+      if (!this.safeMode) return false
+      return this.selectedInventoryLot === null || this.selectedInventoryLot.reportingStatus !== 'ACTIVE'
+    },
+    rtSampleDisabled () {
       if (!this.safeMode) return false
       return this.selectedInventoryLot === null || this.selectedInventoryLot.reportingStatus !== 'ACTIVE'
     },
@@ -419,6 +424,13 @@ export default {
       }
     },
     qaSampleConfig () {
+      return {
+        parentLot: this.selectedInventoryLot,
+        parentInventoryType: this.actualSelectedInventoryType,
+        quantityLabel: this.quantityLabel
+      }
+    },
+    rtSampleConfig () {
       return {
         parentLot: this.selectedInventoryLot,
         parentInventoryType: this.actualSelectedInventoryType,
