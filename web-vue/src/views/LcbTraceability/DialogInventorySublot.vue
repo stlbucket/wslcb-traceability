@@ -52,6 +52,7 @@
 
 <script>
   import {ulid} from 'ulid'
+  import sublotInventory from '@/graphql/mutation/sublotInventory.graphql'
 
   export default {
     name: 'DialogInventorySublot',
@@ -93,7 +94,27 @@
     },
     methods: {
       sublot () {
-        alert('NOT IMPLEMENTED')
+        const sublotInventoryInput = {
+          id: this.ulid,
+          licenseeIdentifier: this.licenseeIdentifier,
+          quantity: this.quantity
+        }
+
+        this.$apollo.mutate({
+          mutation: sublotInventory,
+          variables: {
+            parentLotId: this.sublotConfig.parentLot.id,
+            sublotsInfo: [sublotInventoryInput]
+          }
+        })
+        .then(result => {
+          this.$store.commit('addRecentInventoryLotChange', { newChanges: result.data.sublotInventory.inventoryLots})
+          this.dialog = false
+        })
+        .catch(error => {
+          alert(error.toString())
+          console.error(error)
+        })
       },
       generateUlid () {
         this.ulid = ulid()

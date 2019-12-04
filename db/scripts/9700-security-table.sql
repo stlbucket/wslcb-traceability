@@ -1013,25 +1013,27 @@ $body$;
 
   alter table lcb.conversion disable row level security;
 
+  create policy rls_app_user_default_lcb_conversion 
+    on lcb.conversion
+    as permissive
+    for all
+    to app_user
+    using ( auth_fn.app_user_has_access(app_tenant_id) = true)
+    ;
+
+
 ----------  CREATE NEW TABLE GRANTS
-
-----------  app_super_admin
-  grant 
-    insert, 
-        -- no excluded columns
-    update,
-        -- no excluded columns
-    delete  
-  on table lcb.conversion 
-  to app_super_admin;
-
 
 ----------  app_user
   grant 
-    select  
+    select , 
+    insert, -- ( id, lcb_license_holder_id, created_at, updated_at, deleted_at, id_origin, inventory_type, description, quantity, units, strain_name, area_identifier ), 
+        -- no excluded columns
+    update, -- ( id, lcb_license_holder_id, created_at, updated_at, deleted_at, id_origin, inventory_type, description, quantity, units, strain_name, area_identifier ), 
+        -- no excluded columns
+    delete  
   on table lcb.conversion 
   to app_user;
-
 
 
 ----------  END TABLE POLICY: lcb.conversion
@@ -1057,25 +1059,27 @@ $body$;
 
   alter table lcb.conversion_source disable row level security;
 
+  create policy rls_app_user_default_lcb_conversion_source
+    on lcb.conversion_source
+    as permissive
+    for all
+    to app_user
+    using ( auth_fn.app_user_has_access(app_tenant_id) = true)
+    ;
+
+
 ----------  CREATE NEW TABLE GRANTS
-
-----------  app_super_admin
-  grant 
-    insert, 
-        -- no excluded columns
-    update,
-        -- no excluded columns
-    delete  
-  on table lcb.conversion_source 
-  to app_super_admin;
-
 
 ----------  app_user
   grant 
-    select  
-  on table lcb.conversion_source 
+    select , 
+    insert, -- ( id, lcb_license_holder_id, created_at, updated_at, deleted_at, id_origin, inventory_type, description, quantity, units, strain_name, area_identifier ), 
+        -- no excluded columns
+    update, -- ( id, lcb_license_holder_id, created_at, updated_at, deleted_at, id_origin, inventory_type, description, quantity, units, strain_name, area_identifier ), 
+        -- no excluded columns
+    delete  
+  on table lcb.conversion_source
   to app_user;
-
 
 
 ----------  END TABLE POLICY: lcb.conversion_source
@@ -1102,23 +1106,26 @@ $body$;
 
   alter table lcb.conversion_result disable row level security;
 
+  create policy rls_app_user_default_lcb_conversion_result
+    on lcb.conversion_result
+    as permissive
+    for all
+    to app_user
+    using ( auth_fn.app_user_has_access(app_tenant_id) = true)
+    ;
+
+
 ----------  CREATE NEW TABLE GRANTS
-
-----------  app_super_admin
-  grant 
-    insert, 
-        -- no excluded columns
-    update,
-        -- no excluded columns
-    delete  
-  on table lcb.conversion_result 
-  to app_super_admin;
-
 
 ----------  app_user
   grant 
-    select  
-  on table lcb.conversion_result 
+    select , 
+    insert, -- ( id, lcb_license_holder_id, created_at, updated_at, deleted_at, id_origin, inventory_type, description, quantity, units, strain_name, area_identifier ), 
+        -- no excluded columns
+    update, -- ( id, lcb_license_holder_id, created_at, updated_at, deleted_at, id_origin, inventory_type, description, quantity, units, strain_name, area_identifier ), 
+        -- no excluded columns
+    delete  
+  on table lcb.conversion_result
   to app_user;
 
 

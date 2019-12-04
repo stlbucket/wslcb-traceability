@@ -1,10 +1,10 @@
 -- drop type lcb_fn.sublot_inventory_input cascade;
 
-create type lcb_fn.sublot_inventory_input as (
-  id text,
-  licensee_identifier text,
-  quantity numeric(10,2)
-);
+-- create type lcb_fn.sublot_inventory_input as (
+--   id text,
+--   licensee_identifier text,
+--   quantity numeric(10,2)
+-- );
 
 CREATE OR REPLACE FUNCTION lcb_fn.sublot_inventory(
   _parent_lot_id text, 
@@ -98,7 +98,7 @@ RETURNS setof lcb.inventory_lot
 
         _total_sublotted_quantity := _total_sublotted_quantity + _sublot_inventory_input.quantity;
 
-        if _total_sublotted_quantity > _parent_lot_id.quantity then
+        if _total_sublotted_quantity > _parent_lot.quantity then
           raise exception 'illegal operation - batch cancelled:  total sublotted quantity exceeds parent lot quantity';
         end if;
 
@@ -106,11 +106,11 @@ RETURNS setof lcb.inventory_lot
         values (_current_app_user.app_tenant_id) 
         returning * into _conversion;
 
-        insert into lcb.conversion_source(app_tenant_id, conversion_id, inventory_lot_id)
-        values (_current_app_user.id, _conversion.id, _parent_lot_id);
+        insert into lcb.conversion_source(app_tenant_id, conversion_id, inventory_lot_id, sourced_quantity)
+        values (_current_app_user.app_tenant_id, _conversion.id, _parent_lot_id, _sublot_inventory_input.quantity);
 
-        insert into lcb.conversion_target(app_tenant_id, conversion_id, inventory_lot_id)
-        values (_current_app_user.id, _conversion.id, _sublot.id);
+        insert into lcb.conversion_result(app_tenant_id, conversion_id, inventory_lot_id)
+        values (_current_app_user.app_tenant_id, _conversion.id, _sublot.id);
 
       else
         raise exception 'illegal operation - batch cancelled:  licensee specified sublot id already exists: %', _sublot.id;
