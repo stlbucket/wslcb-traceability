@@ -1088,26 +1088,26 @@ $body$;
 
 
 ----------
-----------  BEGIN TABLE POLICY: lcb.conversion_result
+----------  BEGIN TABLE POLICY: lcb.batch
 ----------  POLICY NAME:  app_user  select only no rls  :::  app_super_admin manage
 ----------
 
 ----------  REMOVE EXISTING TABLE GRANTS
 
   revoke all privileges 
-  on table lcb.conversion_result 
+  on table lcb.batch 
   from public;
 
   revoke all privileges 
-  on table lcb.conversion_result 
+  on table lcb.batch 
   from app_super_admin, app_tenant_admin, app_admin, app_demon, app_user, app_anonymous;
 
 ----------  DISABLE ROW LEVEL SECURITY
 
-  alter table lcb.conversion_result disable row level security;
+  alter table lcb.batch disable row level security;
 
-  create policy rls_app_user_default_lcb_conversion_result
-    on lcb.conversion_result
+  create policy rls_app_user_default_lcb_batch
+    on lcb.batch
     as permissive
     for all
     to app_user
@@ -1125,10 +1125,10 @@ $body$;
     update, -- ( id, lcb_license_holder_id, created_at, updated_at, deleted_at, id_origin, inventory_type, description, quantity, units, strain_name, area_identifier ), 
         -- no excluded columns
     delete  
-  on table lcb.conversion_result
+  on table lcb.batch
   to app_user;
 
 
 
-----------  END TABLE POLICY: lcb.conversion_result
+----------  END TABLE POLICY: lcb.batch
 --==

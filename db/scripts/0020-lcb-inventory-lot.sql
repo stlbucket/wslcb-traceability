@@ -42,11 +42,29 @@ ALTER TABLE ONLY lcb.lcb_license_holder
     ADD CONSTRAINT fk_lcb_license_holder_organization FOREIGN KEY (organization_id) REFERENCES org.organization(id);
 
 
+CREATE TABLE lcb.batch (
+    id text DEFAULT util_fn.generate_ulid() NOT NULL,
+    app_tenant_id text NOT NULL,
+    created_at timestamptz DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at timestamptz NOT NULL,
+    inventory_type text not null,
+    name text
+);
+ALTER TABLE lcb.batch OWNER TO app;
+ALTER TABLE ONLY lcb.batch
+    ADD CONSTRAINT pk_batch PRIMARY KEY (id);
+ALTER TABLE ONLY lcb.batch
+    ADD CONSTRAINT fk_batch_app_tenant_id FOREIGN KEY (app_tenant_id) REFERENCES auth.app_tenant (id);
+ALTER TABLE ONLY lcb.batch
+    ADD CONSTRAINT fk_batch_inventory_type FOREIGN KEY (inventory_type) REFERENCES lcb_ref.inventory_type (id);
+
 CREATE TABLE lcb.inventory_lot (
     id text DEFAULT util_fn.generate_ulid() NOT NULL unique,
     updated_by_app_user_id text NOT NULL,
     licensee_identifier text null,
     app_tenant_id text NOT NULL,
+    source_conversion_id text NULL,
+    batch_id text NULL,
     lcb_license_holder_id text not null,
     reporting_status text not null,
     created_at timestamptz DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -71,6 +89,8 @@ ALTER TABLE ONLY lcb.inventory_lot
     ADD CONSTRAINT fk_inventory_lot_app_tenant_id FOREIGN KEY (app_tenant_id) REFERENCES auth.app_tenant (id);
 ALTER TABLE ONLY lcb.inventory_lot
     ADD CONSTRAINT fk_inventory_lot_lcb_license_holder FOREIGN KEY (lcb_license_holder_id) REFERENCES lcb.lcb_license_holder (id);
+ALTER TABLE ONLY lcb.inventory_lot
+    ADD CONSTRAINT fk_inventory_lot_batch FOREIGN KEY (batch_id) REFERENCES lcb.batch (id);
 ALTER TABLE ONLY lcb.inventory_lot
     ADD CONSTRAINT fk_inventory_lot_inventory_type FOREIGN KEY (inventory_type) REFERENCES lcb_ref.inventory_type (id);
 ALTER TABLE ONLY lcb.inventory_lot
@@ -110,7 +130,6 @@ CREATE FUNCTION lcb.fn_timestamp_update_inventory_lot() RETURNS trigger
 ALTER FUNCTION lcb.fn_timestamp_update_inventory_lot() OWNER TO app;
 CREATE TRIGGER tg_timestamp_update_inventory_lot BEFORE INSERT OR UPDATE ON lcb.inventory_lot FOR EACH ROW EXECUTE PROCEDURE lcb.fn_timestamp_update_inventory_lot();
 
-
 CREATE TABLE lcb.conversion (
     id text NOT NULL UNIQUE default util_fn.generate_ulid(),
     created_at timestamptz DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -131,34 +150,36 @@ CREATE FUNCTION lcb.fn_timestamp_update_conversion() RETURNS trigger
   END; $$;
 ALTER FUNCTION lcb.fn_timestamp_update_conversion() OWNER TO app;
 CREATE TRIGGER tg_timestamp_update_conversion BEFORE INSERT OR UPDATE ON lcb.conversion FOR EACH ROW EXECUTE PROCEDURE lcb.fn_timestamp_update_conversion();
+ALTER TABLE ONLY lcb.inventory_lot
+    ADD CONSTRAINT fk_inventory_lot_source_conversion FOREIGN KEY (source_conversion_id) REFERENCES lcb.conversion (id);
 
 
-CREATE TABLE lcb.conversion_result (
-    id text NOT NULL UNIQUE default util_fn.generate_ulid(),
-    created_at timestamptz DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_at timestamptz NOT NULL,
-    app_tenant_id text NOT NULL,
-    conversion_id text NOT NULL,
-    inventory_lot_id text NOT NULL
-);
-ALTER TABLE lcb.conversion_result OWNER TO app;
-ALTER TABLE ONLY lcb.conversion_result
-    ADD CONSTRAINT pk_conversion_result PRIMARY KEY (id);
-ALTER TABLE ONLY lcb.conversion_result
-    ADD CONSTRAINT fk_conversion_app_tenant FOREIGN KEY (app_tenant_id) REFERENCES auth.app_tenant (id);
-ALTER TABLE ONLY lcb.conversion_result
-    ADD CONSTRAINT fk_conversion_result_conversion FOREIGN KEY (conversion_id) REFERENCES lcb.conversion (id);
-ALTER TABLE ONLY lcb.conversion_result
-    ADD CONSTRAINT fk_conversion_result_to_inventory_lot FOREIGN KEY (inventory_lot_id) REFERENCES lcb.inventory_lot (id);
-CREATE FUNCTION lcb.fn_timestamp_update_conversion_result() RETURNS trigger
-    LANGUAGE plpgsql
-    AS $$
-  BEGIN
-    NEW.updated_at = current_timestamp;
-    RETURN NEW;
-  END; $$;
-ALTER FUNCTION lcb.fn_timestamp_update_conversion_result() OWNER TO app;
-CREATE TRIGGER tg_timestamp_update_conversion_result BEFORE INSERT OR UPDATE ON lcb.conversion_result FOR EACH ROW EXECUTE PROCEDURE lcb.fn_timestamp_update_conversion_result();
+-- CREATE TABLE lcb.conversion_result (
+--     id text NOT NULL UNIQUE default util_fn.generate_ulid(),
+--     created_at timestamptz DEFAULT CURRENT_TIMESTAMP NOT NULL,
+--     updated_at timestamptz NOT NULL,
+--     app_tenant_id text NOT NULL,
+--     conversion_id text NOT NULL,
+--     inventory_lot_id text NOT NULL
+-- );
+-- ALTER TABLE lcb.conversion_result OWNER TO app;
+-- ALTER TABLE ONLY lcb.conversion_result
+--     ADD CONSTRAINT pk_conversion_result PRIMARY KEY (id);
+-- ALTER TABLE ONLY lcb.conversion_result
+--     ADD CONSTRAINT fk_conversion_app_tenant FOREIGN KEY (app_tenant_id) REFERENCES auth.app_tenant (id);
+-- ALTER TABLE ONLY lcb.conversion_result
+--     ADD CONSTRAINT fk_conversion_result_conversion FOREIGN KEY (conversion_id) REFERENCES lcb.conversion (id);
+-- ALTER TABLE ONLY lcb.conversion_result
+--     ADD CONSTRAINT fk_conversion_result_to_inventory_lot FOREIGN KEY (inventory_lot_id) REFERENCES lcb.inventory_lot (id);
+-- CREATE FUNCTION lcb.fn_timestamp_update_conversion_result() RETURNS trigger
+--     LANGUAGE plpgsql
+--     AS $$
+--   BEGIN
+--     NEW.updated_at = current_timestamp;
+--     RETURN NEW;
+--   END; $$;
+-- ALTER FUNCTION lcb.fn_timestamp_update_conversion_result() OWNER TO app;
+-- CREATE TRIGGER tg_timestamp_update_conversion_result BEFORE INSERT OR UPDATE ON lcb.conversion_result FOR EACH ROW EXECUTE PROCEDURE lcb.fn_timestamp_update_conversion_result();
 
 CREATE TABLE lcb.conversion_source (
     id text NOT NULL UNIQUE default util_fn.generate_ulid(),
@@ -187,6 +208,36 @@ CREATE FUNCTION lcb.fn_timestamp_update_conversion_source() RETURNS trigger
   END; $$;
 ALTER FUNCTION lcb.fn_timestamp_update_conversion_source() OWNER TO app;
 CREATE TRIGGER tg_timestamp_update_conversion_source BEFORE INSERT OR UPDATE ON lcb.conversion_source FOR EACH ROW EXECUTE PROCEDURE lcb.fn_timestamp_update_conversion_source();
+
+
+CREATE TABLE lcb.possession (
+    id text NOT NULL UNIQUE default util_fn.generate_ulid(),
+    created_at timestamptz DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at timestamptz NOT NULL,
+    app_tenant_id text NOT NULL,
+    lcb_license_holder_id text not null,
+    inventory_lot_id text NOT NULL,
+    acquisition_date timestamptz NOT NULL DEFAULT current_timestamp,
+    relinquish_date timestamptz NULL
+);
+ALTER TABLE lcb.possession OWNER TO app;
+ALTER TABLE ONLY lcb.possession
+    ADD CONSTRAINT pk_possession PRIMARY KEY (id);
+ALTER TABLE ONLY lcb.possession
+    ADD CONSTRAINT fk_conversion_app_tenant FOREIGN KEY (app_tenant_id) REFERENCES auth.app_tenant (id);
+ALTER TABLE ONLY lcb.possession
+    ADD CONSTRAINT fk_possession_lcb_license_holder FOREIGN KEY (lcb_license_holder_id) REFERENCES lcb.lcb_license_holder (id);
+ALTER TABLE ONLY lcb.possession
+    ADD CONSTRAINT fk_possession_to_inventory_lot FOREIGN KEY (inventory_lot_id) REFERENCES lcb.inventory_lot (id);
+CREATE FUNCTION lcb.fn_timestamp_update_possession() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+  BEGIN
+    NEW.updated_at = current_timestamp;
+    RETURN NEW;
+  END; $$;
+ALTER FUNCTION lcb.fn_timestamp_update_possession() OWNER TO app;
+CREATE TRIGGER tg_timestamp_update_possession BEFORE INSERT OR UPDATE ON lcb.possession FOR EACH ROW EXECUTE PROCEDURE lcb.fn_timestamp_update_possession();
 
 
 ------------------------------------------------------------------------------------------------  lcb_hist

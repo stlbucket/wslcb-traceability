@@ -21,7 +21,6 @@ RETURNS setof lcb.inventory_lot
     _total_sublotted_quantity numeric(10,2);
     _conversion lcb.conversion;
     _conversion_source lcb.conversion_source;
-    _conversion_result lcb.conversion_result;
   BEGIN
     _current_app_user := auth_fn.current_app_user();
     _total_sublotted_quantity := 0;
@@ -63,6 +62,13 @@ RETURNS setof lcb.inventory_lot
       where id = _inventory_lot_id;
 
       if _sublot.id is null then
+        insert into lcb.conversion(app_tenant_id) 
+        values (_current_app_user.app_tenant_id) 
+        returning * into _conversion;
+
+        insert into lcb.conversion_source(app_tenant_id, conversion_id, inventory_lot_id, sourced_quantity)
+        values (_current_app_user.app_tenant_id, _conversion.id, _parent_lot_id, _sublot_inventory_input.quantity);
+
         insert into lcb.inventory_lot(
           id,
           updated_by_app_user_id,
@@ -76,7 +82,8 @@ RETURNS setof lcb.inventory_lot
           description,
           quantity,
           strain_name,
-          area_identifier
+          area_identifier,
+          aource_conversion_id
         )
         SELECT
           COALESCE(_sublot_inventory_input.id, util_fn.generate_ulid()),
@@ -91,7 +98,8 @@ RETURNS setof lcb.inventory_lot
           _parent_lot.description::text,
           _sublot_inventory_input.quantity,
           _parent_lot.strain_name::text,
-          _parent_lot.area_identifier::text
+          _parent_lot.area_identifier::text,
+          _conversion.id
         RETURNING * INTO _sublot;
 
         _total_sublotted_quantity := _total_sublotted_quantity + _sublot_inventory_input.quantity;
@@ -99,16 +107,6 @@ RETURNS setof lcb.inventory_lot
         if _total_sublotted_quantity > _parent_lot.quantity then
           raise exception 'illegal operation - batch cancelled:  total sublotted quantity exceeds parent lot quantity';
         end if;
-
-        insert into lcb.conversion(app_tenant_id) 
-        values (_current_app_user.app_tenant_id) 
-        returning * into _conversion;
-
-        insert into lcb.conversion_source(app_tenant_id, conversion_id, inventory_lot_id, sourced_quantity)
-        values (_current_app_user.app_tenant_id, _conversion.id, _parent_lot_id, _sublot_inventory_input.quantity);
-
-        insert into lcb.conversion_result(app_tenant_id, conversion_id, inventory_lot_id)
-        values (_current_app_user.app_tenant_id, _conversion.id, _sublot.id);
 
       else
         raise exception 'illegal operation - batch cancelled:  licensee specified sublot id already exists: %', _sublot.id;

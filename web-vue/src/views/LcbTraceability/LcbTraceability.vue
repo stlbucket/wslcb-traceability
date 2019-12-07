@@ -5,7 +5,7 @@
       <v-toolbar>
         <v-spacer></v-spacer>
         <dialog-inventory-sublot :disabled="sublotDisabled" :sublotConfig="sublotConfig"></dialog-inventory-sublot>
-        <dialog-inventory-conversion :disabled="conversionDisabled" :parentLot="selectedInventoryLot"></dialog-inventory-conversion>
+        <dialog-inventory-conversion :disabled="conversionDisabled" :conversionConfig="conversionConfig" :inventoryTypes="inventoryTypes"></dialog-inventory-conversion>
         <dialog-inventory-qa-sample :disabled="qaSampleDisabled" :qaSampleConfig="qaSampleConfig"></dialog-inventory-qa-sample>
         <dialog-inventory-rt-sample :disabled="rtSampleDisabled" :rtSampleConfig="rtSampleConfig"></dialog-inventory-rt-sample>
         <dialog-inventory-destroy :disabled="destroyDisabled" :inventoryLot="selectedInventoryLot"></dialog-inventory-destroy>
@@ -383,6 +383,13 @@ export default {
       }
     },
     rtSampleConfig () {
+      return {
+        parentLot: this.selectedInventoryLot,
+        parentInventoryType: this.actualSelectedInventoryType,
+        quantityLabel: this.quantityLabel
+      }
+    },
+    conversionConfig () {
       return {
         parentLot: this.selectedInventoryLot,
         parentInventoryType: this.actualSelectedInventoryType,

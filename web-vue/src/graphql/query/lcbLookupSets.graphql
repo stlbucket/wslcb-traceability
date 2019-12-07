@@ -7,6 +7,18 @@ query LcbLookupSets{
       name
       description
       units
+      canConvertTo: conversionRulesByFromTypeId {
+        nodes {
+          id
+          toTypeId
+        }
+      }
+      canConvertFrom: conversionRulesByToTypeId {
+        nodes {
+          id
+          fromTypeId
+        }
+      }
     }
   }
 }
