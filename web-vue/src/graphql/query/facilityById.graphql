@@ -1,5 +1,5 @@
 query FacilityById(
-  $id: BigInt!
+  $id: String!
 ) {
   facilityById(id: $id) {
     id

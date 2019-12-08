@@ -3,24 +3,23 @@ import Router from 'vue-router'
 import Home from './views/Home.vue'
 // import Home from './views/Generator/OrgGenerator.vue'
 
-// import Login from './views/AppUser/Login.vue'
-import TheLogin from './views/TheLogin/TheLoginVuetify'
+import Login from './views/Login/Login.vue'
 
-import TenantManager from './views/TenantManager/TheTenantManagerVuetify.vue'
-import AppTenantDetail from './views/Auth/AppTenantDetailView/AppTenantDetailViewVuetify'
+import TenantManager from '@/apps/TenantManager/'
+import AppTenantDetail from './views/Auth/AppTenantDetailView'
 
-import LicenseManager from './views/LicenseManager/TheLicenseManagerVuetify.vue'
-import LicenseDetail from './views/App/LicenseDetailView/LicenseDetailViewVuetify'
+import LicenseManager from '@/apps/LicenseManager/'
+import LicenseDetail from './views/App/LicenseDetailView'
 
-import AddressBook from './views/AddressBook/TheAddressBook.vue'
-import OrganizationDetail from './views/Org/OrganizationDetailView/OrganizationDetailViewVuetify'
-import ContactDetail from './views/Org/ContactDetailView/ContactDetailViewVuetify'
-import FacilityDetail from './views/Org/FacilityDetailView/FacilityDetailViewVuetify'
+import AddressBook from '@/apps/AddressBook'
+import OrganizationDetail from './views/Org/OrganizationDetailView'
+import ContactDetail from './views/Org/ContactDetailView'
+import FacilityDetail from './views/Org/FacilityDetailView'
 
-import ProjectManager from './views/ProjectManager/TheProjectManagerVuetify.vue'
-import ProjectDetail from './views/Prj/ProjectDetailView/ProjectDetailViewVuetify.vue'
+import ProjectManager from '@/apps/ProjectManager'
+import ProjectDetail from './views/Prj/ProjectDetailView'
 
-import LcbTraceability from './views/LcbTraceability/LcbTraceability.vue'
+import LcbTraceability from '@/apps/LcbTraceability'
 
 Vue.use(Router)
 
@@ -34,7 +33,7 @@ export default new Router({
     {
       path: '/login',
       name: 'login',
-      component: TheLogin
+      component: Login
     },
     {
       path: '/tenant-manager',

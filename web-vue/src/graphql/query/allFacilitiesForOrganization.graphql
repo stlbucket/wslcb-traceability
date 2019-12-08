@@ -1,6 +1,6 @@
 
 query AllFacilitiesForOrganization(
-  $organizationId: BigInt!
+  $organizationId: String!
 ) {
   allFacilities (
     filter: {

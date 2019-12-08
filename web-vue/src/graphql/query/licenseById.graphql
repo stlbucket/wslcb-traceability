@@ -1,12 +1,16 @@
 query LicenseById(
-  $id: BigInt!
+  $id: String!
 ) {
   licenseById(id: $id) {
     id
     name
-    organization: organizationByOrganizationId {
+    appTenant: appTenantByAppTenantId {
       id
       name
+      organization: organizationByActualAppTenantId {
+        id
+        name
+      }
     }
     licenseType: licenseTypeByLicenseTypeId {
       id

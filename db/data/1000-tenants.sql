@@ -101,6 +101,17 @@ BEGIN;
     do nothing
     ;
 
+    insert into org.facility(
+      app_tenant_id
+      ,organization_id
+      ,name
+    )
+    select
+      o.app_tenant_id 
+      ,o.id
+      ,o.name || ' Facility'
+    from org.organization o;
+
     insert into org.contact(
       app_tenant_id
       ,organization_id

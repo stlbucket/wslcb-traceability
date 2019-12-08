@@ -1,4 +1,4 @@
-query AppTenantById($id: BigInt!) {
+query AppTenantById($id: String!) {
   appTenantById(id: $id) {
     id
     name
@@ -7,10 +7,6 @@ query AppTenantById($id: BigInt!) {
       nodes {
         id
         name
-        organization: organizationByOrganizationId {
-          id
-          name
-        }
         licenseType: licenseTypeByLicenseTypeId {
           id
           name
@@ -28,6 +24,10 @@ query AppTenantById($id: BigInt!) {
             lastName
             email
           }
+        }
+        appTenant: appTenantByAppTenantId {
+          id
+          name
         }
       }
     }

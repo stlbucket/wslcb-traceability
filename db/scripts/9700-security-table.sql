@@ -21,10 +21,17 @@ $body$
   END
 $body$;
 
+grant usage on schema util_fn to app_anonymous, app_user, app_demon;
+grant usage on schema auth to app_anonymous, app_user, app_demon;
+grant usage on schema auth_fn to app_anonymous, app_user, app_demon;
+grant usage on schema org to app_anonymous, app_user, app_demon;
+grant usage on schema org_fn to app_anonymous, app_user, app_demon;
+grant usage on schema app to app_anonymous, app_user, app_demon;
+grant usage on schema lcb to app_anonymous, app_user, app_demon;
 
 ----------
 ----------  BEGIN TABLE POLICY: app.application
-----------  POLICY NAME:  app_user  select only no rls  :::  app_super_admin manage
+----------  POLICY NAME:  app_user  select only no rls  :::  app_user manage
 ----------
 
 ----------  REMOVE EXISTING TABLE GRANTS
@@ -35,7 +42,7 @@ $body$;
 
   revoke all privileges 
   on table app.application 
-  from app_super_admin, app_tenant_admin, app_admin, app_demon, app_user, app_anonymous;
+  from app_user, app_user, app_user, app_user, app_user, app_anonymous;
 
 ----------  DISABLE ROW LEVEL SECURITY
 
@@ -43,7 +50,7 @@ $body$;
 
 ----------  CREATE NEW TABLE GRANTS
 
-----------  app_super_admin
+----------  app_user
   grant 
     insert, -- ( id, created_at, updated_at, external_id, name, key ), 
         -- no excluded columns
@@ -51,7 +58,7 @@ $body$;
         -- no excluded columns
     delete  
   on table app.application 
-  to app_super_admin;
+  to app_user;
 
 
 ----------  app_user
@@ -77,7 +84,7 @@ $body$;
 
   revoke all privileges 
   on table app.license 
-  from app_super_admin, app_tenant_admin, app_admin, app_demon, app_user, app_anonymous;
+  from app_user, app_user, app_user, app_user, app_user, app_anonymous;
 
 ----------  ENABLE ROW LEVEL SECURITY
 
@@ -122,7 +129,7 @@ $body$;
 
   revoke all privileges 
   on table app.license_permission 
-  from app_super_admin, app_tenant_admin, app_admin, app_demon, app_user, app_anonymous;
+  from app_user, app_user, app_user, app_user, app_user, app_anonymous;
 
 ----------  ENABLE ROW LEVEL SECURITY
 
@@ -139,7 +146,7 @@ $body$;
 
 ----------  CREATE NEW TABLE GRANTS
 
-----------  app_admin
+----------  app_user
   grant 
     insert, -- ( id, app_tenant_id, created_at, updated_at, license_id, permission_id ), 
         -- no excluded columns
@@ -147,7 +154,7 @@ $body$;
         -- no excluded columns
     delete  
   on table app.license_permission 
-  to app_admin;
+  to app_user;
 
 
 ----------  app_user
@@ -162,7 +169,7 @@ $body$;
 --==
 ----------
 ----------  BEGIN TABLE POLICY: app.license_type
-----------  POLICY NAME:  app_user  select only no rls  :::  app_super_admin manage
+----------  POLICY NAME:  app_user  select only no rls  :::  app_user manage
 ----------
 
 ----------  REMOVE EXISTING TABLE GRANTS
@@ -173,7 +180,7 @@ $body$;
 
   revoke all privileges 
   on table app.license_type 
-  from app_super_admin, app_tenant_admin, app_admin, app_demon, app_user, app_anonymous;
+  from app_user, app_user, app_user, app_user, app_user, app_anonymous;
 
 ----------  DISABLE ROW LEVEL SECURITY
 
@@ -181,7 +188,7 @@ $body$;
 
 ----------  CREATE NEW TABLE GRANTS
 
-----------  app_super_admin
+----------  app_user
   grant 
     insert, -- ( id, created_at, updated_at, external_id, name, key, application_id ), 
         -- no excluded columns
@@ -189,7 +196,7 @@ $body$;
         -- no excluded columns
     delete  
   on table app.license_type 
-  to app_super_admin;
+  to app_user;
 
 
 ----------  app_user
@@ -204,7 +211,7 @@ $body$;
 --==
 ----------
 ----------  BEGIN TABLE POLICY: app.license_type_permission
-----------  POLICY NAME:  app_user  select only no rls  :::  app_super_admin manage
+----------  POLICY NAME:  app_user  select only no rls  :::  app_user manage
 ----------
 
 ----------  REMOVE EXISTING TABLE GRANTS
@@ -215,7 +222,7 @@ $body$;
 
   revoke all privileges 
   on table app.license_type_permission 
-  from app_super_admin, app_tenant_admin, app_admin, app_demon, app_user, app_anonymous;
+  from app_user, app_user, app_user, app_user, app_user, app_anonymous;
 
 ----------  DISABLE ROW LEVEL SECURITY
 
@@ -223,7 +230,7 @@ $body$;
 
 ----------  CREATE NEW TABLE GRANTS
 
-----------  app_super_admin
+----------  app_user
   grant 
     insert, -- ( id, created_at, updated_at, license_type_id, permission_id, key ), 
         -- no excluded columns
@@ -231,7 +238,7 @@ $body$;
         -- no excluded columns
     delete  
   on table app.license_type_permission 
-  to app_super_admin;
+  to app_user;
 
 
 ----------  app_user
@@ -257,7 +264,7 @@ $body$;
 
   revoke all privileges 
   on table auth.config_auth 
-  from app_super_admin, app_tenant_admin, app_admin, app_demon, app_user, app_anonymous;
+  from app_user, app_user, app_user, app_user, app_user, app_anonymous;
 
 ----------  DISABLE ROW LEVEL SECURITY
 
@@ -270,7 +277,7 @@ $body$;
 --==
 ----------
 ----------  BEGIN TABLE POLICY: auth.permission
-----------  POLICY NAME:  app_user  select only no rls  :::  app_super_admin manage
+----------  POLICY NAME:  app_user  select only no rls  :::  app_user manage
 ----------
 
 ----------  REMOVE EXISTING TABLE GRANTS
@@ -281,7 +288,7 @@ $body$;
 
   revoke all privileges 
   on table auth.permission 
-  from app_super_admin, app_tenant_admin, app_admin, app_demon, app_user, app_anonymous;
+  from app_user, app_user, app_user, app_user, app_user, app_anonymous;
 
 ----------  DISABLE ROW LEVEL SECURITY
 
@@ -289,7 +296,7 @@ $body$;
 
 ----------  CREATE NEW TABLE GRANTS
 
-----------  app_super_admin
+----------  app_user
   grant 
     insert, -- ( id, created_at, key ), 
         -- no excluded columns
@@ -297,7 +304,7 @@ $body$;
         -- no excluded columns
     delete  
   on table auth.permission 
-  to app_super_admin;
+  to app_user;
 
 
 ----------  app_user
@@ -323,7 +330,7 @@ $body$;
 
   revoke all privileges 
   on table auth.app_tenant 
-  from app_super_admin, app_tenant_admin, app_admin, app_demon, app_user, app_anonymous;
+  from app_user, app_user, app_user, app_user, app_user, app_anonymous;
 
 ----------  ENABLE ROW LEVEL SECURITY
 
@@ -340,7 +347,7 @@ $body$;
 
 ----------  CREATE NEW TABLE GRANTS
 
-----------  app_super_admin
+----------  app_user
   grant 
     insert, -- ( id, created_at, updated_at, name, identifier ), 
         -- no excluded columns
@@ -348,7 +355,7 @@ $body$;
         -- no excluded columns
     delete  
   on table auth.app_tenant 
-  to app_super_admin;
+  to app_user;
 
 
 ----------  app_user
@@ -374,7 +381,7 @@ $body$;
 
   revoke all privileges 
   on table auth.app_user 
-  from app_super_admin, app_tenant_admin, app_admin, app_demon, app_user, app_anonymous;
+  from app_user, app_user, app_user, app_user, app_user, app_anonymous;
 
 ----------  ENABLE ROW LEVEL SECURITY
 
@@ -391,13 +398,13 @@ $body$;
 
 ----------  CREATE NEW TABLE GRANTS
 
-----------  app_admin
+----------  app_user
   grant 
     insert, -- ( id, app_tenant_id, created_at, updated_at, username, recovery_email, password_hash, inactive, password_reset_required, permission_key ),
         -- no excluded columns
     delete  
   on table auth.app_user 
-  to app_admin;
+  to app_user;
 
 
 ----------  app_user
@@ -425,7 +432,7 @@ $body$;
 
   revoke all privileges 
   on table auth.token 
-  from app_super_admin, app_tenant_admin, app_admin, app_demon, app_user, app_anonymous;
+  from app_user, app_user, app_user, app_user, app_user, app_anonymous;
 
 ----------  DISABLE ROW LEVEL SECURITY
 
@@ -438,7 +445,7 @@ $body$;
 --==
 ----------
 ----------  BEGIN TABLE POLICY: lcb.lcb_license
-----------  POLICY NAME:  app_user  select only no rls  :::  app_super_admin manage
+----------  POLICY NAME:  app_user  select only no rls  :::  app_user manage
 ----------
 
 ----------  REMOVE EXISTING TABLE GRANTS
@@ -449,7 +456,7 @@ $body$;
 
   revoke all privileges 
   on table lcb.lcb_license 
-  from app_super_admin, app_tenant_admin, app_admin, app_demon, app_user, app_anonymous;
+  from app_user, app_user, app_user, app_user, app_user, app_anonymous;
 
 ----------  DISABLE ROW LEVEL SECURITY
 
@@ -457,7 +464,7 @@ $body$;
 
 ----------  CREATE NEW TABLE GRANTS
 
-----------  app_super_admin
+----------  app_user
   grant 
     insert, -- ( id, created_at, updated_at, code ), 
         -- no excluded columns
@@ -465,7 +472,7 @@ $body$;
         -- no excluded columns
     delete  
   on table lcb.lcb_license 
-  to app_super_admin;
+  to app_user;
 
 
 ----------  app_user
@@ -480,7 +487,7 @@ $body$;
 --==
 ----------
 ----------  BEGIN TABLE POLICY: lcb.lcb_license_holder
-----------  POLICY NAME:  app_user  select only no rls  :::  app_super_admin manage
+----------  POLICY NAME:  app_user  select only no rls  :::  app_user manage
 ----------
 
 ----------  REMOVE EXISTING TABLE GRANTS
@@ -491,7 +498,7 @@ $body$;
 
   revoke all privileges 
   on table lcb.lcb_license_holder 
-  from app_super_admin, app_tenant_admin, app_admin, app_demon, app_user, app_anonymous;
+  from app_user, app_user, app_user, app_user, app_user, app_anonymous;
 
 ----------  DISABLE ROW LEVEL SECURITY
 
@@ -499,7 +506,7 @@ $body$;
 
 ----------  CREATE NEW TABLE GRANTS
 
-----------  app_super_admin
+----------  app_user
   grant 
     insert, -- ( id, created_at, updated_at, lcb_license_id, organization_id, acquisition_date, relinquish_date ), 
         -- no excluded columns
@@ -507,7 +514,7 @@ $body$;
         -- no excluded columns
     delete  
   on table lcb.lcb_license_holder 
-  to app_super_admin;
+  to app_user;
 
 
 ----------  app_user
@@ -533,7 +540,7 @@ $body$;
 
   revoke all privileges 
   on table lcb.inventory_lot 
-  from app_super_admin, app_tenant_admin, app_admin, app_demon, app_user, app_anonymous;
+  from app_user, app_user, app_user, app_user, app_user, app_anonymous;
 
 ----------  ENABLE ROW LEVEL SECURITY
 
@@ -578,7 +585,7 @@ $body$;
 
   revoke all privileges 
   on table org.config_org 
-  from app_super_admin, app_tenant_admin, app_admin, app_demon, app_user, app_anonymous;
+  from app_user, app_user, app_user, app_user, app_user, app_anonymous;
 
 ----------  DISABLE ROW LEVEL SECURITY
 
@@ -602,7 +609,7 @@ $body$;
 
   revoke all privileges 
   on table org.contact 
-  from app_super_admin, app_tenant_admin, app_admin, app_demon, app_user, app_anonymous;
+  from app_user, app_user, app_user, app_user, app_user, app_anonymous;
 
 ----------  ENABLE ROW LEVEL SECURITY
 
@@ -647,7 +654,7 @@ $body$;
 
   revoke all privileges 
   on table org.facility 
-  from app_super_admin, app_tenant_admin, app_admin, app_demon, app_user, app_anonymous;
+  from app_user, app_user, app_user, app_user, app_user, app_anonymous;
 
 ----------  ENABLE ROW LEVEL SECURITY
 
@@ -692,7 +699,7 @@ $body$;
 
   revoke all privileges 
   on table org.location 
-  from app_super_admin, app_tenant_admin, app_admin, app_demon, app_user, app_anonymous;
+  from app_user, app_user, app_user, app_user, app_user, app_anonymous;
 
 ----------  ENABLE ROW LEVEL SECURITY
 
@@ -737,7 +744,7 @@ $body$;
 
   revoke all privileges 
   on table org.organization 
-  from app_super_admin, app_tenant_admin, app_admin, app_demon, app_user, app_anonymous;
+  from app_user, app_user, app_user, app_user, app_user, app_anonymous;
 
 ----------  ENABLE ROW LEVEL SECURITY
 
@@ -782,7 +789,7 @@ $body$;
 
   revoke all privileges 
   on table org.contact_app_user 
-  from app_super_admin, app_tenant_admin, app_admin, app_demon, app_user, app_anonymous;
+  from app_user, app_user, app_user, app_user, app_user, app_anonymous;
 
 ----------  ENABLE ROW LEVEL SECURITY
 
@@ -830,7 +837,7 @@ $body$;
 
   revoke all privileges 
   on table lcb_hist.hist_inventory_lot 
-  from app_super_admin, app_tenant_admin, app_admin, app_demon, app_user, app_anonymous;
+  from app_user, app_user, app_user, app_user, app_user, app_anonymous;
 
 ----------  ENABLE ROW LEVEL SECURITY
 
@@ -867,7 +874,7 @@ $body$;
 
 ----------
 ----------  BEGIN TABLE POLICY: lcb_ref.inventory_lot_reporting_status
-----------  POLICY NAME:  app_user  select only no rls  :::  app_super_admin manage
+----------  POLICY NAME:  app_user  select only no rls  :::  app_user manage
 ----------
 
 ----------  REMOVE EXISTING TABLE GRANTS
@@ -878,7 +885,7 @@ $body$;
 
   revoke all privileges 
   on table lcb_ref.inventory_lot_reporting_status 
-  from app_super_admin, app_tenant_admin, app_admin, app_demon, app_user, app_anonymous;
+  from app_user, app_user, app_user, app_user, app_user, app_anonymous;
 
 ----------  DISABLE ROW LEVEL SECURITY
 
@@ -886,7 +893,7 @@ $body$;
 
 ----------  CREATE NEW TABLE GRANTS
 
-----------  app_super_admin
+----------  app_user
   grant 
     insert ( id ), 
         -- no excluded columns
@@ -894,7 +901,7 @@ $body$;
         -- no excluded columns
     delete  
   on table lcb_ref.inventory_lot_reporting_status 
-  to app_super_admin;
+  to app_user;
 
 
 ----------  app_user
@@ -909,7 +916,7 @@ $body$;
 --==
 ----------
 ----------  BEGIN TABLE POLICY: lcb_ref.inventory_type
-----------  POLICY NAME:  app_user  select only no rls  :::  app_super_admin manage
+----------  POLICY NAME:  app_user  select only no rls  :::  app_user manage
 ----------
 
 ----------  REMOVE EXISTING TABLE GRANTS
@@ -920,7 +927,7 @@ $body$;
 
   revoke all privileges 
   on table lcb_ref.inventory_type 
-  from app_super_admin, app_tenant_admin, app_admin, app_demon, app_user, app_anonymous;
+  from app_user, app_user, app_user, app_user, app_user, app_anonymous;
 
 ----------  DISABLE ROW LEVEL SECURITY
 
@@ -928,7 +935,7 @@ $body$;
 
 ----------  CREATE NEW TABLE GRANTS
 
-----------  app_super_admin
+----------  app_user
   grant 
     insert ( id, name, description ), 
         -- no excluded columns
@@ -936,7 +943,7 @@ $body$;
         -- no excluded columns
     delete  
   on table lcb_ref.inventory_type 
-  to app_super_admin;
+  to app_user;
 
 
 ----------  app_user
@@ -952,7 +959,7 @@ $body$;
 
 
 ----------  BEGIN TABLE POLICY: lcb_ref.conversion_rule
-----------  POLICY NAME:  app_user  select only no rls  :::  app_super_admin manage
+----------  POLICY NAME:  app_user  select only no rls  :::  app_user manage
 ----------
 
 ----------  REMOVE EXISTING TABLE GRANTS
@@ -963,7 +970,7 @@ $body$;
 
   revoke all privileges 
   on table lcb_ref.conversion_rule 
-  from app_super_admin, app_tenant_admin, app_admin, app_demon, app_user, app_anonymous;
+  from app_user, app_user, app_user, app_user, app_user, app_anonymous;
 
 ----------  DISABLE ROW LEVEL SECURITY
 
@@ -971,7 +978,7 @@ $body$;
 
 ----------  CREATE NEW TABLE GRANTS
 
-----------  app_super_admin
+----------  app_user
   grant 
     insert, 
         -- no excluded columns
@@ -979,7 +986,7 @@ $body$;
         -- no excluded columns
     delete  
   on table lcb_ref.conversion_rule 
-  to app_super_admin;
+  to app_user;
 
 
 ----------  app_user
@@ -996,7 +1003,7 @@ $body$;
 
 ----------
 ----------  BEGIN TABLE POLICY: lcb.conversion
-----------  POLICY NAME:  app_user  select only no rls  :::  app_super_admin manage
+----------  POLICY NAME:  app_user  select only no rls  :::  app_user manage
 ----------
 
 ----------  REMOVE EXISTING TABLE GRANTS
@@ -1007,7 +1014,7 @@ $body$;
 
   revoke all privileges 
   on table lcb.conversion 
-  from app_super_admin, app_tenant_admin, app_admin, app_demon, app_user, app_anonymous;
+  from app_user, app_user, app_user, app_user, app_user, app_anonymous;
 
 ----------  DISABLE ROW LEVEL SECURITY
 
@@ -1042,7 +1049,7 @@ $body$;
 
 ----------
 ----------  BEGIN TABLE POLICY: lcb.conversion_source
-----------  POLICY NAME:  app_user  select only no rls  :::  app_super_admin manage
+----------  POLICY NAME:  app_user  select only no rls  :::  app_user manage
 ----------
 
 ----------  REMOVE EXISTING TABLE GRANTS
@@ -1053,7 +1060,7 @@ $body$;
 
   revoke all privileges 
   on table lcb.conversion_source 
-  from app_super_admin, app_tenant_admin, app_admin, app_demon, app_user, app_anonymous;
+  from app_user, app_user, app_user, app_user, app_user, app_anonymous;
 
 ----------  DISABLE ROW LEVEL SECURITY
 
@@ -1089,7 +1096,7 @@ $body$;
 
 ----------
 ----------  BEGIN TABLE POLICY: lcb.batch
-----------  POLICY NAME:  app_user  select only no rls  :::  app_super_admin manage
+----------  POLICY NAME:  app_user  select only no rls  :::  app_user manage
 ----------
 
 ----------  REMOVE EXISTING TABLE GRANTS
@@ -1100,7 +1107,7 @@ $body$;
 
   revoke all privileges 
   on table lcb.batch 
-  from app_super_admin, app_tenant_admin, app_admin, app_demon, app_user, app_anonymous;
+  from app_user, app_user, app_user, app_user, app_user, app_anonymous;
 
 ----------  DISABLE ROW LEVEL SECURITY
 
