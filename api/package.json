@@ -9,6 +9,7 @@
     "start": "nodemon --exec babel-node -r node_modules/dotenv/config src/server.js",
     "build": "babel src --out-dir dist --extensions '.ts'",
     "serve": "yarn build && node -r ../node_modules/dotenv/config dist/server.js",
+    "serve-pm2": "yarn build && pm2 start -r ../node_modules/dotenv/config dist/server.js",
     "serve-az-tmp": "yarn build && node -r ../node_modules/dotenv/config dist/server.js dotenv_config_path=.az.tmp.env",
     "docker-build": "docker build --force-rm -t phile-starter-api:latest .",
     "docker-run": "docker run -p 3000:8090 --name ps-api -d phile-starter-api:latest .",

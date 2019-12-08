@@ -84,5 +84,4 @@ process.once("SIGUSR2", function () {
   t.unref();
 });
 console.log(`listening on ${process.env.PORT}`);
-console.log(`http://localhost:${process.env.PORT}/pgdbi`);
 console.log(`http://localhost:${process.env.PORT}/graphiql`);
