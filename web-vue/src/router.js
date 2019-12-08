@@ -3,9 +3,9 @@ import Router from 'vue-router'
 import Home from './views/Home.vue'
 // import Home from './views/Generator/OrgGenerator.vue'
 
-import Login from './views/Login/Login.vue'
+import Login from './views/Login'
 
-import TenantManager from '@/apps/TenantManager/'
+import TenantManager from '@/apps/TenantManager'
 import AppTenantDetail from './views/Auth/AppTenantDetailView'
 
 import LicenseManager from '@/apps/LicenseManager/'
