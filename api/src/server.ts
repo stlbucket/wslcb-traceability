@@ -7,11 +7,11 @@ import mutationHooks from "./mutation-hooks";
 const app = express();
 // const pluginHook = makePluginHook([pgdbi]);
 
-app.use(express.static("dist"));
+// app.use(express.static("dist"));
 
-app.get("/", (req, res) => {
-  res.redirect("/dist/index.html");
-});
+// app.get("/", (req, res) => {
+//   res.redirect("/dist/index.html");
+// });
 
 const schema = postgraphile(
   process.env.POSTGRES_CONNECTION,
