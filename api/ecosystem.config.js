@@ -1,7 +1,7 @@
 module.exports = {
   apps : [{
     name: 'API',
-    script: 'app.js',
+    script: './dist/server.js',
 
     // Options reference: https://pm2.io/doc/en/runtime/reference/ecosystem-file/
     args: '',
