@@ -31,4 +31,20 @@ query AllLicenses{
     	}
     }
   }
+
+  allAppUsers {
+    nodes {
+      id
+      username
+      contactAppUser: contactAppUserByAppUserId {
+        id
+        contact: contactByContactId {
+          id
+          firstName
+          lastName
+          email
+        }
+      }
+    }
+  }
 }

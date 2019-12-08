@@ -2,6 +2,7 @@
   <div>
     <license-list-component
       :licenses="licenses"
+      :appUsers="appUsers"
     ></license-list-component>
   </div>
 </template>
@@ -17,7 +18,8 @@ export default {
   },
   data () {
     return {
-      licenses: []
+      licenses: [],
+      appUsers: []
     }
   },
   apollo: {
@@ -26,6 +28,7 @@ export default {
       fetchPolicy: 'network-only',
       update (data) {
         this.licenses = data.allLicenses.nodes
+        this.appUsers = data.allAppUsers.nodes
       }
     }
   }

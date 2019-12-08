@@ -1,0 +1,44 @@
+mutation ConvertInventory(
+  $sourcesInfo: [ConvertInventorySourceInputRecordInput]!
+  $newLotsInfo: [ReportInventoryLotInputRecordInput]!
+) {
+  convertInventory(input: {
+    _sourcesInfo: $sourcesInfo
+  	_newLotsInfo: $newLotsInfo
+  }) {
+    inventoryLots {
+      id
+      createdAt
+      updatedAt
+      reportingStatus
+      lotType
+      inventoryType: inventoryTypeByInventoryType {
+        id
+        name
+        description
+        units
+      }
+      strainName
+      description
+      quantity
+      areaIdentifier
+      licenseeIdentifier
+      histInventoryLots: histInventoryLotsByInventoryLotId {
+        nodes {
+          id
+          inventoryLotId
+		      reportingStatus
+          createdAt
+          updatedAt
+          lotType
+          inventoryType
+          strainName
+          description
+          quantity
+          areaIdentifier
+          licenseeIdentifier
+        }
+      }
+    }
+  }
+}

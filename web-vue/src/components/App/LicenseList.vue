@@ -19,17 +19,32 @@
           </router-link>
       </template>
 
+      <template v-slot:item.assignedTo="{item}">
+        <assign-license-dialog
+          :license="item"
+          :appUsers="appUsers"
+        >
+        </assign-license-dialog>
+      </template>
+
     </v-data-table>
   </div>
 </template>
 
 <script>
+import AssignLicenseDialog from './Dialog/AssignLicenseDialog'
+
 export default {
   name: "LicenseList",
   components: {
+    AssignLicenseDialog
   },
   props: {
     licenses: {
+      type: Array,
+      required: true
+    },
+    appUsers: {
       type: Array,
       required: true
     }
@@ -41,7 +56,7 @@ export default {
         { text: 'Tenant', value: 'appTenantName' },
         { text: 'Key', value: 'licenseTypeKey' },
         { text: 'Application', value: 'applicationName' },
-        { text: 'Assigned To', value: 'AssignedTo' },
+        { text: 'Assigned To', value: 'assignedTo' },
       ],
     }
   },

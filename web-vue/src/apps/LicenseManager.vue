@@ -10,7 +10,7 @@
   import LicenseListView from '@/views/App/LicenseListView'
 
   export default {
-    name: 'TheLicenseManager',
+    name: 'LicenseManager',
     components: {
       LicenseListView
     }

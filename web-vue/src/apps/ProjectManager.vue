@@ -11,7 +11,7 @@
 
 
   export default {
-    name: 'TheProjectManager',
+    name: 'ProjectManager',
     components: {
       ProjectListView
     }

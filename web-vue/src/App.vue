@@ -1,23 +1,11 @@
 <template>
   <v-app id="inspire"
   >
-    <v-hover v-slot:default="{ hover }">
-      <v-navigation-drawer
-        v-model="drawer"
-        :clipped="true"
-        app
-        :width="hover ? 500 : 200"
-        disable-route-watcher
-      >
-        <app-menu></app-menu>
-      </v-navigation-drawer>
-    </v-hover>
-
+ 
     <v-app-bar
       app
-      clipped-left
+      clipped-right
     >
-      <v-app-bar-nav-icon @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
       <v-spacer></v-spacer>
       <v-spacer></v-spacer>
       <v-spacer></v-spacer>
@@ -28,9 +16,24 @@
       <current-app-user-contact></current-app-user-contact>
       <v-spacer></v-spacer>
       <login-manager></login-manager>
+      <v-spacer></v-spacer>
+      <v-app-bar-nav-icon @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
     </v-app-bar>
 
-    <v-content
+    <v-hover v-slot:default="{ hover }">
+      <v-navigation-drawer
+        v-model="drawer"
+        :clipped="true"
+        app
+        right
+        :width="hover ? 500 : 200"
+        disable-route-watcher
+      >
+        <app-menu></app-menu>
+      </v-navigation-drawer>
+    </v-hover>
+
+   <v-content
     >
       <v-container
         justify-start
