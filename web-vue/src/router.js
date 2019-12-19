@@ -19,7 +19,7 @@ import FacilityDetail from './views/Org/FacilityDetailView'
 import ProjectManager from '@/apps/ProjectManager'
 import ProjectDetail from './views/Prj/ProjectDetailView'
 
-import LcbTraceability from '@/apps/LcbTraceability'
+import Traceability from '@/apps/Traceability'
 
 Vue.use(Router)
 
@@ -92,9 +92,9 @@ export default new Router({
       props: true
     },
     {
-      path: '/lcb-traceability',
-      name: 'lcb-traceability',
-      component: LcbTraceability
+      path: '/traceability',
+      name: 'traceability',
+      component: Traceability
     },
     {
       path: '/about',

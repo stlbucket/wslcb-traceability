@@ -5,7 +5,7 @@
     >
       <h2>Inventory Lots</h2>
     </v-toolbar>
-    <v-tabs>
+    <v-tabs @change="onTabChange" v-model="activeTab">
       <v-tab
         key="active"
       >
@@ -94,6 +94,12 @@ export default {
     }
   },
   watch: {
+    activeTab () {
+      this.$store.commit('setUserTabStatus', { 
+        tabName: 'sortedInventory',
+        tabValue: this.activeTab
+      })
+    }
   },
   computed: {
     activeLots() {
@@ -114,7 +120,13 @@ export default {
     },
   },
   data () {
-    return {}
+    return {
+      activeTab: 0
+    }
+  },
+  mounted () {
+    const tabStatus = this.$store.state.userAppState.tabStatus.find(ts => ts.tabName === 'sortedInventory')
+    this.activeTab = tabStatus ? tabStatus.tabValue : 0
   }
 }
 </script>

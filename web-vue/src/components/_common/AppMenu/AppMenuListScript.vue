@@ -49,9 +49,9 @@ export default {
           iconKey: 'people'
         },
         {
-          key: 'lcb-traceability',
-          name: 'LCB Traceability',
-          routeName: 'lcb-traceability',
+          key: 'traceability',
+          name: 'Traceability',
+          routeName: 'traceability',
           iconKey: 'hot_tub'
         }
       ]

@@ -12,7 +12,10 @@ export default new Vuex.Store({
     isLoggedIn: false,
     currentAppUser: null,
     graphqlTypes: [],
-    recentInventoryLotChanges: []
+    recentInventoryLotChanges: [],
+    userAppState: {
+      tabStatus: []
+    }
   },
   mutations: {
     login (state, payload) {
@@ -36,6 +39,23 @@ export default new Vuex.Store({
     },
     clearRecentChanges (state) {
       state.recentInventoryLotChanges = []
+    },
+    setUserTabStatus (state, payload) {
+      const tabName = payload.tabName
+      const tabValue = payload.tabValue
+      const others = state.userAppState.tabStatus.filter(ts => ts.tabName !== tabName)
+
+
+      state.userAppState = {
+        ...state.userAppState,
+        tabStatus: [
+          ...others,
+          {
+            tabName: tabName,
+            tabValue: tabValue
+          }
+        ]
+      }
     }
   },
   actions: {

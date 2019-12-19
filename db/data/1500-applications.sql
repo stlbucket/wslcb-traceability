@@ -159,8 +159,8 @@ select * from app.license;
     ,key
   ) 
   values (
-    'LCB Traceability'
-    ,'lcb-traceability'
+    'Traceability'
+    ,'traceability'
   )
   on conflict(key) 
   do nothing
@@ -173,9 +173,9 @@ select * from app.license;
   )
   values
   (
-    'LCB Traceability'
-    ,'lcb-traceability'
-    ,(select id from app.application where key = 'lcb-traceability')
+    'Traceability'
+    ,'traceability'
+    ,(select id from app.application where key = 'traceability')
   )
   on conflict(key) 
   do nothing
@@ -189,8 +189,8 @@ select * from app.license;
   )
   select
     au.app_tenant_id
-    ,(select id from app.license_type where key = 'lcb-traceability')
-    ,au.username || ' - ' || (select name from app.license_type where key = 'lcb-traceability')
+    ,(select id from app.license_type where key = 'traceability')
+    ,au.username || ' - ' || (select name from app.license_type where key = 'traceability')
     ,au.id
   from auth.app_user au
   where au.permission_key in ('SuperAdmin', 'Admin', 'User')
