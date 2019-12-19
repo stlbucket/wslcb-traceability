@@ -2,6 +2,7 @@ drop schema if exists lcb_ref cascade;
 
 create schema if not exists lcb_ref;
 grant usage on schema lcb_ref to app_user;
+grant usage on schema lcb_ref to app;
 
 
 CREATE TABLE lcb_ref.inventory_type (

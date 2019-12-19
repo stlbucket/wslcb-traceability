@@ -3,13 +3,13 @@
     <v-text-field
       label="username"
       placeholder="username"
-      box
+      rounded
       v-model="username"
     ></v-text-field>
     <v-text-field
       label="password"
       placeholder="password"
-      box
+      rounded
       v-model="password"
     ></v-text-field>
     <v-btn @click="login">Login</v-btn>
@@ -68,7 +68,7 @@ export default {
   },
   data () {
     return {
-      username: 'testAdmin001',
+      username: 'lcb_producer_admin',
       password: 'badpassword'
     }
   },

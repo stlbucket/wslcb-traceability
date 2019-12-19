@@ -4,7 +4,7 @@ mutation QaSampleInventory(
 ) {
   qaSampleInventory(input: {
     _parentLotId: $parentLotId
-    _samplesInfo: $samplesInfo
+    _qaSampleInventorysInfo: $samplesInfo
   }) {
     inventoryLots {
       id

@@ -74,37 +74,29 @@
       </v-row>
     </v-card>
 
-    <v-toolbar 
-      class="blue-grey darken-4"
-    >
-      <h2>Recent Changes</h2>
-      <v-spacer></v-spacer>
-      <v-btn @click="clearRecentChanges">Clear</v-btn>
-    </v-toolbar>
-    <inventory-lot-collection
-      :inventoryLots="recentChanges"
-      :onSelectInventoryLot="inventoryLotSelected"
-    >
-    </inventory-lot-collection>
-
-    <v-toolbar 
-      class="blue-grey darken-4"
-    >
-      <h2>Inventory Lots</h2>
-    </v-toolbar>
     <v-tabs>
-      <v-tab>Active</v-tab>
-      
-      <v-tab>Provisioned</v-tab>
-      <v-tab>Depleted</v-tab>
-      <v-tab>Destroyed</v-tab>
-      <v-tab>Invalidated</v-tab>
+      <v-tab key="recent">
+        Recent Changes
+      </v-tab>
+      <v-tab-item key="recent">
+        <recent-inventory-changes
+          :inventoryLots="recentChanges"
+          :onSelectInventoryLot="onSelectInventoryLot"
+        >
+        </recent-inventory-changes>
+      </v-tab-item>
+      <v-tab key="all">
+        All Inventory
+      </v-tab>
+      <v-tab-item key="all">
+        <sorted-inventory
+          :inventoryLots="inventoryLots"
+          :onSelectInventoryLot="onSelectInventoryLot"
+        ></sorted-inventory>
+      </v-tab-item>
     </v-tabs>
-    <inventory-lot-collection
-      :inventoryLots="inventoryLots"
-      :onSelectInventoryLot="inventoryLotSelected"
-    >
-    </inventory-lot-collection>
+
+
     <v-switch
       label="safe mode"
       v-model="safeMode"
@@ -127,7 +119,9 @@ import DialogInventoryProvision from './LcbTraceability/DialogInventoryProvision
 import DialogInventoryQaSample from './LcbTraceability/DialogInventoryQaSample'
 import DialogInventoryRtSample from './LcbTraceability/DialogInventoryRtSample'
 import DialogInventorySublot from './LcbTraceability/DialogInventorySublot'
-import InventoryLotCollection from './LcbTraceability/InventoryLotCollection'
+// import InventoryLotCollection from './LcbTraceability/InventoryLotCollection'
+import SortedInventory from './LcbTraceability/SortedInventory'
+import RecentInventoryChanges from './LcbTraceability/RecentInventoryChanges'
 
 export default {
   name: "WSLCBTraceability",
@@ -139,7 +133,9 @@ export default {
     DialogInventoryQaSample,
     DialogInventoryRtSample,
     DialogInventorySublot,
-    InventoryLotCollection
+    // InventoryLotCollection,
+    SortedInventory,
+    RecentInventoryChanges
   },
   methods: {
     generateUlid () {
@@ -202,9 +198,6 @@ export default {
           )
       }
     },
-    clearRecentChanges () {
-      this.$store.commit('clearRecentChanges')
-    },
     invalidateInventoryLots () {
       this.$apollo.mutate({
         mutation: invalidateInventoryLotIds,
@@ -222,15 +215,9 @@ export default {
         console.error(error)
       })
     },
-    sublotInventoryLots () {
-
+    onSelectInventoryLot (inventoryLot) {
+      this.selectedInventoryLot = inventoryLot
     },
-    convertInventoryLots () {
-
-    },
-    sampleInventoryLots () {
-
-    }
 },
   watch: {
     selectedInventoryLot () {
@@ -263,7 +250,7 @@ export default {
           }
         )
     },
-    mappedInventoryLots() {
+    mappedInventoryLots () {
       return this.inventoryLots
         .map(
           il => {
@@ -278,6 +265,22 @@ export default {
             return this.mapInventoryLot(il)
           }
         )
+    },
+    activeLots() {
+      return this.inventoryLots
+        .filter(il => il.reportingStatus === 'ACTIVE')
+    },
+    provisionedLots() {
+      return this.inventoryLots
+        .filter(il => il.reportingStatus === 'PROVISIONED')
+    },
+    destroyedLots() {
+      return this.inventoryLots
+        .filter(il => il.reportingStatus === 'DESTROYED')
+    },
+    invalidatedLots() {
+      return this.inventoryLots
+        .filter(il => il.reportingStatus === 'INVALIDATED')
     },
     dataIsDirty () {
       if (this.selectedInventoryLot) {

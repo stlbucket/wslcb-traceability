@@ -92,7 +92,7 @@
         const sampleInventoryInput = {
           id: this.ulid,
           licenseeIdentifier: this.licenseeIdentifier,
-          quantity: this.quantity
+          quantity: parseFloat(this.quantity)
         }
 
         this.$apollo.mutate({

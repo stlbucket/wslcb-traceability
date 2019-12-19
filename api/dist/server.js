@@ -11,11 +11,11 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 // POSTGRAPHILE
 // import pgdbi from "@graphile-contrib/pgdbi";
 const app = (0, _express.default)(); // const pluginHook = makePluginHook([pgdbi]);
+// app.use(express.static("dist"));
+// app.get("/", (req, res) => {
+//   res.redirect("/dist/index.html");
+// });
 
-app.use(_express.default.static("dist"));
-app.get("/", (req, res) => {
-  res.redirect("/dist/index.html");
-});
 const schema = (0, _postgraphile.postgraphile)(process.env.POSTGRES_CONNECTION, process.env.SCHEMATA_TO_GRAPHQL.split(","), {
   // pluginHook,
   enableCors: process.env.ENABLE_CORS === 'true',

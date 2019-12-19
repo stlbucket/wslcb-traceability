@@ -18,10 +18,12 @@ export default new Vuex.Store({
     login (state, payload) {
       state.currentAppUser = payload.currentAppUser
       state.isLoggedIn = payload.currentAppUser !== null && payload.currentAppUser !== undefined
+      state.recentInventoryLotChanges = []
     },
     logout (state) {
       state.isLoggedIn = false
       state.currentAppUser = null
+      state.recentInventoryLotChanges = []
     },
     setGraphqlTypes (state, payload) {
       state.graphqlTypes = payload

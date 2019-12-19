@@ -76,4 +76,20 @@ BEGIN;
     END;
     $$;
 
+    DO $$
+    BEGIN
+        PERFORM true FROM pg_roles WHERE rolname = 'app';
+        IF NOT FOUND THEN
+            CREATE ROLE app with noinherit;
+            GRANT app_super_admin to app;
+            GRANT app_tenant_admin to app;
+            GRANT app_admin TO app;
+            GRANT app_demon TO app;
+            GRANT app_anonymous TO app;
+            GRANT app_user TO app;
+        END IF;
+    END;
+    $$;
+
+
 COMMIT;

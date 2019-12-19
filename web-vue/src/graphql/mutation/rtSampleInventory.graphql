@@ -4,7 +4,7 @@ mutation RtSampleInventory(
 ) {
   rtSampleInventory(input: {
     _parentLotId: $parentLotId
-    _samplesInfo: $samplesInfo
+    _rtSampleInventorysInfo: $samplesInfo
   }) {
     inventoryLots {
       id

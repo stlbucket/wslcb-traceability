@@ -83,7 +83,7 @@ RETURNS setof lcb.inventory_lot
           quantity,
           strain_name,
           area_identifier,
-          aource_conversion_id
+          source_conversion_id
         )
         SELECT
           COALESCE(_sublot_inventory_input.id, util_fn.generate_ulid()),
