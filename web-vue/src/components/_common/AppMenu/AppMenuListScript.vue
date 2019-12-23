@@ -6,7 +6,7 @@ export default {
   methods: {
     appSelected (app) {
       this.$router.push({name: app.routeName})
-     this.$eventHub.$emit('app-selected');
+    //  this.$eventHub.$emit('app-selected');
     },
   },
   computed: {
@@ -49,10 +49,34 @@ export default {
           iconKey: 'people'
         },
         {
-          key: 'traceability',
-          name: 'Traceability',
-          routeName: 'traceability',
-          iconKey: 'hot_tub'
+          key: 'trc-inv',
+          name: 'Inventory',
+          routeName: 'trc-inv',
+          iconKey: 'apartment'
+        },
+        {
+          key: 'trc-xfer',
+          name: 'Transfers',
+          routeName: 'trc-xfer',
+          iconKey: 'local_shipping'
+        },
+        {
+          key: 'trc-rec',
+          name: 'Receiving',
+          routeName: 'trc-rec',
+          iconKey: 'receipt'
+        },
+        {
+          key: 'trc-ret',
+          name: 'Returns',
+          routeName: 'trc-ret',
+          iconKey: 'keyboard_return'
+        },
+        {
+          key: 'trc-qa',
+          name: 'QA Manager',
+          routeName: 'trc-qa',
+          iconKey: 'check'
         }
       ]
     }

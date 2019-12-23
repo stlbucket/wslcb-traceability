@@ -1,0 +1,40 @@
+mutation CreateManifest(
+  $toLcbLicenseHolderId: String!
+  $scheduledTransferDate: Datetime!
+  $inventoryLotIds: [String]!
+) {
+  createManifest(input: {
+    _toLcbLicenseHolderId: $toLcbLicenseHolderId
+    _scheduledTransferDate: $scheduledTransferDate
+    _inventoryLotIds:$inventoryLotIds
+  }) {
+    manifest {
+      id
+      scheduledTransferTimestamp
+      status
+      statusTimestamp
+      toLcbLicenseHolder:lcbLicenseHolderByToLcbLicenseHolderId {
+        id
+        lcbLicense: lcbLicenseByLcbLicenseId {
+          id
+          code
+        }
+        organization: organizationByOrganizationId {
+          id
+          name
+        }
+      }
+      manifestItems: manifestItemsByManifestId {
+        nodes {
+          id
+          manifestedInventoryLot: inventoryLotByManifestedInventoryLotId {
+            id
+            description
+            strainName
+            quantity
+          }
+        }
+      }
+    }
+  }
+}

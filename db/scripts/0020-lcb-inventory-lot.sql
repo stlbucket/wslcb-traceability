@@ -30,6 +30,7 @@ CREATE TABLE lcb.lcb_license_holder (
     lcb_license_id text not null unique,
     organization_id text not null,
     acquisition_date timestamptz not null default CURRENT_TIMESTAMP,
+    status text NOT NULL,
     relinquish_date timestamptz null
 );
 
@@ -42,6 +43,8 @@ ALTER TABLE ONLY lcb.lcb_license_holder
     ADD CONSTRAINT fk_lcb_license_holder_license FOREIGN KEY (lcb_license_id) REFERENCES lcb.lcb_license(id);
 ALTER TABLE ONLY lcb.lcb_license_holder
     ADD CONSTRAINT fk_lcb_license_holder_organization FOREIGN KEY (organization_id) REFERENCES org.organization(id);
+ALTER TABLE ONLY lcb.lcb_license_holder
+    ADD CONSTRAINT fk_lcb_license_holder_status FOREIGN KEY (status) REFERENCES lcb_ref.lcb_license_holder_status(id);
 
 
 CREATE TABLE lcb.batch (

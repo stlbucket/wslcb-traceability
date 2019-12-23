@@ -1,6 +1,6 @@
 <template>
   <v-container>
-    <h1>Inventory Manager</h1>
+    <h1>Inventory</h1>
     <inventory-lot-detail
       :inventoryLot="selectedInventoryLot"
     >
@@ -28,11 +28,11 @@
     </v-tabs>
 
 
-    <v-switch
+    <!-- <v-switch
       label="safe mode"
       v-model="safeMode"
     >
-    </v-switch>
+    </v-switch> -->
     
   </v-container>
 </template>
@@ -40,8 +40,8 @@
 <script>
 import allInventoryLots from '@/graphql/query/allInventoryLots.graphql'
 import lcbLookupSets from '@/graphql/query/lcbLookupSets.graphql'
-import reportInventoryLots from '@/graphql/mutation/reportInventoryLots.graphql'
-import invalidateInventoryLotIds from '@/graphql/mutation/invalidateInventoryLotIds.graphql'
+// import reportInventoryLots from '@/graphql/mutation/reportInventoryLots.graphql'
+// import invalidateInventoryLotIds from '@/graphql/mutation/invalidateInventoryLotIds.graphql'
 import {ulid} from 'ulid'
 import InventoryLotDetail from './InventoryLotDetail'
 import SortedInventory from './SortedInventory'
@@ -60,34 +60,34 @@ export default {
       this.ulid = this.nextUlid
       this.selectedInventoryLot = null
     },
-    reportInventory () {
-      const inventoryInfo = {
-        id: this.ulid,
-        inventoryType: this.selectedInventoryType.value,
-        licenseeIdentifier: this.licenseeIdentifier,
-        strainName: this.strainName,
-        description: this.description,
-        areaIdentifier: this.areaIdentifier,
-        quantity: this.quantity,
-      }
+    // reportInventory () {
+    //   const inventoryInfo = {
+    //     id: this.ulid,
+    //     inventoryType: this.selectedInventoryType.value,
+    //     licenseeIdentifier: this.licenseeIdentifier,
+    //     strainName: this.strainName,
+    //     description: this.description,
+    //     areaIdentifier: this.areaIdentifier,
+    //     quantity: this.quantity,
+    //   }
 
-      this.$apollo.mutate({
-        mutation: reportInventoryLots,
-        variables: {
-          input: [inventoryInfo]
-        }
-      })
-      .then(result => {
-        this.$store.commit('addRecentInventoryLotChange', { newChanges: result.data.reportInventoryLot.inventoryLots})
-        this.selectedInventoryLot = null
-        this.$apollo.queries.getInventoryLots.refetch()
-      })
-      .catch(error => {
-        alert(error.toString())
-        console.error(error)
-      })
+    //   this.$apollo.mutate({
+    //     mutation: reportInventoryLots,
+    //     variables: {
+    //       input: [inventoryInfo]
+    //     }
+    //   })
+    //   .then(result => {
+    //     this.$store.commit('addRecentInventoryLotChange', { newChanges: result.data.reportInventoryLot.inventoryLots})
+    //     this.selectedInventoryLot = null
+    //     this.$apollo.queries.getInventoryLots.refetch()
+    //   })
+    //   .catch(error => {
+    //     alert(error.toString())
+    //     console.error(error)
+    //   })
 
-    },
+    // },
     inventoryLotSelected (inventoryLot) {
       this.selectedInventoryLot = inventoryLot
     },
@@ -115,23 +115,23 @@ export default {
           )
       }
     },
-    invalidateInventoryLots () {
-      this.$apollo.mutate({
-        mutation: invalidateInventoryLotIds,
-        variables: {
-          ids: [this.selectedInventoryLot.id]
-        }
-      })
-      .then(result => {
-        this.$store.commit('addRecentInventoryLotChange', { newChanges: result.data.invalidateInventoryLotIds.inventoryLots})
-        this.selectedInventoryLot = null
-        this.$apollo.queries.getInventoryLots.refetch()
-      })
-      .catch(error => {
-        alert(error.toString())
-        console.error(error)
-      })
-    },
+    // invalidateInventoryLots () {
+    //   this.$apollo.mutate({
+    //     mutation: invalidateInventoryLotIds,
+    //     variables: {
+    //       ids: [this.selectedInventoryLot.id]
+    //     }
+    //   })
+    //   .then(result => {
+    //     this.$store.commit('addRecentInventoryLotChange', { newChanges: result.data.invalidateInventoryLotIds.inventoryLots})
+    //     this.selectedInventoryLot = null
+    //     this.$apollo.queries.getInventoryLots.refetch()
+    //   })
+    //   .catch(error => {
+    //     alert(error.toString())
+    //     console.error(error)
+    //   })
+    // },
     onSelectInventoryLot (inventoryLot) {
       this.selectedInventoryLot = inventoryLot
     },
@@ -216,82 +216,82 @@ export default {
         return true
       }
     },
-    reportDisabled () {
-      if (!this.safeMode) return false
-      if (this.selectedInventoryLot) {
-        return !this.dataIsDirty || ['ACTIVE', 'PROVISIONED'].indexOf(this.selectedInventoryLot.reportingStatus) === -1
-      } else {
-        const quantity = parseFloat(this.quantity)
-        const notNum = isNaN(quantity)
-        console.log(quantity, notNum, quantity >= 0)
+    // reportDisabled () {
+    //   if (!this.safeMode) return false
+    //   if (this.selectedInventoryLot) {
+    //     return !this.dataIsDirty || ['ACTIVE', 'PROVISIONED'].indexOf(this.selectedInventoryLot.reportingStatus) === -1
+    //   } else {
+    //     const quantity = parseFloat(this.quantity)
+    //     const notNum = isNaN(quantity)
+    //     console.log(quantity, notNum, quantity >= 0)
 
-        if (notNum) {
-          return true
-        } else {
-          return quantity < 0
-        }
-      }
-    },
-    destroyDisabled () {
-      if (!this.safeMode) return false
-      return this.selectedInventoryLot === null || this.selectedInventoryLot.reportingStatus !== 'ACTIVE'
-    },
-    sublotDisabled () {
-      if (!this.safeMode) return false
-      return this.selectedInventoryLot === null || this.selectedInventoryLot.reportingStatus !== 'ACTIVE'
-    },
-    qaSampleDisabled () {
-      if (!this.safeMode) return false
-      return this.selectedInventoryLot === null || this.selectedInventoryLot.reportingStatus !== 'ACTIVE'
-    },
-    rtSampleDisabled () {
-      if (!this.safeMode) return false
-      return this.selectedInventoryLot === null || this.selectedInventoryLot.reportingStatus !== 'ACTIVE'
-    },
-    conversionDisabled () {
-      if (!this.safeMode) return false
-      return this.selectedInventoryLot === null || this.selectedInventoryLot.reportingStatus !== 'ACTIVE'
-    },
-    invalidateDisabled () {
-      if (!this.safeMode) return false
-      return this.selectedInventoryLot === null || this.selectedInventoryLot.reportingStatus !== 'PROVISIONED'
-    },
-    inventoryTypeSelectDisabled () {
-      if (!this.safeMode) return false
-      return this.selectedInventoryLot !== null
-    },
-    provisionDisabled () {
-      if (!this.safeMode) return false
-      return false
-    },
-    sublotConfig () {
-      return {
-        parentLot: this.selectedInventoryLot,
-        parentInventoryType: this.actualSelectedInventoryType,
-        quantityLabel: this.quantityLabel
-      }
-    },
-    qaSampleConfig () {
-      return {
-        parentLot: this.selectedInventoryLot,
-        parentInventoryType: this.actualSelectedInventoryType,
-        quantityLabel: this.quantityLabel
-      }
-    },
-    rtSampleConfig () {
-      return {
-        parentLot: this.selectedInventoryLot,
-        parentInventoryType: this.actualSelectedInventoryType,
-        quantityLabel: this.quantityLabel
-      }
-    },
-    conversionConfig () {
-      return {
-        parentLot: this.selectedInventoryLot,
-        parentInventoryType: this.actualSelectedInventoryType,
-        quantityLabel: this.quantityLabel
-      }
-    },
+    //     if (notNum) {
+    //       return true
+    //     } else {
+    //       return quantity < 0
+    //     }
+    //   }
+    // },
+    // destroyDisabled () {
+    //   if (!this.safeMode) return false
+    //   return this.selectedInventoryLot === null || this.selectedInventoryLot.reportingStatus !== 'ACTIVE'
+    // },
+    // sublotDisabled () {
+    //   if (!this.safeMode) return false
+    //   return this.selectedInventoryLot === null || this.selectedInventoryLot.reportingStatus !== 'ACTIVE'
+    // },
+    // qaSampleDisabled () {
+    //   if (!this.safeMode) return false
+    //   return this.selectedInventoryLot === null || this.selectedInventoryLot.reportingStatus !== 'ACTIVE'
+    // },
+    // rtSampleDisabled () {
+    //   if (!this.safeMode) return false
+    //   return this.selectedInventoryLot === null || this.selectedInventoryLot.reportingStatus !== 'ACTIVE'
+    // },
+    // conversionDisabled () {
+    //   if (!this.safeMode) return false
+    //   return this.selectedInventoryLot === null || this.selectedInventoryLot.reportingStatus !== 'ACTIVE'
+    // },
+    // invalidateDisabled () {
+    //   if (!this.safeMode) return false
+    //   return this.selectedInventoryLot === null || this.selectedInventoryLot.reportingStatus !== 'PROVISIONED'
+    // },
+    // inventoryTypeSelectDisabled () {
+    //   if (!this.safeMode) return false
+    //   return this.selectedInventoryLot !== null
+    // },
+    // provisionDisabled () {
+    //   if (!this.safeMode) return false
+    //   return false
+    // },
+    // sublotConfig () {
+    //   return {
+    //     parentLot: this.selectedInventoryLot,
+    //     parentInventoryType: this.actualSelectedInventoryType,
+    //     quantityLabel: this.quantityLabel
+    //   }
+    // },
+    // qaSampleConfig () {
+    //   return {
+    //     parentLot: this.selectedInventoryLot,
+    //     parentInventoryType: this.actualSelectedInventoryType,
+    //     quantityLabel: this.quantityLabel
+    //   }
+    // },
+    // rtSampleConfig () {
+    //   return {
+    //     parentLot: this.selectedInventoryLot,
+    //     parentInventoryType: this.actualSelectedInventoryType,
+    //     quantityLabel: this.quantityLabel
+    //   }
+    // },
+    // conversionConfig () {
+    //   return {
+    //     parentLot: this.selectedInventoryLot,
+    //     parentInventoryType: this.actualSelectedInventoryType,
+    //     quantityLabel: this.quantityLabel
+    //   }
+    // },
     actualSelectedInventoryType () {
       if (this.selectedInventoryType) {
         return this.inventoryTypes.find(it => it.id === this.selectedInventoryType.value)

@@ -81,22 +81,22 @@ values
   ('DEPLETED')
 ;
 
-CREATE TABLE lcb_ref.transfer_status (
+CREATE TABLE lcb_ref.manifest_status (
     id text NOT NULL UNIQUE,
-    CONSTRAINT ck_transfer_status_id CHECK ((id <> ''::text))
+    CONSTRAINT ck_manifest_status_id CHECK ((id <> ''::text))
 );
 
-ALTER TABLE lcb_ref.transfer_status OWNER TO app;
-ALTER TABLE ONLY lcb_ref.transfer_status
-    ADD CONSTRAINT fk_transfer_status PRIMARY KEY (id);
+ALTER TABLE lcb_ref.manifest_status OWNER TO app;
+ALTER TABLE ONLY lcb_ref.manifest_status
+    ADD CONSTRAINT fk_manifest_status PRIMARY KEY (id);
 
-INSERT INTO lcb_ref.transfer_status(id)
+INSERT INTO lcb_ref.manifest_status(id)
 values
+  ('MANIFESTED'),
   ('SCHEDULED'),
-  ('DEPARTED'),
+  ('IN_TRANSIT'),
   ('DELIVERED'),
   ('RECEIVED'),
-  ('REJECTED'),
   ('CANCELLED')
 ;
 
@@ -115,5 +115,20 @@ values
   ('INVENTORY'),
   ('QA_SAMPLE'),
   ('RT_SAMPLE')
+;
+
+CREATE TABLE lcb_ref.lcb_license_holder_status (
+    id text NOT NULL UNIQUE,
+    CONSTRAINT ck_lcb_license_holder_status_id CHECK ((id <> ''::text))
+);
+
+ALTER TABLE lcb_ref.lcb_license_holder_status OWNER TO app;
+ALTER TABLE ONLY lcb_ref.lcb_license_holder_status
+    ADD CONSTRAINT fk_lcb_license_holder_status PRIMARY KEY (id);
+
+INSERT INTO lcb_ref.lcb_license_holder_status(id)
+values
+  ('ACTIVE'),
+  ('INACTIVE')
 ;
 

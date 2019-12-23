@@ -153,14 +153,14 @@ select * from app.license_type;
 \echo ----------------------------------
 select * from app.license;
 
---------------------------------------------------   lcb traceability
+--------------------------------------------------   inventory manager
   insert into app.application(
     name 
     ,key
   ) 
   values (
-    'Traceability'
-    ,'traceability'
+    'Inventory'
+    ,'trc-inv'
   )
   on conflict(key) 
   do nothing
@@ -173,9 +173,9 @@ select * from app.license;
   )
   values
   (
-    'Traceability'
-    ,'traceability'
-    ,(select id from app.application where key = 'traceability')
+    'Inventory'
+    ,'trc-inv'
+    ,(select id from app.application where key = 'trc-inv')
   )
   on conflict(key) 
   do nothing
@@ -189,8 +189,188 @@ select * from app.license;
   )
   select
     au.app_tenant_id
-    ,(select id from app.license_type where key = 'traceability')
-    ,au.username || ' - ' || (select name from app.license_type where key = 'traceability')
+    ,(select id from app.license_type where key = 'trc-inv')
+    ,au.username || ' - ' || (select name from app.license_type where key = 'trc-inv')
+    ,au.id
+  from auth.app_user au
+  where au.permission_key in ('SuperAdmin', 'Admin', 'User')
+  on conflict (assigned_to_app_user_id, license_type_id)
+  do nothing
+  ;
+
+--------------------------------------------------   transfer manager
+  insert into app.application(
+    name 
+    ,key
+  ) 
+  values (
+    'Transfers'
+    ,'trc-xfer'
+  )
+  on conflict(key) 
+  do nothing
+  ;
+
+  insert into app.license_type(
+    name
+    ,key
+    ,application_id
+  )
+  values
+  (
+    'Transfers'
+    ,'trc-xfer'
+    ,(select id from app.application where key = 'trc-xfer')
+  )
+  on conflict(key) 
+  do nothing
+  ;
+
+  insert into app.license(
+    app_tenant_id
+    ,license_type_id
+    ,name
+    ,assigned_to_app_user_id
+  )
+  select
+    au.app_tenant_id
+    ,(select id from app.license_type where key = 'trc-xfer')
+    ,au.username || ' - ' || (select name from app.license_type where key = 'trc-xfer')
+    ,au.id
+  from auth.app_user au
+  where au.permission_key in ('SuperAdmin', 'Admin', 'User')
+  on conflict (assigned_to_app_user_id, license_type_id)
+  do nothing
+  ;
+
+--------------------------------------------------   receiving manager
+  insert into app.application(
+    name 
+    ,key
+  ) 
+  values (
+    'Receiving'
+    ,'trc-rec'
+  )
+  on conflict(key) 
+  do nothing
+  ;
+
+  insert into app.license_type(
+    name
+    ,key
+    ,application_id
+  )
+  values
+  (
+    'Receiving'
+    ,'trc-rec'
+    ,(select id from app.application where key = 'trc-rec')
+  )
+  on conflict(key) 
+  do nothing
+  ;
+
+  insert into app.license(
+    app_tenant_id
+    ,license_type_id
+    ,name
+    ,assigned_to_app_user_id
+  )
+  select
+    au.app_tenant_id
+    ,(select id from app.license_type where key = 'trc-rec')
+    ,au.username || ' - ' || (select name from app.license_type where key = 'trc-rec')
+    ,au.id
+  from auth.app_user au
+  where au.permission_key in ('SuperAdmin', 'Admin', 'User')
+  on conflict (assigned_to_app_user_id, license_type_id)
+  do nothing
+  ;
+
+--------------------------------------------------   returns manager
+  insert into app.application(
+    name 
+    ,key
+  ) 
+  values (
+    'Returns'
+    ,'trc-ret'
+  )
+  on conflict(key) 
+  do nothing
+  ;
+
+  insert into app.license_type(
+    name
+    ,key
+    ,application_id
+  )
+  values
+  (
+    'Returns'
+    ,'trc-ret'
+    ,(select id from app.application where key = 'trc-ret')
+  )
+  on conflict(key) 
+  do nothing
+  ;
+
+  insert into app.license(
+    app_tenant_id
+    ,license_type_id
+    ,name
+    ,assigned_to_app_user_id
+  )
+  select
+    au.app_tenant_id
+    ,(select id from app.license_type where key = 'trc-ret')
+    ,au.username || ' - ' || (select name from app.license_type where key = 'trc-ret')
+    ,au.id
+  from auth.app_user au
+  where au.permission_key in ('SuperAdmin', 'Admin', 'User')
+  on conflict (assigned_to_app_user_id, license_type_id)
+  do nothing
+  ;
+
+--------------------------------------------------   qa manager
+  insert into app.application(
+    name 
+    ,key
+  ) 
+  values (
+    'QA'
+    ,'trc-qa'
+  )
+  on conflict(key) 
+  do nothing
+  ;
+
+  insert into app.license_type(
+    name
+    ,key
+    ,application_id
+  )
+  values
+  (
+    'QA'
+    ,'trc-qa'
+    ,(select id from app.application where key = 'trc-qa')
+  )
+  on conflict(key) 
+  do nothing
+  ;
+
+  insert into app.license(
+    app_tenant_id
+    ,license_type_id
+    ,name
+    ,assigned_to_app_user_id
+  )
+  select
+    au.app_tenant_id
+    ,(select id from app.license_type where key = 'trc-qa')
+    ,au.username || ' - ' || (select name from app.license_type where key = 'trc-qa')
     ,au.id
   from auth.app_user au
   where au.permission_key in ('SuperAdmin', 'Admin', 'User')

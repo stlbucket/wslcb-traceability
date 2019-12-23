@@ -1,0 +1,16 @@
+query AllLcbLicenseHolders {
+  allLcbLicenseHolders(filter: {status: {eq: "ACTIVE"}}) {
+    nodes {
+      id
+      status
+      lcbLicense: lcbLicenseByLcbLicenseId {
+        id
+        code
+      }
+      organization: organizationByOrganizationId {
+        id
+        name
+      }
+    }
+  }
+}

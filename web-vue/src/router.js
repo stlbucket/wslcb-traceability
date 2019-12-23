@@ -19,7 +19,11 @@ import FacilityDetail from './views/Org/FacilityDetailView'
 import ProjectManager from '@/apps/ProjectManager'
 import ProjectDetail from './views/Prj/ProjectDetailView'
 
-import Traceability from '@/apps/Traceability'
+import InventoryManager from '@/apps/traceability/inventory/InventoryManager'
+import TransferManager from '@/apps/traceability/transfers/TransferManager'
+import ReceivingManager from '@/apps/traceability/receiving/ReceivingManager'
+import ReturnsManager from '@/apps/traceability/returns/ReturnsManager'
+import QaManager from '@/apps/traceability/qa/QaManager'
 
 Vue.use(Router)
 
@@ -92,9 +96,29 @@ export default new Router({
       props: true
     },
     {
-      path: '/traceability',
-      name: 'traceability',
-      component: Traceability
+      path: '/trc-inv',
+      name: 'trc-inv',
+      component: InventoryManager
+    },
+    {
+      path: '/trc-xfer',
+      name: 'trc-xfer',
+      component: TransferManager
+    },
+    {
+      path: '/trc-rec',
+      name: 'trc-rec',
+      component: ReceivingManager
+    },
+    {
+      path: '/trc-ret',
+      name: 'trc-ret',
+      component: ReturnsManager
+    },
+    {
+      path: '/trc-qa',
+      name: 'trc-qa',
+      component: QaManager
     },
     {
       path: '/about',

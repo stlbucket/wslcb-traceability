@@ -1,11 +1,16 @@
 <template>
   <div>
-    <v-text-field
+    <!-- <v-text-field
       label="username"
       placeholder="username"
       rounded
       v-model="username"
-    ></v-text-field>
+    ></v-text-field> -->
+    <v-combobox
+      v-model="username"
+      :items="users"
+    >
+    </v-combobox>
     <v-text-field
       label="password"
       placeholder="password"
@@ -69,7 +74,18 @@ export default {
   data () {
     return {
       username: 'lcb_producer_admin',
-      password: 'badpassword'
+      password: 'badpassword',
+      users: [
+        'appsuperadmin',
+        'lcb_producer_admin',
+        'lcb_processor_admin',
+        'lcb_retail_admin',
+        'lcb_qa_lab_admin',
+        'lcb_producer_user',
+        'lcb_processor_user',
+        'lcb_retail_user',
+        'lcb_qa_lab_user'
+      ]
     }
   },
 }

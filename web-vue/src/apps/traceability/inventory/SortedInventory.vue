@@ -5,7 +5,7 @@
     >
       <h2>Inventory Lots</h2>
     </v-toolbar>
-    <v-tabs @change="onTabChange" v-model="activeTab">
+    <v-tabs v-model="activeTab">
       <v-tab
         key="active"
       >
