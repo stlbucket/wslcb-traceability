@@ -122,6 +122,8 @@ RETURNS setof lcb.inventory_lot
     _inventory_lot_input lcb_fn.report_inventory_lot_input;
     _inventory_lot lcb.inventory_lot;
     _inventory_lot_id text;
+    _strain lcb.strain;
+    _area lcb.area;
     _lcb_inventory_type lcb_ref.inventory_type;
   BEGIN
     _current_app_user := auth_fn.current_app_user();
@@ -170,6 +172,11 @@ RETURNS setof lcb.inventory_lot
         if _lcb_inventory_type.is_single_lotted AND _inventory_lot_input.quantity != 1 then
           raise exception 'illegal operation - batch cancelled:  single-lotted inventory type lots must have quantity of 1: %', _inventory_lot_input.inventory_type;
         end if;
+
+        -- insert into lcb.strain(
+        --   app_tenant_id,
+
+        -- )
 
         insert into lcb.inventory_lot(
           id,

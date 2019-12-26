@@ -12,6 +12,7 @@
       :sort-by="'updatedAt'"
       :sort-desc="true"
       show-select
+      v-model="selectedItems"
     >
       <template v-slot:item.sourcedQuantity="{item}">
         <v-text-field
@@ -84,6 +85,9 @@ export default {
     },
 },
   watch: {
+    selectedItems () {
+      console.log('selected', this.selectedItems)
+    },
     inventoryLots: {
       deep: true,
       handler () {
@@ -121,6 +125,7 @@ export default {
       recentExpanded: [],
       singleExpand: false,
       itemSourcedQuantities: {},
+      selectedItems: [],
       headers: [
         {
           text: 'sourced quantity',

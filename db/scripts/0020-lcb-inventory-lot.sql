@@ -53,6 +53,7 @@ CREATE TABLE lcb.batch (
     created_at timestamptz DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at timestamptz NOT NULL,
     inventory_type text not null,
+    lcb_license_holder_id text not null,
     name text
 );
 ALTER TABLE lcb.batch OWNER TO app;
@@ -62,6 +63,46 @@ ALTER TABLE ONLY lcb.batch
     ADD CONSTRAINT fk_batch_app_tenant_id FOREIGN KEY (app_tenant_id) REFERENCES auth.app_tenant (id);
 ALTER TABLE ONLY lcb.batch
     ADD CONSTRAINT fk_batch_inventory_type FOREIGN KEY (inventory_type) REFERENCES lcb_ref.inventory_type (id);
+ALTER TABLE ONLY lcb.batch
+    ADD CONSTRAINT fk_batch_lcb_license_holder FOREIGN KEY (lcb_license_holder_id) REFERENCES lcb.lcb_license_holder (id);
+ALTER TABLE ONLY lcb.batch
+    ADD CONSTRAINT uq_batch_lcb_license_holder UNIQUE (lcb_license_holder_id, name);
+
+CREATE TABLE lcb.strain (
+    id text DEFAULT util_fn.generate_ulid() NOT NULL,
+    app_tenant_id text NOT NULL,
+    created_at timestamptz DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at timestamptz NOT NULL,
+    lcb_license_holder_id text not null,
+    name text
+);
+ALTER TABLE lcb.strain OWNER TO app;
+ALTER TABLE ONLY lcb.strain
+    ADD CONSTRAINT pk_strain PRIMARY KEY (id);
+ALTER TABLE ONLY lcb.strain
+    ADD CONSTRAINT fk_strain_app_tenant_id FOREIGN KEY (app_tenant_id) REFERENCES auth.app_tenant (id);
+ALTER TABLE ONLY lcb.strain
+    ADD CONSTRAINT fk_strain_lcb_license_holder FOREIGN KEY (lcb_license_holder_id) REFERENCES lcb.lcb_license_holder (id);
+ALTER TABLE ONLY lcb.strain
+    ADD CONSTRAINT uq_strain_lcb_license_holder UNIQUE (lcb_license_holder_id, name);
+
+CREATE TABLE lcb.area (
+    id text DEFAULT util_fn.generate_ulid() NOT NULL,
+    app_tenant_id text NOT NULL,
+    created_at timestamptz DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at timestamptz NOT NULL,
+    lcb_license_holder_id text not null,
+    name text
+);
+ALTER TABLE lcb.area OWNER TO app;
+ALTER TABLE ONLY lcb.area
+    ADD CONSTRAINT pk_area PRIMARY KEY (id);
+ALTER TABLE ONLY lcb.area
+    ADD CONSTRAINT fk_area_app_tenant_id FOREIGN KEY (app_tenant_id) REFERENCES auth.app_tenant (id);
+ALTER TABLE ONLY lcb.area
+    ADD CONSTRAINT fk_area_lcb_license_holder FOREIGN KEY (lcb_license_holder_id) REFERENCES lcb.lcb_license_holder (id);
+ALTER TABLE ONLY lcb.area
+    ADD CONSTRAINT uq_area_lcb_license_holder UNIQUE (lcb_license_holder_id, name);
 
 CREATE TABLE lcb.inventory_lot (
     id text DEFAULT util_fn.generate_ulid() NOT NULL unique,
@@ -82,6 +123,8 @@ CREATE TABLE lcb.inventory_lot (
     quantity numeric(10,2),
     strain_name text,
     area_identifier text,
+    strain_id text,
+    area_id text,
     CONSTRAINT ck_inventory_lot_id_origin CHECK ((id_origin <> ''::text)),
     CONSTRAINT ck_inventory_lot_inventory_type CHECK ((inventory_type <> ''::text)),
     CONSTRAINT ck_inventory_lot_id CHECK ((id <> ''::text))
@@ -104,6 +147,10 @@ ALTER TABLE ONLY lcb.inventory_lot
     ADD CONSTRAINT fk_inventory_lot_updated_by_app_user FOREIGN KEY (updated_by_app_user_id) REFERENCES auth.app_user (id);
 ALTER TABLE ONLY lcb.inventory_lot
     ADD CONSTRAINT fk_inventory_lot_type FOREIGN KEY (lot_type) REFERENCES lcb_ref.inventory_lot_type (id);
+ALTER TABLE ONLY lcb.inventory_lot
+    ADD CONSTRAINT fk_inventory_lot_strain FOREIGN KEY (strain_id) REFERENCES lcb.strain (id);
+ALTER TABLE ONLY lcb.inventory_lot
+    ADD CONSTRAINT fk_inventory_lot_area FOREIGN KEY (area_id) REFERENCES lcb.area (id);
 
 CREATE FUNCTION lcb.fn_timestamp_update_lcb_license() RETURNS trigger
     LANGUAGE plpgsql
@@ -264,7 +311,9 @@ CREATE TABLE lcb_hist.hist_inventory_lot (
     quantity numeric(10,2),
     units text,
     strain_name text,
-    area_identifier text
+    area_identifier text,
+    strain_id text,
+    area_id text
 );
 ALTER TABLE ONLY lcb_hist.hist_inventory_lot
     ADD CONSTRAINT fk_hist_inventory_lot_inventory_lot FOREIGN KEY (inventory_lot_id) REFERENCES lcb.inventory_lot (id);
@@ -291,7 +340,9 @@ CREATE FUNCTION lcb_hist.fn_capture_hist_inventory_lot() RETURNS trigger
         description,
         quantity,
         strain_name,
-        area_identifier
+        area_identifier,
+        strain_id,
+        area_id
     )
     values (
         OLD.id,
@@ -309,7 +360,9 @@ CREATE FUNCTION lcb_hist.fn_capture_hist_inventory_lot() RETURNS trigger
         OLD.description,
         OLD.quantity,
         OLD.strain_name,
-        OLD.area_identifier
+        OLD.area_identifier,
+        OLD.strain_id,
+        OLD.area_id
     )
     ;
 

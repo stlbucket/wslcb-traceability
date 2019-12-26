@@ -231,16 +231,19 @@ export default {
       return this.selectedInventoryLots.length === 0
     },
     continueDisabledSourceQuantities () {
-      return this.selectedInventoryLots.reduce(
-        (anyAreMissing, il) => {
-          if (anyAreMissing) {
-            return true
-          } else {
-            const sourceQuantity = parseFloat(this.itemSourcedQuantities[il.id])
-            return isNaN(sourceQuantity) || sourceQuantity <= 0
-          }
-        }, false
-      )
+      console.log('sleected', this.selectedInventoryLots)
+      console.log('itemSourcedQuantities', this.itemSourcedQuantities)
+      return false
+      // return this.selectedInventoryLots.reduce(
+      //   (anyAreMissing, il) => {
+      //     if (anyAreMissing) {
+      //       return true
+      //     } else {
+      //       const sourceQuantity = parseFloat(this.itemSourcedQuantities[il.id])
+      //       return isNaN(sourceQuantity) || sourceQuantity <= 0
+      //     }
+      //   }, false
+      // )
     },
     continueDisabledDescribeNewLots () {
       return this.selectedInventoryLots.length === 0
