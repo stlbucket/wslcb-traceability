@@ -1,0 +1,33 @@
+query AllManifests {
+  allManifests {
+    nodes {
+      id
+      scheduledTransferTimestamp
+      fromLcbLicenseHolder: lcbLicenseHolderByFromLcbLicenseHolderId {
+        id
+        lcbLicense: lcbLicenseByLcbLicenseId {
+          id
+          code
+        }
+        organization: organizationByOrganizationId {
+          id
+          name
+        }        
+      }
+      toLcbLicenseHolder: lcbLicenseHolderByToLcbLicenseHolderId {
+        id
+        lcbLicense: lcbLicenseByLcbLicenseId {
+          id
+          code
+        }
+        organization: organizationByOrganizationId {
+          id
+          name
+        }
+      }
+      manifestItems: manifestItemsByManifestId {
+        totalCount
+      }
+    }
+  }
+}

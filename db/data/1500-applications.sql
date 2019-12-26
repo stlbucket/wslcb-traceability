@@ -378,5 +378,410 @@ select * from app.license;
   do nothing
   ;
 
+--------------------------------------------------   planting
+  insert into app.application(
+    name 
+    ,key
+  ) 
+  values (
+    'Planting'
+    ,'trc-planting'
+  )
+  on conflict(key) 
+  do nothing
+  ;
+
+  insert into app.license_type(
+    name
+    ,key
+    ,application_id
+  )
+  values
+  (
+    'Planting'
+    ,'trc-planting'
+    ,(select id from app.application where key = 'trc-planting')
+  )
+  on conflict(key) 
+  do nothing
+  ;
+
+  insert into app.license(
+    app_tenant_id
+    ,license_type_id
+    ,name
+    ,assigned_to_app_user_id
+  )
+  select
+    au.app_tenant_id
+    ,(select id from app.license_type where key = 'trc-planting')
+    ,au.username || ' - ' || (select name from app.license_type where key = 'trc-planting')
+    ,au.id
+  from auth.app_user au
+  where au.permission_key in ('SuperAdmin', 'Admin', 'User')
+  on conflict (assigned_to_app_user_id, license_type_id)
+  do nothing
+  ;
+
+--------------------------------------------------   cloning
+  insert into app.application(
+    name 
+    ,key
+  ) 
+  values (
+    'Cloning'
+    ,'trc-cloning'
+  )
+  on conflict(key) 
+  do nothing
+  ;
+
+  insert into app.license_type(
+    name
+    ,key
+    ,application_id
+  )
+  values
+  (
+    'Cloning'
+    ,'trc-cloning'
+    ,(select id from app.application where key = 'trc-cloning')
+  )
+  on conflict(key) 
+  do nothing
+  ;
+
+  insert into app.license(
+    app_tenant_id
+    ,license_type_id
+    ,name
+    ,assigned_to_app_user_id
+  )
+  select
+    au.app_tenant_id
+    ,(select id from app.license_type where key = 'trc-cloning')
+    ,au.username || ' - ' || (select name from app.license_type where key = 'trc-cloning')
+    ,au.id
+  from auth.app_user au
+  where au.permission_key in ('SuperAdmin', 'Admin', 'User')
+  on conflict (assigned_to_app_user_id, license_type_id)
+  do nothing
+  ;
+
+--------------------------------------------------   growing
+  insert into app.application(
+    name 
+    ,key
+  ) 
+  values (
+    'Growing'
+    ,'trc-growing'
+  )
+  on conflict(key) 
+  do nothing
+  ;
+
+  insert into app.license_type(
+    name
+    ,key
+    ,application_id
+  )
+  values
+  (
+    'Growing'
+    ,'trc-growing'
+    ,(select id from app.application where key = 'trc-growing')
+  )
+  on conflict(key) 
+  do nothing
+  ;
+
+  insert into app.license(
+    app_tenant_id
+    ,license_type_id
+    ,name
+    ,assigned_to_app_user_id
+  )
+  select
+    au.app_tenant_id
+    ,(select id from app.license_type where key = 'trc-growing')
+    ,au.username || ' - ' || (select name from app.license_type where key = 'trc-growing')
+    ,au.id
+  from auth.app_user au
+  where au.permission_key in ('SuperAdmin', 'Admin', 'User')
+  on conflict (assigned_to_app_user_id, license_type_id)
+  do nothing
+  ;
+
+--------------------------------------------------   harvest
+  insert into app.application(
+    name 
+    ,key
+  ) 
+  values (
+    'Harvesting'
+    ,'trc-harvesting'
+  )
+  on conflict(key) 
+  do nothing
+  ;
+
+  insert into app.license_type(
+    name
+    ,key
+    ,application_id
+  )
+  values
+  (
+    'Harvesting'
+    ,'trc-harvesting'
+    ,(select id from app.application where key = 'trc-harvesting')
+  )
+  on conflict(key) 
+  do nothing
+  ;
+
+  insert into app.license(
+    app_tenant_id
+    ,license_type_id
+    ,name
+    ,assigned_to_app_user_id
+  )
+  select
+    au.app_tenant_id
+    ,(select id from app.license_type where key = 'trc-harvesting')
+    ,au.username || ' - ' || (select name from app.license_type where key = 'trc-harvesting')
+    ,au.id
+  from auth.app_user au
+  where au.permission_key in ('SuperAdmin', 'Admin', 'User')
+  on conflict (assigned_to_app_user_id, license_type_id)
+  do nothing
+  ;
+
+--------------------------------------------------   cure
+  insert into app.application(
+    name 
+    ,key
+  ) 
+  values (
+    'Curing'
+    ,'trc-curing'
+  )
+  on conflict(key) 
+  do nothing
+  ;
+
+  insert into app.license_type(
+    name
+    ,key
+    ,application_id
+  )
+  values
+  (
+    'Curing'
+    ,'trc-curing'
+    ,(select id from app.application where key = 'trc-curing')
+  )
+  on conflict(key) 
+  do nothing
+  ;
+
+  insert into app.license(
+    app_tenant_id
+    ,license_type_id
+    ,name
+    ,assigned_to_app_user_id
+  )
+  select
+    au.app_tenant_id
+    ,(select id from app.license_type where key = 'trc-curing')
+    ,au.username || ' - ' || (select name from app.license_type where key = 'trc-curing')
+    ,au.id
+  from auth.app_user au
+  where au.permission_key in ('SuperAdmin', 'Admin', 'User')
+  on conflict (assigned_to_app_user_id, license_type_id)
+  do nothing
+  ;
+
+--------------------------------------------------   flower lotting
+  insert into app.application(
+    name 
+    ,key
+  ) 
+  values (
+    'Flower Lotting'
+    ,'trc-flower-lotting'
+  )
+  on conflict(key) 
+  do nothing
+  ;
+
+  insert into app.license_type(
+    name
+    ,key
+    ,application_id
+  )
+  values
+  (
+    'Flower Lotting'
+    ,'trc-flower-lotting'
+    ,(select id from app.application where key = 'trc-flower-lotting')
+  )
+  on conflict(key) 
+  do nothing
+  ;
+
+  insert into app.license(
+    app_tenant_id
+    ,license_type_id
+    ,name
+    ,assigned_to_app_user_id
+  )
+  select
+    au.app_tenant_id
+    ,(select id from app.license_type where key = 'trc-flower-lotting')
+    ,au.username || ' - ' || (select name from app.license_type where key = 'trc-flower-lotting')
+    ,au.id
+  from auth.app_user au
+  where au.permission_key in ('SuperAdmin', 'Admin', 'User')
+  on conflict (assigned_to_app_user_id, license_type_id)
+  do nothing
+  ;
+
+--------------------------------------------------   flower processing
+  insert into app.application(
+    name 
+    ,key
+  ) 
+  values (
+    'Flower Processing'
+    ,'trc-flower-processing'
+  )
+  on conflict(key) 
+  do nothing
+  ;
+
+  insert into app.license_type(
+    name
+    ,key
+    ,application_id
+  )
+  values
+  (
+    'Flower Processing'
+    ,'trc-flower-processing'
+    ,(select id from app.application where key = 'trc-flower-processing')
+  )
+  on conflict(key) 
+  do nothing
+  ;
+
+  insert into app.license(
+    app_tenant_id
+    ,license_type_id
+    ,name
+    ,assigned_to_app_user_id
+  )
+  select
+    au.app_tenant_id
+    ,(select id from app.license_type where key = 'trc-flower-processing')
+    ,au.username || ' - ' || (select name from app.license_type where key = 'trc-flower-processing')
+    ,au.id
+  from auth.app_user au
+  where au.permission_key in ('SuperAdmin', 'Admin', 'User')
+  on conflict (assigned_to_app_user_id, license_type_id)
+  do nothing
+  ;
+
+--------------------------------------------------   product processing
+  insert into app.application(
+    name 
+    ,key
+  ) 
+  values (
+    'Product Packaging'
+    ,'trc-product-processing'
+  )
+  on conflict(key) 
+  do nothing
+  ;
+
+  insert into app.license_type(
+    name
+    ,key
+    ,application_id
+  )
+  values
+  (
+    'Product Packaging'
+    ,'trc-product-processing'
+    ,(select id from app.application where key = 'trc-product-processing')
+  )
+  on conflict(key) 
+  do nothing
+  ;
+
+  insert into app.license(
+    app_tenant_id
+    ,license_type_id
+    ,name
+    ,assigned_to_app_user_id
+  )
+  select
+    au.app_tenant_id
+    ,(select id from app.license_type where key = 'trc-product-processing')
+    ,au.username || ' - ' || (select name from app.license_type where key = 'trc-product-processing')
+    ,au.id
+  from auth.app_user au
+  where au.permission_key in ('SuperAdmin', 'Admin', 'User')
+  on conflict (assigned_to_app_user_id, license_type_id)
+  do nothing
+  ;
+
+--------------------------------------------------   product packaging
+  insert into app.application(
+    name 
+    ,key
+  ) 
+  values (
+    'Product Processing'
+    ,'trc-product-packaging'
+  )
+  on conflict(key) 
+  do nothing
+  ;
+
+  insert into app.license_type(
+    name
+    ,key
+    ,application_id
+  )
+  values
+  (
+    'Product Processing'
+    ,'trc-product-packaging'
+    ,(select id from app.application where key = 'trc-product-packaging')
+  )
+  on conflict(key) 
+  do nothing
+  ;
+
+  insert into app.license(
+    app_tenant_id
+    ,license_type_id
+    ,name
+    ,assigned_to_app_user_id
+  )
+  select
+    au.app_tenant_id
+    ,(select id from app.license_type where key = 'trc-product-packaging')
+    ,au.username || ' - ' || (select name from app.license_type where key = 'trc-product-packaging')
+    ,au.id
+  from auth.app_user au
+  where au.permission_key in ('SuperAdmin', 'Admin', 'User')
+  on conflict (assigned_to_app_user_id, license_type_id)
+  do nothing
+  ;
+
 COMMIT;
 

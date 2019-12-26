@@ -21,9 +21,19 @@ import ProjectDetail from './views/Prj/ProjectDetailView'
 
 import InventoryManager from '@/apps/traceability/inventory/InventoryManager'
 import TransferManager from '@/apps/traceability/transfers/TransferManager'
+import ManifestDetail from '@/apps/traceability/transfers/ManifestDetail'
 import ReceivingManager from '@/apps/traceability/receiving/ReceivingManager'
 import ReturnsManager from '@/apps/traceability/returns/ReturnsManager'
 import QaManager from '@/apps/traceability/qa/QaManager'
+import Planting from '@/apps/traceability/grow/Planting'
+import Cloning from '@/apps/traceability/grow/Cloning'
+import Growing from '@/apps/traceability/grow/Growing'
+import Harvesting from '@/apps/traceability/grow/Harvesting'
+import Curing from '@/apps/traceability/grow/Curing'
+import FlowerLotting from '@/apps/traceability/grow/FlowerLotting'
+import FlowerProcessing from '@/apps/traceability/grow/FlowerProcessing'
+import ProductProcessing from '@/apps/traceability/grow/ProductProcessing'
+import ProductPackaging from '@/apps/traceability/grow/ProductPackaging'
 
 Vue.use(Router)
 
@@ -106,6 +116,12 @@ export default new Router({
       component: TransferManager
     },
     {
+      path: '/trc-manifest-detail/:id',
+      name: 'trc-manifest-detail',
+      component: ManifestDetail,
+      props: true
+    },
+    {
       path: '/trc-rec',
       name: 'trc-rec',
       component: ReceivingManager
@@ -119,6 +135,51 @@ export default new Router({
       path: '/trc-qa',
       name: 'trc-qa',
       component: QaManager
+    },
+    {
+      path: '/trc-planting',
+      name: 'trc-planting',
+      component: Planting
+    },
+    {
+      path: '/trc-cloning',
+      name: 'trc-cloning',
+      component: Cloning
+    },
+    {
+      path: '/trc-growing',
+      name: 'trc-growing',
+      component: Growing
+    },
+    {
+      path: '/trc-harvesting',
+      name: 'trc-harvesting',
+      component: Harvesting
+    },
+    {
+      path: '/trc-curing',
+      name: 'trc-curing',
+      component: Curing
+    },
+    {
+      path: '/trc-flower-lotting',
+      name: 'trc-flower-lotting',
+      component: FlowerLotting
+    },
+    {
+      path: '/trc-flower-processing',
+      name: 'trc-flower-processing',
+      component: FlowerProcessing
+    },
+    {
+      path: '/trc-product-processing',
+      name: 'trc-product-processing',
+      component: ProductProcessing
+    },
+    {
+      path: '/trc-product-packaging',
+      name: 'trc-product-packaging',
+      component: ProductPackaging
     },
     {
       path: '/about',

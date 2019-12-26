@@ -5,43 +5,28 @@
       :items="mappedInventoryLots"
       class="elevation-1"
       dense
-      :single-expand="singleExpand"
-      :expanded.sync="expanded"
       item-key="id"
-      show-expand
       hide-default-footer
       :items-per-page="100"
       @click:row="inventoryLotSelected"
       :sort-by="'updatedAt'"
       :sort-desc="true"
-      :show-select="showSelect"
-      v-model="selectedInventoryLots"
+      show-select
     >
-      <template slot="expanded-item" slot-scope="props">
-        <td :colspan="headers.length + 1">
-          <h3>Lot History</h3>
-          <v-card>
-            <v-data-table
-              :headers="historyHeaders"
-              :items="props.item.histInventoryLots.nodes"
-              dense
-              hide-default-footer
-              :items-per-page="100"
-              :sort-by="'updatedAt'"
-              :sort-desc="true"
-            >
-            </v-data-table>
-          </v-card>
-        </td>
+      <template v-slot:item.sourcedQuantity="{item}">
+        <v-text-field
+          v-model="itemSourcedQuantities[item.id]"
+          label="Sourced Quantity"
+        >
+        </v-text-field>
       </template>
-
     </v-data-table>
   </v-container>
 </template>
 
 <script>
 export default {
-  name: "InventoryLotCollection",
+  name: "InventoryConversionSourceCollection",
   components: {
   },
   props: {
@@ -57,12 +42,17 @@ export default {
       type: Boolean,
       default: false
     },
-    onSelectedInventoryLots: {
+    onItemSourcedQuantitiesChanged: {
       type: Function,
-      required: false
+      required: true
     }
   },
   methods: {
+    captureItemSourcedQuantity (item) {
+      console.log(item)
+      const ref = this.$refs[item.id]
+      console.log('ref', ref)
+    },
     inventoryLotSelected (inventoryLot) {
       if (this.onSelectInventoryLot) this.onSelectInventoryLot(inventoryLot)
     },
@@ -94,8 +84,24 @@ export default {
     },
 },
   watch: {
-    selectedInventoryLots () {
-      if (this.onSelectedInventoryLots) this.onSelectedInventoryLots(this.selectedInventoryLots)
+    inventoryLots: {
+      deep: true,
+      handler () {
+        this.itemSourcedQuantities = this.inventoryLots.reduce(
+          (sq, il) => {
+            return {
+              ...sq,
+              [il.id]: this.itemSourcedQuantities[il.id] || il.quantity
+            }
+          }, {}
+        )
+      }
+    },
+    itemSourcedQuantities: {
+      deep: true,
+      handler () {
+        this.onItemSourcedQuantitiesChanged(this.itemSourcedQuantities)
+      }
     }
   },
   computed: {
@@ -111,31 +117,22 @@ export default {
   },
   data () {
     return {
-      selectedInventoryLots: [],
       expanded: [],
       recentExpanded: [],
       singleExpand: false,
+      itemSourcedQuantities: {},
       headers: [
         {
-          text: 'Updated At',
-          value: 'updatedAtDisplay'
+          text: 'sourced quantity',
+          value: 'sourcedQuantity'
+        },
+        {
+          text: 'available quantity',
+          value: 'quantity'
         },
         {
           text: 'ULID',
           value: 'id'
-        },
-        {
-          text: 'Lot Type',
-          value: 'lotType'
-
-        },
-        // {
-        //   text: 'Identifier',
-        //   value: 'licenseeIdentifier'
-        // },
-        {
-          text: 'status',
-          value: 'reportingStatus'
         },
         {
           text: 'inventory type',
@@ -145,59 +142,18 @@ export default {
           text: 'strain',
           value: 'strainName'
         },
-        {
-          text: 'description',
-          value: 'descriptionDisplay'
-        },
-        {
-          text: 'area',
-          value: 'areaIdentifier'
-        },
-        {
-          text: 'quantity',
-          value: 'quantity'
-        }
-      ],
-      historyHeaders: [
-        {
-          text: 'Updated At',
-          value: 'updatedAtDisplay'
-        },
-        // {
-        //   text: 'ULID',
-        //   value: 'inventoryLotId'
-        // },
-        // {
-        //   text: 'Identifier',
-        //   value: 'licenseeIdentifier'
-        // },
-        {
-          text: 'status',
-          value: 'reportingStatus'
-        },
-        // {
-        //   text: 'inventory type',
-        //   value: 'inventoryType'
-        // },
-        {
-          text: 'strain',
-          value: 'strainName'
-        },
-        {
-          text: 'description',
-          value: 'descriptionDisplay'
-        },
-        {
-          text: 'area',
-          value: 'areaIdentifier'
-        },
-        {
-          text: 'quantity',
-          value: 'quantity'
-        }
       ]
-
     }
-  }
+  },
+  // mounted () {
+  //   this.itemSourcedQuantities = this.inventoryLots.reduce(
+  //     (sq, il) => {
+  //       return {
+  //         ...sq,
+  //         [il.id]: il.quantity
+  //       }
+  //     }, {}
+  //   )
+  // }
 }
 </script>

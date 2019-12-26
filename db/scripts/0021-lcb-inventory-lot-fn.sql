@@ -14,6 +14,8 @@ RETURNS setof lcb.inventory_lot
     _current_app_user auth.app_user;
     _lcb_license_holder_id text;
     _inventory_lot lcb.inventory_lot;
+    _lcb_inventory_type lcb_ref.inventory_type;
+    _lot_count integer;
   BEGIN
     _current_app_user := auth_fn.current_app_user();
 
@@ -25,27 +27,76 @@ RETURNS setof lcb.inventory_lot
 
     -- raise exception '%, %', _current_app_user.app_tenant_id, _lcb_license_holder_id;
 
-    RETURN QUERY INSERT INTO lcb.inventory_lot(
-      updated_by_app_user_id,
-      app_tenant_id,
-      lcb_license_holder_id,
-      id_origin,
-      reporting_status,
-      inventory_type,
-      lot_type
-    )
-    SELECT
-      _current_app_user.id,
-      _current_app_user.app_tenant_id,
-      _lcb_license_holder_id,
-      'WSLCB',
-      'PROVISIONED',
-      _inventory_type,
-      'INVENTORY'
-    FROM
-      generate_series(1, _number_requested)
-    RETURNING *
+    select *
+    into _lcb_inventory_type
+    from lcb_ref.inventory_type
+    where id = _inventory_type
     ;
+
+    if _lcb_inventory_type.id is null then
+      raise exception 'illegal operation - batch cancelled:  no inventory type: %', _inventory_type;
+    end if;
+
+    if _lcb_inventory_type.is_single_lotted = false then
+      RETURN QUERY INSERT INTO lcb.inventory_lot(
+        updated_by_app_user_id,
+        app_tenant_id,
+        lcb_license_holder_id,
+        id_origin,
+        reporting_status,
+        inventory_type,
+        lot_type
+      )
+      SELECT
+        _current_app_user.id,
+        _current_app_user.app_tenant_id,
+        _lcb_license_holder_id,
+        'WSLCB',
+        'PROVISIONED',
+        _inventory_type,
+        'INVENTORY'
+      FROM
+        generate_series(1, _number_requested)
+      RETURNING *
+      ;
+    else
+      _lot_count := 0;
+
+      loop
+        if _lot_count = _number_requested then 
+          exit; 
+        end if;
+
+        INSERT INTO lcb.inventory_lot(
+          updated_by_app_user_id,
+          app_tenant_id,
+          lcb_license_holder_id,
+          id_origin,
+          reporting_status,
+          inventory_type,
+          lot_type,
+          quantity
+        )
+        SELECT
+          _current_app_user.id,
+          _current_app_user.app_tenant_id,
+          _lcb_license_holder_id,
+          'WSLCB',
+          'PROVISIONED',
+          _inventory_type,
+          'INVENTORY',
+          1
+        RETURNING *
+        INTO _inventory_lot
+        ;
+        _lot_count := _lot_count + 1;
+
+        RETURN next _inventory_lot;
+      end loop;
+
+      RETURN;
+    end if;
+
   end;
   $$;
 ALTER FUNCTION lcb_fn.provision_inventory_lot_ids(text,integer) OWNER TO app;
@@ -71,6 +122,7 @@ RETURNS setof lcb.inventory_lot
     _inventory_lot_input lcb_fn.report_inventory_lot_input;
     _inventory_lot lcb.inventory_lot;
     _inventory_lot_id text;
+    _lcb_inventory_type lcb_ref.inventory_type;
   BEGIN
     _current_app_user := auth_fn.current_app_user();
 
@@ -105,6 +157,20 @@ RETURNS setof lcb.inventory_lot
       where id = _inventory_lot_id;
 
       if _inventory_lot.id is null then
+        select *
+        into _lcb_inventory_type
+        from lcb_ref.inventory_type
+        where id = _inventory_lot_input.inventory_type::text
+        ;
+
+        if _lcb_inventory_type.id is null then
+          raise exception 'illegal operation - batch cancelled:  no inventory type: %', _inventory_lot_input.inventory_type;
+        end if;
+
+        if _lcb_inventory_type.is_single_lotted AND _inventory_lot_input.quantity != 1 then
+          raise exception 'illegal operation - batch cancelled:  single-lotted inventory type lots must have quantity of 1: %', _inventory_lot_input.inventory_type;
+        end if;
+
         insert into lcb.inventory_lot(
           id,
           updated_by_app_user_id,
@@ -128,7 +194,7 @@ RETURNS setof lcb.inventory_lot
           _lcb_license_holder_id,
           case when _inventory_lot_input.id is null then 'WSLCB' else 'LICENSEE' end,
           case when _inventory_lot_input.quantity > 0 then 'ACTIVE' else 'DEPLETED' end,
-          _inventory_lot_input.inventory_type::text,
+          _lcb_inventory_type.id,
           'INVENTORY',
           _inventory_lot_input.description::text,
           _inventory_lot_input.quantity::numeric(10,2),

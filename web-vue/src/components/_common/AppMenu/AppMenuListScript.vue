@@ -31,30 +31,6 @@ export default {
     return {
       appList: [
         {
-          key: 'tenant-manager',
-          name: 'Tenant Manager',
-          routeName: 'tenant-manager',
-          iconKey: 'location_city'
-        },
-        {
-          key: 'license-manager',
-          name: 'License Manager',
-          routeName: 'license-manager',
-          iconKey: 'domain'
-        },
-        {
-          key: 'address-book',
-          name: 'Address Book',
-          routeName: 'address-book',
-          iconKey: 'people'
-        },
-        {
-          key: 'trc-inv',
-          name: 'Inventory',
-          routeName: 'trc-inv',
-          iconKey: 'apartment'
-        },
-        {
           key: 'trc-xfer',
           name: 'Transfers',
           routeName: 'trc-xfer',
@@ -77,7 +53,85 @@ export default {
           name: 'QA Manager',
           routeName: 'trc-qa',
           iconKey: 'check'
-        }
+        },
+        {
+          key: 'trc-planting',
+          name: 'Planting',
+          routeName: 'trc-planting',
+          iconKey: 'adjust'
+        },
+        {
+          key: 'trc-cloning',
+          name: 'Cloning',
+          routeName: 'trc-cloning',
+          iconKey: 'people'
+        },
+        {
+          key: 'trc-growing',
+          name: 'Growing',
+          routeName: 'trc-growing',
+          iconKey: 'add_alarm'
+        },
+        {
+          key: 'trc-harvesting',
+          name: 'Harvesting',
+          routeName: 'trc-harvesting',
+          iconKey: 'graphic_eq'
+        },
+        {
+          key: 'trc-curing',
+          name: 'Curing',
+          routeName: 'trc-curing',
+          iconKey: 'access_time'
+        },
+        {
+          key: 'trc-flower-lotting',
+          name: 'Flower Lotting',
+          routeName: 'trc-flower-lotting',
+          iconKey: 'storage'
+        },
+        {
+          key: 'trc-flower-processing',
+          name: 'Flower Processing',
+          routeName: 'trc-flower-processing',
+          iconKey: 'flip_camera_android'
+        },
+        {
+          key: 'trc-product-processing',
+          name: 'Product Processing',
+          routeName: 'trc-product-processing',
+          iconKey: 'control_camera'
+        },
+        {
+          key: 'trc-product-packaging',
+          name: 'Product Packaging',
+          routeName: 'trc-product-packaging',
+          iconKey: 'dashboard'
+        },
+        {
+          key: 'trc-inv',
+          name: 'Inventory Admin',
+          routeName: 'trc-inv',
+          iconKey: 'apartment'
+        },
+        {
+          key: 'address-book',
+          name: 'Address Book',
+          routeName: 'address-book',
+          iconKey: 'people'
+        },
+        {
+          key: 'license-manager',
+          name: 'License Manager',
+          routeName: 'license-manager',
+          iconKey: 'domain'
+        },
+        {
+          key: 'tenant-manager',
+          name: 'Tenant Manager',
+          routeName: 'tenant-manager',
+          iconKey: 'location_city'
+        },
       ]
     }
   },

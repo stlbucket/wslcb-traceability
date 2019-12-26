@@ -10,26 +10,28 @@ CREATE TABLE lcb_ref.inventory_type (
     name text NOT NULL UNIQUE,
     description text NULL,
     units text NOT NULL,
+    is_single_lotted boolean NOT NULL,
     CONSTRAINT ck_inventory_type_id CHECK ((id <> ''::text))
 );
 ALTER TABLE lcb_ref.inventory_type OWNER TO app;
 ALTER TABLE ONLY lcb_ref.inventory_type
     ADD CONSTRAINT pk_inventory_type PRIMARY KEY (id);
 
-INSERT INTO lcb_ref.inventory_type(id, name, units)
+INSERT INTO lcb_ref.inventory_type(id, name, units, is_single_lotted)
 values
-  ('WW', 'Waste', 'g'),
-  ('WF', 'Wet Flower', 'g'),
-  ('BF', 'Bulk Flower', 'g'),
-  ('LF', 'Lot Flower', 'g'),
-  ('UM', 'Usable Marijuana', 'g'),
-  ('PM', 'Packaged Marijuana', 'g'),
-  ('PR', 'Pre-roll Joints', 'ct'),
-  ('CL', 'Clones', 'ct'),
-  ('SD', 'Seeds', 'ct'),
-  ('PL', 'Plants', 'ct'),
-  ('IS', 'Infused Solid Edible', 'ct'),
-  ('IL', 'Infused Liquid Edible', 'ct')
+  ('SD', 'Seeds', 'ct', false),
+  ('CL', 'Clones', 'ct', true),
+  ('SL', 'Seedlings', 'ct', true),
+  ('PL', 'Plants', 'ct', true),
+  ('WF', 'Wet Flower', 'g', false),
+  ('BF', 'Bulk Flower', 'g', false),
+  ('LF', 'Lot Flower', 'g', false),
+  ('UM', 'Usable Marijuana', 'g', false),
+  ('PM', 'Packaged Marijuana', 'g', false),
+  ('PR', 'Pre-roll Joints', 'ct', false),
+  ('IS', 'Infused Solid Edibles', 'ct', false),
+  ('IL', 'Infused Liquid Edibles', 'ct', false),
+  ('WW', 'Waste', 'g', false)
 ;
 
 
@@ -78,7 +80,8 @@ values
   ('INVALIDATED'),
   ('ACTIVE'),
   ('DESTROYED'),
-  ('DEPLETED')
+  ('DEPLETED'),
+  ('TRANSFERRED')
 ;
 
 CREATE TABLE lcb_ref.manifest_status (

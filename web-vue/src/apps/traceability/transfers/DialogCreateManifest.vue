@@ -57,12 +57,10 @@
     },
     computed: {
       mappedLicenseHolders () {
-        console.log('user', this.$store.state.currentAppUser)
         return this.allLcbLicenseHolders
 
           .map(
             lh => {
-              console.log(lh)
               return {
                 text: `${lh.lcbLicense.code} - ${lh.organization.name}`,
                 value: lh.id
