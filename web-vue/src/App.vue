@@ -26,7 +26,7 @@
         :clipped="true"
         app
         right
-        :width="hover ? 500 : 200"
+        :width="hover ? 500 : 300"
         disable-route-watcher
       >
         <app-menu></app-menu>
@@ -51,7 +51,7 @@
 </template>
 
 <script>
-import AppMenu from '@/components/_common/AppMenu/AppMenuListVuetify'
+import AppMenu from '@/components/_common/AppMenu/AppMenuList'
 import CurrentAppUserContact from '@/components/_common/CurrentAppUserContact/CurrentAppUserContactVuetify'
 import LoginManager from '@/components/_common/LoginManager/LoginManagerVuetify'
 import introspection from '@/graphql/query/introspection.graphql'

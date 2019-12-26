@@ -90,7 +90,7 @@
           class="mb-12"
           color="grey lighten-1"
         >
-          <h2>jessica needs a pounding</h2>
+          <h2>tacos</h2>
         </v-card>
 
         <v-btn
@@ -130,7 +130,7 @@
           class="mb-12"
           color="grey lighten-1"
         >
-          <h2>as does molly</h2>
+          <h2>pizza</h2>
           <h2>New Seedlings</h2>
           <inventory-conversion-source-collection
             :inventoryLots="newSeedlings"
