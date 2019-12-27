@@ -55,13 +55,13 @@ export default {
       })
     },
     getCurrentAppUserContact () {
-      this.$apollo.query({
-        query: currentAppUser,
-        fetchPolicy: 'network-only',
+      this.$apollo.mutate({
+        mutation: currentAppUser,
+        fetchPolicy: 'no-cache',
         variables: {}
       })
       .then(result => {
-        this.$store.commit('login', { currentAppUser: result.data.allAppUsers.nodes[0] })
+        this.$store.commit('login', { currentAppUser: result.data.currentAppUser.appUser })
         this.$router.push({name: 'home'})
       })
       .catch(error => {

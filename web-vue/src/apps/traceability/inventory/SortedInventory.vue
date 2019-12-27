@@ -37,6 +37,21 @@
       </v-tab-item>
       
       <v-tab
+        key="depleted"
+      >
+        Depleted
+      </v-tab>
+      <v-tab-item
+        key="depleted"
+      >
+        <inventory-lot-collection
+          :inventoryLots="depletedLots"
+          :onSelectInventoryLot="onSelectInventoryLot"
+        >
+        </inventory-lot-collection>
+      </v-tab-item>
+      
+      <v-tab
         key="destroyed"
       >
         Destroyed
@@ -109,6 +124,10 @@ export default {
     provisionedLots() {
       return this.inventoryLots
         .filter(il => il.reportingStatus === 'PROVISIONED')
+    },
+    depletedLots () {
+      return this.inventoryLots
+        .filter(il => il.reportingStatus === 'DEPLETED')
     },
     destroyedLots() {
       return this.inventoryLots

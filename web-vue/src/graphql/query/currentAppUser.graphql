@@ -1,6 +1,6 @@
-query CurrentAppUserContact{
-  allAppUsers {
-    nodes {
+mutation CurrentAppUser {
+  currentAppUser(input: {}) {
+    appUser {
       id
       username
       contactAppUser: contactAppUserByAppUserId {

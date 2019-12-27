@@ -45,7 +45,7 @@
         <v-col cols="2">
           <v-text-field
             label="Area"
-            v-model="areaIdentifier"
+            v-model="areaName"
           ></v-text-field>
         </v-col>
       </v-row>
@@ -125,7 +125,7 @@ export default {
         licenseeIdentifier: this.licenseeIdentifier,
         strainName: this.strainName,
         description: this.description,
-        areaIdentifier: this.areaIdentifier,
+        areaName: this.areaName,
         quantity: this.quantity,
       }
 
@@ -177,7 +177,7 @@ export default {
       this.licenseeIdentifier = il ? il.licenseeIdentifier : null
       this.strainName = il ? il.strainName : this.strainName
       this.description = il ? il.description : this.description
-      this.areaIdentifier = il ? il.areaIdentifier : this.areaIdentifier
+      this.areaName = il ? il.areaName : this.areaName
       this.quantity = il ? il.quantity : null
 
       this.nextUlid = null
@@ -201,7 +201,7 @@ export default {
           this.inventoryLot.licenseeIdentifier !== this.licenseeIdentifier
           || this.inventoryLot.strainName !== this.strainName
           || this.inventoryLot.description !== this.description
-          || this.inventoryLot.areaIdentifier !== this.areaIdentifier
+          || this.inventoryLot.areaName !== this.areaName
           || this.inventoryLot.quantity !== this.quantity
         ) {
           return true
@@ -315,7 +315,7 @@ export default {
       licenseeIdentifier: null,
       strainName: null,
       description: null,
-      areaIdentifier: null,
+      areaName: null,
       quantity: null,
       inventoryLots: [],
       inventoryTypes: [],

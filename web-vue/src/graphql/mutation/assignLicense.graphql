@@ -20,7 +20,7 @@ mutation ConvertInventory(
       }
       description
       quantity
-      areaIdentifier
+      areaName
       licenseeIdentifier
       histInventoryLots: histInventoryLotsByInventoryLotId {
         nodes {
@@ -33,7 +33,7 @@ mutation ConvertInventory(
           inventoryType
           description
           quantity
-          areaIdentifier
+          areaName
           licenseeIdentifier
         }
       }

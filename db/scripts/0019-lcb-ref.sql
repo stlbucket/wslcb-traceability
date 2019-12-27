@@ -12,27 +12,28 @@ CREATE TABLE lcb_ref.inventory_type (
     units text NOT NULL,
     is_single_lotted boolean NOT NULL,
     is_strain_mixable boolean NOT NULL,
+    is_strain_optional boolean NOT NULL,
     CONSTRAINT ck_inventory_type_id CHECK ((id <> ''::text))
 );
 ALTER TABLE lcb_ref.inventory_type OWNER TO app;
 ALTER TABLE ONLY lcb_ref.inventory_type
     ADD CONSTRAINT pk_inventory_type PRIMARY KEY (id);
 
-INSERT INTO lcb_ref.inventory_type(id, name, units, is_single_lotted, is_strain_mixable)
+INSERT INTO lcb_ref.inventory_type(id, name, units, is_single_lotted, is_strain_mixable, is_strain_optional)
 values
-  ('SD', 'Seeds', 'ct', false, false),
-  ('CL', 'Clones', 'ct', true, false),
-  ('SL', 'Seedlings', 'ct', true, false),
-  ('PL', 'Plants', 'ct', true, false),
-  ('WF', 'Wet Flower', 'g', false, false),
-  ('BF', 'Bulk Flower', 'g', false, false),
-  ('LF', 'Lot Flower', 'g', false, false),
-  ('UM', 'Usable Marijuana', 'g', false, true),
-  ('PM', 'Packaged Marijuana', 'g', false, true),
-  ('PR', 'Pre-roll Joints', 'ct', false, true),
-  ('IS', 'Infused Solid Edibles', 'ct', false, true),
-  ('IL', 'Infused Liquid Edibles', 'ct', false, true),
-  ('WW', 'Waste', 'g', false, true)
+  ('SD', 'Seeds', 'ct', false, false, false),
+  ('CL', 'Clones', 'ct', true, false, false),
+  ('SL', 'Seedlings', 'ct', true, false, false),
+  ('PL', 'Plants', 'ct', true, false, false),
+  ('WF', 'Wet Flower', 'g', false, false, false),
+  ('BF', 'Bulk Flower', 'g', false, false, false),
+  ('LF', 'Lot Flower', 'g', false, false, false),
+  ('UM', 'Usable Marijuana', 'g', false, true, false),
+  ('PM', 'Packaged Marijuana', 'g', false, true, false),
+  ('PR', 'Pre-roll Joints', 'ct', false, true, false),
+  ('IS', 'Infused Solid Edibles', 'ct', false, true, true),
+  ('IL', 'Infused Liquid Edibles', 'ct', false, true, true),
+  ('WW', 'Waste', 'g', false, true, true)
 ;
 
 
@@ -67,16 +68,17 @@ insert into lcb_ref.conversion_rule (
 select
   id,
   name,
-  '{"WW"}'
+  case when id not in ('SD', 'WW') then '{"WW"}' else '{}'::text[] end
 from lcb_ref.inventory_type
 ;
 
 insert into lcb_ref.conversion_rule_source(
-  to_inventory_type_id,
-  inventory_type_id
+  inventory_type_id,
+  to_inventory_type_id
 )
 values
-  ('SD','CL'),
+  ('SD','SL'),
+  ('SL','PL'),
   ('CL','PL'),
   ('PL','WF'),
   ('WF','BF'),

@@ -12,7 +12,7 @@ create type lcb_fn.convert_inventory_result_input as (
   inventory_type text,
   description text,
   quantity numeric(10,2),
-  area_identifier text
+  area_name text
 );
 
 CREATE OR REPLACE FUNCTION lcb_fn.convert_inventory(
@@ -29,6 +29,7 @@ RETURNS setof lcb.inventory_lot
     _source_input lcb_fn.convert_inventory_source_input;
     _result_input lcb_fn.convert_inventory_result_input;
     _inventory_lot_id text;
+    _to_inventory_type lcb_ref.inventory_type;
     _result_lot lcb.inventory_lot;
     _parent_lot lcb.inventory_lot;
     _total_sourced_quantity numeric(10,2);
@@ -39,8 +40,9 @@ RETURNS setof lcb.inventory_lot
     _result_inventory_type text;
     _conversion_rule lcb_ref.conversion_rule;
     _conversion_source_allowed boolean;
-    _strain lcb.strain;
-    _area lcb.area;
+    _result_strain_id text;
+    _result_area_id text;
+    _lot_count integer;
   BEGIN
     _current_app_user := auth_fn.current_app_user();
     _total_sourced_quantity := 0;
@@ -53,6 +55,16 @@ RETURNS setof lcb.inventory_lot
     ;
 
     if _conversion_rule.to_inventory_type_id is null then
+        raise exception 'illegal operation - batch cancelled:  no conversion rule for inventory type id: %', _to_inventory_type_id;
+    end if;
+
+    select *
+    into _to_inventory_type
+    from lcb_ref.inventory_type
+    where id = _to_inventory_type_id
+    ;
+
+    if _to_inventory_type.id is null then
         raise exception 'illegal operation - batch cancelled:  no inventory type for id: %', _to_inventory_type_id;
     end if;
 
@@ -75,6 +87,21 @@ RETURNS setof lcb.inventory_lot
 
       if _parent_lot.id is null then
         raise exception 'illegal operation - batch cancelled:  no inventory lot exists for parent lot id: %', _source_input.id;
+      end if;
+
+      _result_strain_id := coalesce(_result_strain_id, _parent_lot.strain_id);
+
+      if _result_strain_id != _parent_lot.strain_id then
+        if _to_inventory_type.is_strain_mixable = true then
+          insert into lcb.strain(app_tenant_id, lcb_license_holder_id, name)
+          values (_current_app_user.app_tenant_id, _lcb_license_holder_id, 'Mixed')
+          on conflict(lcb_license_holder_id, name)
+          do update set lcb_license_holder = _lcb_license_holder_id
+          returning id into _result_strain_id
+          ;
+        else
+          raise exception 'illegal operation - batch cancelled:  all source strains must be the same for inventory type: %', _to_inventory_type.id;
+        end if;
       end if;
 
       select (count(*) > 0)
@@ -104,14 +131,14 @@ RETURNS setof lcb.inventory_lot
       values (_current_app_user.app_tenant_id, _conversion.id, _parent_lot.id, _source_input.quantity);
 
       update lcb.inventory_lot set
-        quantity = (quantity - _source_input.quantity)
+        quantity = (quantity - _source_input.quantity),
+        reporting_status = case when (quantity - _source_input.quantity) > 0 then 'ACTIVE' else 'DEPLETED' end
       where id = _source_input.id
       returning * into _parent_lot;
 
       return next _parent_lot;
 
     end loop;
-
 
     foreach _result_input in ARRAY _new_lots_info
     loop
@@ -138,43 +165,110 @@ RETURNS setof lcb.inventory_lot
         raise exception 'illegal operation - batch cancelled:  licensee specified inventory lot id already exists: %', _result_input.id;
       end if;
 
-      insert into lcb.inventory_lot(
-        id,
-        updated_by_app_user_id,
-        licensee_identifier,
+      if _result_input.area_name is null or _result_input.area_name::text = '' then
+        raise exception 'illegal operation - batch cancelled:  all result lots must specify area name';
+      end if;
+
+      insert into lcb.area(
         app_tenant_id,
         lcb_license_holder_id,
-        id_origin,
-        reporting_status,
-        inventory_type,
-        lot_type,
-        description,
-        quantity,
-        strain_id,
-        area_id,
-        source_conversion_id
+        name
       )
-      SELECT
-        COALESCE(_result_input.id, util_fn.generate_ulid()),
-        _current_app_user.id,
-        _result_input.licensee_identifier,
+      values (
         _current_app_user.app_tenant_id,
         _lcb_license_holder_id,
-        case when _result_input.id is null then 'WSLCB' else 'LICENSEE' end,
-        'ACTIVE',
-        _result_input.inventory_type,
-        'INVENTORY',
-        _result_input.description::text,
-        _result_input.quantity,
-        _strain.id,
-        _area.id,
-        _conversion.id
-      RETURNING * INTO _result_lot;
+        _result_input.area_name::text
+      )
+      on conflict(lcb_license_holder_id, name)
+      do update set lcb_license_holder_id = _lcb_license_holder_id
+      returning id into _result_area_id
+      ;
 
-      _total_converted_quantity := _total_converted_quantity + _result_input.quantity;
+      if _to_inventory_type.is_single_lotted = false then
+        insert into lcb.inventory_lot(
+          id,
+          updated_by_app_user_id,
+          licensee_identifier,
+          app_tenant_id,
+          lcb_license_holder_id,
+          id_origin,
+          reporting_status,
+          inventory_type,
+          lot_type,
+          description,
+          quantity,
+          strain_id,
+          area_id,
+          source_conversion_id
+        )
+        SELECT
+          COALESCE(_result_input.id, util_fn.generate_ulid()),
+          _current_app_user.id,
+          _result_input.licensee_identifier,
+          _current_app_user.app_tenant_id,
+          _lcb_license_holder_id,
+          case when _result_input.id is null then 'WSLCB' else 'LICENSEE' end,
+          'ACTIVE',
+          _result_input.inventory_type,
+          'INVENTORY',
+          _result_input.description::text,
+          _result_input.quantity,
+          _result_strain_id,
+          _result_area_id,
+          _conversion.id
+        RETURNING * INTO _result_lot;
 
-      return next _result_lot;
+        _total_converted_quantity := _total_converted_quantity + _result_input.quantity;
 
+        return next _result_lot;
+      else
+        _lot_count := 0;
+
+        loop
+          if _lot_count = _result_input.quantity then 
+            exit; 
+          end if;
+
+          insert into lcb.inventory_lot(
+            id,
+            updated_by_app_user_id,
+            licensee_identifier,
+            app_tenant_id,
+            lcb_license_holder_id,
+            id_origin,
+            reporting_status,
+            inventory_type,
+            lot_type,
+            description,
+            quantity,
+            strain_id,
+            area_id,
+            source_conversion_id
+          )
+          SELECT
+            COALESCE(_result_input.id, util_fn.generate_ulid()),
+            _current_app_user.id,
+            _result_input.licensee_identifier,
+            _current_app_user.app_tenant_id,
+            _lcb_license_holder_id,
+            case when _result_input.id is null then 'WSLCB' else 'LICENSEE' end,
+            'ACTIVE',
+            _result_input.inventory_type,
+            'INVENTORY',
+            _result_input.description::text,
+            1,
+            _result_strain_id,
+            _result_area_id,
+            _conversion.id
+          RETURNING * INTO _result_lot;
+
+          _total_converted_quantity := _total_converted_quantity + _result_input.quantity;
+          _lot_count := _lot_count + 1;
+
+          return next _result_lot;
+        end loop;
+        RETURN;
+      end if;
     end loop;
 
     if _total_converted_quantity != _total_sourced_quantity then

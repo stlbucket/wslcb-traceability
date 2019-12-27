@@ -15,8 +15,14 @@ query allInventoryLots{
       description
       quantity
       licenseeIdentifier
-      strainId
-      areaId
+      strain: strainByStrainId {
+        id
+        name
+      }
+      area: areaByAreaId {
+        id
+        name
+      }
       histInventoryLots: histInventoryLotsByInventoryLotId {
         nodes {
           id

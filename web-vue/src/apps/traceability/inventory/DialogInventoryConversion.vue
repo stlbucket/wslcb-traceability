@@ -1,7 +1,7 @@
 
 <template>
     <div>
-      <v-dialog v-model="dialog" persistent width="600">
+      <v-dialog v-model="dialog" persistent width="800">
         <template v-slot:activator="{ on }">
           <v-btn
             small
@@ -10,6 +10,7 @@
             :disabled="btnDisabled"
             :hidden="hidden"
             class="text-none"
+            @click="showDialog"
           >
             Conversion
           </v-btn>
@@ -22,6 +23,11 @@
             :items="mappedInventoryTypes"
             label="Select Inventory Type"
           ></v-combobox>
+          <v-text-field
+            label="Area"
+            v-model="areaName"
+          >
+          </v-text-field>
           <v-row>
             <v-col cols="3">
               <v-text-field
@@ -78,11 +84,13 @@
         quantity: 0,
         ulid: null,
         licenseeIdentifier: null,
-        selectedInventoryType: null
+        selectedInventoryType: null,
+        areaName: null
       }
     },
     computed: {
       mappedInventoryTypes () {
+        console.log('config', this.conversionConfig)
         return this.conversionConfig.conversionRules
           .filter(
             cr => {
@@ -133,6 +141,9 @@
     watch: {
     },
     methods: {
+      showDialog () {
+        this.areaName = this.conversionConfig.parentLot.area.name
+      },
       conversion () {
         const sourcesInfo = [
           {
@@ -144,7 +155,8 @@
           {
             description: 'conversion result',
             quantity: this.quantity,
-            inventoryType: this.selectedInventoryType.value
+            inventoryType: this.selectedInventoryType.value,
+            areaName: this.areaName
           }
         ]
 
@@ -168,7 +180,6 @@
       generateUlid () {
         this.ulid = ulid()
       },
-
     }
   }
 </script>

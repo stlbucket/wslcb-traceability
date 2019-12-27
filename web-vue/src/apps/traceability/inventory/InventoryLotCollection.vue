@@ -75,6 +75,8 @@ export default {
         ...il,
         updatedAtDisplay: updatedAtDisplay,
         descriptionDisplay: descriptionDisplay,
+        strainName: il.strain ? il.strain.name : 'n/a',
+        areaName: il.area ? il.area.name : 'n/a',
         histInventoryLots: {
           nodes: il.histInventoryLots.nodes
           .map(
@@ -151,7 +153,7 @@ export default {
         },
         {
           text: 'area',
-          value: 'areaIdentifier'
+          value: 'areaName'
         },
         {
           text: 'quantity',
@@ -189,7 +191,7 @@ export default {
         },
         {
           text: 'area',
-          value: 'areaIdentifier'
+          value: 'areaName'
         },
         {
           text: 'quantity',
