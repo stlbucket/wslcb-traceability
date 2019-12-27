@@ -15,7 +15,8 @@ export default new Vuex.Store({
     recentInventoryLotChanges: [],
     userAppState: {
       tabStatus: []
-    }
+    },
+    inventoryTypes: []
   },
   mutations: {
     login (state, payload) {
@@ -56,6 +57,9 @@ export default new Vuex.Store({
           }
         ]
       }
+    },
+    setInventoryTypes (state, payload) {
+      state.inventoryTypes = payload.inventoryTypes
     }
   },
   actions: {

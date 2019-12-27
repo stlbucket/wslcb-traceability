@@ -286,7 +286,8 @@ export default {
       return {
         parentLot: this.inventoryLot,
         parentInventoryType: this.actualSelectedInventoryType,
-        quantityLabel: this.quantityLabel
+        quantityLabel: this.quantityLabel,
+        conversionRules: this.conversionRules
       }
     },
     actualSelectedInventoryType () {
@@ -318,6 +319,7 @@ export default {
       quantity: null,
       inventoryLots: [],
       inventoryTypes: [],
+      conversionRules: [],
       // recentChanges: [],
       selectedInventoryType: null,
       // inventoryLot: null,
@@ -335,6 +337,7 @@ export default {
       ,fetchPolicy: 'network-only'
       ,update (data) {
         this.inventoryTypes = (data.inventoryTypes || {nodes:[]}).nodes
+        this.conversionRules = (data.conversionRules || {nodes:[]}).nodes
       }
     }
   }

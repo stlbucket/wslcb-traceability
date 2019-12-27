@@ -1,42 +1,26 @@
 <template>
-  <v-container>
-    <h1>Growing</h1>
-    <inventory-lot-collection
-      :inventoryLots="inventoryLots"
-      :onSelectInventoryLot="onSelectInventoryLot"
-    >
-    </inventory-lot-collection>
-  </v-container>
+  <batch-conversion
+    :recipeDefinition="recipeDefinition"
+  >
+  </batch-conversion>
 </template>
 
 <script>
-const sourceTypes = ['PL','CL']
-import allInventoryLots from '@/graphql/query/allInventoryLots.graphql'
-import InventoryLotCollection from '../inventory/InventoryLotCollection'
+import BatchConversion from './BatchConversion'
 
 export default {
   name: 'Growing',
   components: {
-    InventoryLotCollection
+    BatchConversion
   },
   data () {
     return {
-      inventoryLots: []
+      recipeDefinition: {
+        name: 'Growing',
+        sourceTypes: ['CL', 'SL'],
+        targetType: 'PL'
+      },
     }
-  },
-  methods: {
-    onSelectInventoryLot (lot) {
-      console.log(lot)
-    }
-  },
-  apollo: {
-    getInventoryLots: {
-      query: allInventoryLots
-      ,fetchPolicy: 'network-only'
-      ,update (data) {
-        this.inventoryLots = (data.inventoryLots || {nodes:[]}).nodes.filter(il => sourceTypes.indexOf(il.inventoryType.id) !== -1)
-      }
-    },
   }
 }
 </script>

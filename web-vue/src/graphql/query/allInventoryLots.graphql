@@ -12,11 +12,11 @@ query allInventoryLots{
         description
         units
       }
-      strainName
       description
       quantity
-      areaIdentifier
       licenseeIdentifier
+      strainId
+      areaId
       histInventoryLots: histInventoryLotsByInventoryLotId {
         nodes {
           id
@@ -26,11 +26,11 @@ query allInventoryLots{
           updatedAt
           lotType
           inventoryType
-          strainName
           description
           quantity
-          areaIdentifier
           licenseeIdentifier
+          strainId
+          areaId
         }
       }
     }

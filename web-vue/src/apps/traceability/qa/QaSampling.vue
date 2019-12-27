@@ -1,10 +1,10 @@
 <template>
-  <h1>QA Manager</h1>
+  <h1>Qa Sampling</h1>
 </template>
 
 <script>
 export default {
-  name: 'QaManager',
+  name: 'QaSampling',
 }
 </script>
 

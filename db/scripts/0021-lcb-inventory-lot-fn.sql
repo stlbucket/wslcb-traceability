@@ -122,6 +122,7 @@ RETURNS setof lcb.inventory_lot
     _inventory_lot_input lcb_fn.report_inventory_lot_input;
     _inventory_lot lcb.inventory_lot;
     _inventory_lot_id text;
+    _inventory_type lcb_ref.inventory_type;
     _strain lcb.strain;
     _area lcb.area;
     _lcb_inventory_type lcb_ref.inventory_type;
@@ -158,6 +159,44 @@ RETURNS setof lcb.inventory_lot
       from lcb.inventory_lot
       where id = _inventory_lot_id;
 
+      if _inventory_lot_input.strain_name::text != '' then
+        insert into lcb.strain(
+          app_tenant_id,
+          lcb_license_holder_id,
+          name
+        )
+        values (
+          _current_app_user.app_tenant_id,
+          _lcb_license_holder_id,
+          _inventory_lot_input.strain_name::text
+        )
+        on conflict(lcb_license_holder_id, name)
+        do nothing
+        returning * into _strain
+        ;
+      else
+        _strain := (select null)::lcb.strain;
+      end if;
+
+      if _inventory_lot_input.area_identifier::text != '' then
+        insert into lcb.area(
+          app_tenant_id,
+          lcb_license_holder_id,
+          name
+        )
+        values (
+          _current_app_user.app_tenant_id,
+          _lcb_license_holder_id,
+          _inventory_lot_input.area_identifier::text
+        )
+        on conflict(lcb_license_holder_id, name)
+        do nothing
+        returning * into _area
+        ;
+      else
+        _area := (select null)::lcb.area;
+      end if;
+
       if _inventory_lot.id is null then
         select *
         into _lcb_inventory_type
@@ -173,11 +212,6 @@ RETURNS setof lcb.inventory_lot
           raise exception 'illegal operation - batch cancelled:  single-lotted inventory type lots must have quantity of 1: %', _inventory_lot_input.inventory_type;
         end if;
 
-        -- insert into lcb.strain(
-        --   app_tenant_id,
-
-        -- )
-
         insert into lcb.inventory_lot(
           id,
           updated_by_app_user_id,
@@ -190,8 +224,8 @@ RETURNS setof lcb.inventory_lot
           lot_type,
           description,
           quantity,
-          strain_name,
-          area_identifier
+          strain_id,
+          area_id
         )
         SELECT
           COALESCE(_inventory_lot_input.id, util_fn.generate_ulid()),
@@ -200,14 +234,15 @@ RETURNS setof lcb.inventory_lot
           _current_app_user.app_tenant_id,
           _lcb_license_holder_id,
           case when _inventory_lot_input.id is null then 'WSLCB' else 'LICENSEE' end,
-          case when _inventory_lot_input.quantity > 0 then 'ACTIVE' else 'DEPLETED' end,
+          case when _inventory_lot_input.quantity::numeric(10,2) > 0 then 'ACTIVE' else 'DEPLETED' end,
           _lcb_inventory_type.id,
           'INVENTORY',
           _inventory_lot_input.description::text,
           _inventory_lot_input.quantity::numeric(10,2),
-          _inventory_lot_input.strain_name::text,
-          _inventory_lot_input.area_identifier::text
+          _strain.id,
+          _area.id
         RETURNING * INTO _inventory_lot;
+
       else
         if _inventory_lot.reporting_status != 'ACTIVE' and _inventory_lot.reporting_status != 'PROVISIONED' then
           raise exception 'illegal operation - batch cancelled:  can only report on ACTIVE or PROVISIONED inventory lots: %', _inventory_lot.id;
@@ -225,12 +260,12 @@ RETURNS setof lcb.inventory_lot
         then
           update lcb.inventory_lot set
             updated_by_app_user_id = _current_app_user.id,
-            licensee_identifier = _inventory_lot_input.licensee_identifier::text,
-            description = _inventory_lot_input.description::text,
-            quantity = _inventory_lot_input.quantity::numeric(10,2),
-            strain_name = _inventory_lot_input.strain_name::text,
-            area_identifier = _inventory_lot_input.area_identifier::text,
-            reporting_status = case when _inventory_lot_input.quantity::numeric(10,2) > 0 then 'ACTIVE' else 'DEPLETED' end
+            licensee_identifier = coalesce(_inventory_lot_input.licensee_identifier::text, licensee_identifier),
+            description = coalesce(_inventory_lot_input.description::text, description),
+            quantity = coalesce(_inventory_lot_input.quantity::numeric(10,2), quantity),
+            strain_id = coalesce(_strain.id, strain_id),
+            area_id = coalesce(_area.id, area_id),
+            reporting_status = case when coalesce(_inventory_lot_input.quantity::numeric(10,2), quantity)::numeric(10,2) > 0 then 'ACTIVE' else 'DEPLETED' end
           where id = _inventory_lot_id
           returning * into _inventory_lot
           ;

@@ -72,7 +72,6 @@ CREATE TABLE lcb.strain (
     id text DEFAULT util_fn.generate_ulid() NOT NULL,
     app_tenant_id text NOT NULL,
     created_at timestamptz DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_at timestamptz NOT NULL,
     lcb_license_holder_id text not null,
     name text
 );
@@ -84,13 +83,12 @@ ALTER TABLE ONLY lcb.strain
 ALTER TABLE ONLY lcb.strain
     ADD CONSTRAINT fk_strain_lcb_license_holder FOREIGN KEY (lcb_license_holder_id) REFERENCES lcb.lcb_license_holder (id);
 ALTER TABLE ONLY lcb.strain
-    ADD CONSTRAINT uq_strain_lcb_license_holder UNIQUE (lcb_license_holder_id, name);
+    ADD CONSTRAINT uq_strain_lcb_license_holder UNIQUE (lcb_license_holder_id, name);    
 
 CREATE TABLE lcb.area (
     id text DEFAULT util_fn.generate_ulid() NOT NULL,
     app_tenant_id text NOT NULL,
     created_at timestamptz DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_at timestamptz NOT NULL,
     lcb_license_holder_id text not null,
     name text
 );
@@ -121,8 +119,6 @@ CREATE TABLE lcb.inventory_lot (
     lot_type text not null,
     description text,
     quantity numeric(10,2),
-    strain_name text,
-    area_identifier text,
     strain_id text,
     area_id text,
     CONSTRAINT ck_inventory_lot_id_origin CHECK ((id_origin <> ''::text)),
@@ -182,10 +178,90 @@ CREATE FUNCTION lcb.fn_timestamp_update_inventory_lot() RETURNS trigger
 ALTER FUNCTION lcb.fn_timestamp_update_inventory_lot() OWNER TO app;
 CREATE TRIGGER tg_timestamp_update_inventory_lot BEFORE INSERT OR UPDATE ON lcb.inventory_lot FOR EACH ROW EXECUTE PROCEDURE lcb.fn_timestamp_update_inventory_lot();
 
+CREATE TABLE lcb.recipe (
+    id text NOT NULL UNIQUE default util_fn.generate_ulid(),
+    created_at timestamptz DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at timestamptz NOT NULL,
+    app_tenant_id text NOT NULL,
+    conversion_rule_id text NOT NULL,
+    name text NOT NULL
+);
+ALTER TABLE lcb.recipe OWNER TO app;
+ALTER TABLE ONLY lcb.recipe
+    ADD CONSTRAINT pk_recipe PRIMARY KEY (id);
+ALTER TABLE ONLY lcb.recipe
+    ADD CONSTRAINT fk_recipe_app_tenant FOREIGN KEY (app_tenant_id) REFERENCES auth.app_tenant (id);
+ALTER TABLE ONLY lcb.recipe
+    ADD CONSTRAINT fk_recipe_conversion_rule FOREIGN KEY (conversion_rule_id) REFERENCES lcb_ref.conversion_rule (to_inventory_type_id);
+CREATE FUNCTION lcb.fn_timestamp_update_recipe() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+  BEGIN
+    NEW.updated_at = current_timestamp;
+    RETURN NEW;
+  END; $$;
+ALTER FUNCTION lcb.fn_timestamp_update_recipe() OWNER TO app;
+CREATE TRIGGER tg_timestamp_update_recipe BEFORE INSERT OR UPDATE ON lcb.recipe FOR EACH ROW EXECUTE PROCEDURE lcb.fn_timestamp_update_recipe();
+
+-- CREATE TABLE lcb.recipe_source_inventory_type (
+--     id text NOT NULL UNIQUE default util_fn.generate_ulid(),
+--     created_at timestamptz DEFAULT CURRENT_TIMESTAMP NOT NULL,
+--     updated_at timestamptz NOT NULL,
+--     app_tenant_id text NOT NULL,
+--     recipe_id text NOT NULL,
+--     inventory_type_id text NOT NULL
+-- );
+-- ALTER TABLE lcb.recipe_source_inventory_type OWNER TO app;
+-- ALTER TABLE ONLY lcb.recipe_source_inventory_type
+--     ADD CONSTRAINT pk_recipe_source_inventory_type PRIMARY KEY (id);
+-- ALTER TABLE ONLY lcb.recipe_source_inventory_type
+--     ADD CONSTRAINT fk_recipe_source_inventory_type_app_tenant FOREIGN KEY (app_tenant_id) REFERENCES auth.app_tenant (id);
+-- ALTER TABLE ONLY lcb.recipe_source_inventory_type
+--     ADD CONSTRAINT fk_recipe_source_inventory_type_recipe FOREIGN KEY (recipe_id) REFERENCES lcb.recipe (id);
+-- ALTER TABLE ONLY lcb.recipe_source_inventory_type
+--     ADD CONSTRAINT fk_recipe_source_inventory_type_inventory_type FOREIGN KEY (inventory_type_id) REFERENCES lcb_ref.inventory_type (id);
+-- CREATE FUNCTION lcb.fn_timestamp_update_recipe_source_inventory_type() RETURNS trigger
+--     LANGUAGE plpgsql
+--     AS $$
+--   BEGIN
+--     NEW.updated_at = current_timestamp;
+--     RETURN NEW;
+--   END; $$;
+-- ALTER FUNCTION lcb.fn_timestamp_update_recipe_source_inventory_type() OWNER TO app;
+-- CREATE TRIGGER tg_timestamp_update_recipe_source_inventory_type BEFORE INSERT OR UPDATE ON lcb.recipe FOR EACH ROW EXECUTE PROCEDURE lcb.fn_timestamp_update_recipe();
+
+-- CREATE TABLE lcb.recipe_target_inventory_type (
+--     id text NOT NULL UNIQUE default util_fn.generate_ulid(),
+--     created_at timestamptz DEFAULT CURRENT_TIMESTAMP NOT NULL,
+--     updated_at timestamptz NOT NULL,
+--     app_tenant_id text NOT NULL,
+--     recipe_id text NOT NULL,
+--     inventory_type_id text NOT NULL
+-- );
+-- ALTER TABLE lcb.recipe_target_inventory_type OWNER TO app;
+-- ALTER TABLE ONLY lcb.recipe_target_inventory_type
+--     ADD CONSTRAINT pk_recipe_target_inventory_type PRIMARY KEY (id);
+-- ALTER TABLE ONLY lcb.recipe_target_inventory_type
+--     ADD CONSTRAINT fk_recipe_target_inventory_type_app_tenant FOREIGN KEY (app_tenant_id) REFERENCES auth.app_tenant (id);
+-- ALTER TABLE ONLY lcb.recipe_target_inventory_type
+--     ADD CONSTRAINT fk_recipe_target_inventory_type_recipe FOREIGN KEY (recipe_id) REFERENCES lcb.recipe (id);
+-- ALTER TABLE ONLY lcb.recipe_target_inventory_type
+--     ADD CONSTRAINT fk_recipe_target_inventory_type_inventory_type FOREIGN KEY (inventory_type_id) REFERENCES lcb_ref.inventory_type (id);
+-- CREATE FUNCTION lcb.fn_timestamp_update_recipe_target_inventory_type() RETURNS trigger
+--     LANGUAGE plpgsql
+--     AS $$
+--   BEGIN
+--     NEW.updated_at = current_timestamp;
+--     RETURN NEW;
+--   END; $$;
+-- ALTER FUNCTION lcb.fn_timestamp_update_recipe_target_inventory_type() OWNER TO app;
+-- CREATE TRIGGER tg_timestamp_update_recipe_target_inventory_type BEFORE INSERT OR UPDATE ON lcb.recipe FOR EACH ROW EXECUTE PROCEDURE lcb.fn_timestamp_update_recipe();
+
 CREATE TABLE lcb.conversion (
     id text NOT NULL UNIQUE default util_fn.generate_ulid(),
     created_at timestamptz DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at timestamptz NOT NULL,
+    recipe_id text NULL,
     app_tenant_id text NOT NULL
 );
 ALTER TABLE lcb.conversion OWNER TO app;
@@ -202,36 +278,10 @@ CREATE FUNCTION lcb.fn_timestamp_update_conversion() RETURNS trigger
   END; $$;
 ALTER FUNCTION lcb.fn_timestamp_update_conversion() OWNER TO app;
 CREATE TRIGGER tg_timestamp_update_conversion BEFORE INSERT OR UPDATE ON lcb.conversion FOR EACH ROW EXECUTE PROCEDURE lcb.fn_timestamp_update_conversion();
+ALTER TABLE ONLY lcb.conversion
+    ADD CONSTRAINT fk_conversion_recipe FOREIGN KEY (recipe_id) REFERENCES lcb.recipe (id);
 ALTER TABLE ONLY lcb.inventory_lot
     ADD CONSTRAINT fk_inventory_lot_source_conversion FOREIGN KEY (source_conversion_id) REFERENCES lcb.conversion (id);
-
-
--- CREATE TABLE lcb.conversion_result (
---     id text NOT NULL UNIQUE default util_fn.generate_ulid(),
---     created_at timestamptz DEFAULT CURRENT_TIMESTAMP NOT NULL,
---     updated_at timestamptz NOT NULL,
---     app_tenant_id text NOT NULL,
---     conversion_id text NOT NULL,
---     inventory_lot_id text NOT NULL
--- );
--- ALTER TABLE lcb.conversion_result OWNER TO app;
--- ALTER TABLE ONLY lcb.conversion_result
---     ADD CONSTRAINT pk_conversion_result PRIMARY KEY (id);
--- ALTER TABLE ONLY lcb.conversion_result
---     ADD CONSTRAINT fk_conversion_app_tenant FOREIGN KEY (app_tenant_id) REFERENCES auth.app_tenant (id);
--- ALTER TABLE ONLY lcb.conversion_result
---     ADD CONSTRAINT fk_conversion_result_conversion FOREIGN KEY (conversion_id) REFERENCES lcb.conversion (id);
--- ALTER TABLE ONLY lcb.conversion_result
---     ADD CONSTRAINT fk_conversion_result_to_inventory_lot FOREIGN KEY (inventory_lot_id) REFERENCES lcb.inventory_lot (id);
--- CREATE FUNCTION lcb.fn_timestamp_update_conversion_result() RETURNS trigger
---     LANGUAGE plpgsql
---     AS $$
---   BEGIN
---     NEW.updated_at = current_timestamp;
---     RETURN NEW;
---   END; $$;
--- ALTER FUNCTION lcb.fn_timestamp_update_conversion_result() OWNER TO app;
--- CREATE TRIGGER tg_timestamp_update_conversion_result BEFORE INSERT OR UPDATE ON lcb.conversion_result FOR EACH ROW EXECUTE PROCEDURE lcb.fn_timestamp_update_conversion_result();
 
 CREATE TABLE lcb.conversion_source (
     id text NOT NULL UNIQUE default util_fn.generate_ulid(),
@@ -310,8 +360,6 @@ CREATE TABLE lcb_hist.hist_inventory_lot (
     description text,
     quantity numeric(10,2),
     units text,
-    strain_name text,
-    area_identifier text,
     strain_id text,
     area_id text
 );
@@ -339,8 +387,6 @@ CREATE FUNCTION lcb_hist.fn_capture_hist_inventory_lot() RETURNS trigger
         lot_type,
         description,
         quantity,
-        strain_name,
-        area_identifier,
         strain_id,
         area_id
     )
@@ -359,8 +405,6 @@ CREATE FUNCTION lcb_hist.fn_capture_hist_inventory_lot() RETURNS trigger
         OLD.lot_type,
         OLD.description,
         OLD.quantity,
-        OLD.strain_name,
-        OLD.area_identifier,
         OLD.strain_id,
         OLD.area_id
     )

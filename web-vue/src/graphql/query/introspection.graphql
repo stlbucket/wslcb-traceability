@@ -20,7 +20,7 @@ query IntrospectionQuery {
 fragment FullType on __Type {
   kind
   name
-  description
+      description
   fields(includeDeprecated: true) {
     name
     description
@@ -52,7 +52,7 @@ fragment FullType on __Type {
 
 fragment InputValue on __InputValue {
   name
-  description
+      description
   type { ...TypeRef }
   defaultValue
 }

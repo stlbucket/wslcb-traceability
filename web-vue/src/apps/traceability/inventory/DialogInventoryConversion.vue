@@ -69,10 +69,6 @@
       conversionConfig: {
         type: Object,
         required: true
-      },
-      inventoryTypes: {
-        type: Array,
-        required: true
       }
     },
     data () {
@@ -87,22 +83,38 @@
     },
     computed: {
       mappedInventoryTypes () {
-        return this.inventoryTypes
+        return this.conversionConfig.conversionRules
           .filter(
-            it => {
-              const fromIds = it.canConvertFrom.nodes.map(ccf => ccf.fromTypeId)
+            cr => {
+              const fromIds = cr.conversionRuleSources.nodes.map(crs => crs.inventoryTypeId)
               const sourceInventoryType = this.conversionConfig.parentLot ? this.conversionConfig.parentLot.inventoryType.id : 'N/A'
               return fromIds.indexOf(sourceInventoryType) !== -1
             }
           )
           .map(
-            it => {
+            cr => {
               return {
-                text: `${it.id}: ${it.name}`,
-                value: it.id
+                text: `${cr.toInventoryType.id}: ${cr.toInventoryType.name}`,
+                value: cr.toInventoryType.id
               }
             }
           )
+        // return this.inventoryTypes
+        //   .filter(
+        //     it => {
+        //       const fromIds = it.canConvertFrom.nodes.map(ccf => ccf.fromTypeId)
+        //       const sourceInventoryType = this.conversionConfig.parentLot ? this.conversionConfig.parentLot.inventoryType.id : 'N/A'
+        //       return fromIds.indexOf(sourceInventoryType) !== -1
+        //     }
+        //   )
+        //   .map(
+        //     it => {
+        //       return {
+        //         text: `${it.id}: ${it.name}`,
+        //         value: it.id
+        //       }
+        //     }
+        //   )
       },
       parentLotDisplay () {
         const parentLot = this.conversionConfig.parentLot
@@ -132,13 +144,14 @@
           {
             description: 'conversion result',
             quantity: this.quantity,
-            inventoryType: this.conversionConfig.parentLot.inventoryType.id
+            inventoryType: this.selectedInventoryType.value
           }
         ]
 
         this.$apollo.mutate({
           mutation: conversionInventory,
           variables: {
+            toInventoryTypeId: this.selectedInventoryType.value,
             sourcesInfo: sourcesInfo,
             newLotsInfo: newLotsInfo
           }

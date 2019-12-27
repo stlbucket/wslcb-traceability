@@ -29,9 +29,8 @@ mutation CreateManifest(
           id
           manifestedInventoryLot: inventoryLotByManifestedInventoryLotId {
             id
-            description
-            strainName
-            quantity
+      description
+                        quantity
           }
         }
       }

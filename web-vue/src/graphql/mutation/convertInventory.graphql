@@ -1,8 +1,10 @@
 mutation ConvertInventory(
+  $toInventoryTypeId: String!
   $sourcesInfo: [ConvertInventorySourceInputRecordInput]!
-  $newLotsInfo: [ReportInventoryLotInputRecordInput]!
+  $newLotsInfo: [ConvertInventoryResultInputRecordInput]!
 ) {
   convertInventory(input: {
+    _toInventoryTypeId: $toInventoryTypeId
     _sourcesInfo: $sourcesInfo
   	_newLotsInfo: $newLotsInfo
   }) {
@@ -18,11 +20,17 @@ mutation ConvertInventory(
         description
         units
       }
-      strainName
       description
       quantity
-      areaIdentifier
       licenseeIdentifier
+      strain: strainByStrainId {
+        id
+        name
+      }
+      area: areaByAreaId {
+        id
+        name
+      }
       histInventoryLots: histInventoryLotsByInventoryLotId {
         nodes {
           id
@@ -32,11 +40,11 @@ mutation ConvertInventory(
           updatedAt
           lotType
           inventoryType
-          strainName
           description
           quantity
-          areaIdentifier
           licenseeIdentifier
+          strainId
+          areaId
         }
       }
     }

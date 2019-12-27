@@ -997,6 +997,37 @@ grant usage on schema lcb to app_anonymous, app_user, app_demon;
 
 
 
+----------  END TABLE POLICY: lcb_ref.conversion_rule_source
+--==
+
+----------  BEGIN TABLE POLICY: lcb_ref.conversion_rule_source
+----------  POLICY NAME:  app_user  select only no rls  :::  app_user manage
+----------
+
+----------  REMOVE EXISTING TABLE GRANTS
+
+  revoke all privileges 
+  on table lcb_ref.conversion_rule_source 
+  from public;
+
+  revoke all privileges 
+  on table lcb_ref.conversion_rule_source 
+  from app_user, app_user, app_user, app_user, app_user, app_anonymous;
+
+----------  DISABLE ROW LEVEL SECURITY
+
+  alter table lcb_ref.conversion_rule_source disable row level security;
+
+----------  CREATE NEW TABLE GRANTS
+
+----------  app_user
+  grant 
+    select  
+  on table lcb_ref.conversion_rule_source
+  to app_user;
+
+
+
 ----------  END TABLE POLICY: lcb_ref.conversion_rule
 --==
 
@@ -1043,7 +1074,52 @@ grant usage on schema lcb to app_anonymous, app_user, app_demon;
   to app_user;
 
 
-----------  END TABLE POLICY: lcb.conversion
+----------  END TABLE POLICY: lcb.recipe
+--==
+
+----------
+----------  BEGIN TABLE POLICY: lcb.recipe
+----------  POLICY NAME:  app_user  select only no rls  :::  app_user manage
+----------
+
+----------  REMOVE EXISTING TABLE GRANTS
+
+  revoke all privileges 
+  on table lcb.recipe 
+  from public;
+
+  revoke all privileges 
+  on table lcb.recipe 
+  from app_user, app_user, app_user, app_user, app_user, app_anonymous;
+
+----------  DISABLE ROW LEVEL SECURITY
+
+  alter table lcb.recipe disable row level security;
+
+  create policy rls_app_user_default_lcb_recipe 
+    on lcb.recipe
+    as permissive
+    for all
+    to app_user
+    using ( auth_fn.app_user_has_access(app_tenant_id) = true)
+    ;
+
+
+----------  CREATE NEW TABLE GRANTS
+
+----------  app_user
+  grant 
+    select , 
+    insert, -- ( id, lcb_license_holder_id, created_at, updated_at, deleted_at, id_origin, inventory_type, description, quantity, units, strain_name, area_identifier ), 
+        -- no excluded columns
+    update, -- ( id, lcb_license_holder_id, created_at, updated_at, deleted_at, id_origin, inventory_type, description, quantity, units, strain_name, area_identifier ), 
+        -- no excluded columns
+    delete  
+  on table lcb.recipe 
+  to app_user;
+
+
+----------  END TABLE POLICY: lcb.recipe
 --==
 
 
@@ -1233,4 +1309,99 @@ grant usage on schema lcb to app_anonymous, app_user, app_demon;
 
 
 ----------  END TABLE POLICY: lcb.manifest_item
+--==
+
+
+
+----------
+----------  BEGIN TABLE POLICY: lcb.strain
+----------  POLICY NAME:  app_user  select only no rls  :::  app_user manage
+----------
+
+----------  REMOVE EXISTING TABLE GRANTS
+
+  revoke all privileges 
+  on table lcb.strain 
+  from public;
+
+  revoke all privileges 
+  on table lcb.strain 
+  from app_user, app_user, app_user, app_user, app_user, app_anonymous;
+
+----------  DISABLE ROW LEVEL SECURITY
+
+  alter table lcb.strain disable row level security;
+
+  create policy rls_app_user_default_lcb_strain
+    on lcb.strain
+    as permissive
+    for all
+    to app_user
+    using ( auth_fn.app_user_has_access(app_tenant_id) = true)
+    ;
+
+
+----------  CREATE NEW TABLE GRANTS
+
+----------  app_user
+  grant 
+    select , 
+    insert, -- ( id, lcb_license_holder_id, created_at, updated_at, deleted_at, id_origin, inventory_type, description, quantity, units, strain_name, area_identifier ), 
+        -- no excluded columns
+    update, -- ( id, lcb_license_holder_id, created_at, updated_at, deleted_at, id_origin, inventory_type, description, quantity, units, strain_name, area_identifier ), 
+        -- no excluded columns
+    delete  
+  on table lcb.strain
+  to app_user;
+
+
+
+----------  END TABLE POLICY: lcb.strain
+--==
+
+
+----------
+----------  BEGIN TABLE POLICY: lcb.area
+----------  POLICY NAME:  app_user  select only no rls  :::  app_user manage
+----------
+
+----------  REMOVE EXISTING TABLE GRANTS
+
+  revoke all privileges 
+  on table lcb.area 
+  from public;
+
+  revoke all privileges 
+  on table lcb.area 
+  from app_user, app_user, app_user, app_user, app_user, app_anonymous;
+
+----------  DISABLE ROW LEVEL SECURITY
+
+  alter table lcb.area disable row level security;
+
+  create policy rls_app_user_default_lcb_area
+    on lcb.area
+    as permissive
+    for all
+    to app_user
+    using ( auth_fn.app_user_has_access(app_tenant_id) = true)
+    ;
+
+
+----------  CREATE NEW TABLE GRANTS
+
+----------  app_user
+  grant 
+    select , 
+    insert, -- ( id, lcb_license_holder_id, created_at, updated_at, deleted_at, id_origin, inventory_type, description, quantity, units, area_name, area_identifier ), 
+        -- no excluded columns
+    update, -- ( id, lcb_license_holder_id, created_at, updated_at, deleted_at, id_origin, inventory_type, description, quantity, units, area_name, area_identifier ), 
+        -- no excluded columns
+    delete  
+  on table lcb.area
+  to app_user;
+
+
+
+----------  END TABLE POLICY: lcb.area
 --==

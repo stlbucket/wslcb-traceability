@@ -51,6 +51,7 @@
 </template>
 
 <script>
+import lcbLookupSets from '@/graphql/query/lcbLookupSets.graphql'
 import AppMenu from '@/components/_common/AppMenu/AppMenuList'
 import CurrentAppUserContact from '@/components/_common/CurrentAppUserContact/CurrentAppUserContactVuetify'
 import LoginManager from '@/components/_common/LoginManager/LoginManagerVuetify'
@@ -83,6 +84,15 @@ export default {
       update (data) {
         const schema = data.__schema || {types: []}
         this.$store.commit('setGraphqlTypes', schema.types)
+      }
+    },
+    lcbLookupSets: {
+      query: lcbLookupSets
+      ,fetchPolicy: 'network-only'
+      ,update (data) {
+        this.$store.commit('setInventoryTypes', {
+          inventoryTypes: (data.inventoryTypes || {nodes:[]}).nodes
+        })
       }
     }
   },

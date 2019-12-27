@@ -14,11 +14,17 @@ mutation InvalidateInventoryLotIds ($ids: [String]!) {
         description
         units
       }
-      strainName
       description
       quantity
-      areaIdentifier
       licenseeIdentifier
+      strain: strainByStrainId {
+        id
+        name
+      }
+      area: areaByAreaId {
+        id
+        name
+      }
       histInventoryLots: histInventoryLotsByInventoryLotId {
         nodes {
           id
@@ -26,13 +32,13 @@ mutation InvalidateInventoryLotIds ($ids: [String]!) {
 		      reportingStatus
           createdAt
           updatedAt
-          inventoryType
           lotType
-          strainName
+          inventoryType
           description
           quantity
-          areaIdentifier
           licenseeIdentifier
+          strainId
+          areaId
         }
       }
     }

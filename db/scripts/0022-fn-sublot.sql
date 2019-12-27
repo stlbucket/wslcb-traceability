@@ -81,8 +81,8 @@ RETURNS setof lcb.inventory_lot
           lot_type,
           description,
           quantity,
-          strain_name,
-          area_identifier,
+          strain_id,
+          area_id,
           source_conversion_id
         )
         SELECT
@@ -97,8 +97,8 @@ RETURNS setof lcb.inventory_lot
           'INVENTORY',
           _parent_lot.description::text,
           _sublot_inventory_input.quantity,
-          _parent_lot.strain_name::text,
-          _parent_lot.area_identifier::text,
+          _parent_lot.strain_id,
+          _parent_lot.area_id,
           _conversion.id
         RETURNING * INTO _sublot;
 

@@ -14,11 +14,17 @@ mutation DestroyInventoryLotIds ($ids: [String]!) {
         description
         units
       }
-      strainName
       description
       quantity
-      areaIdentifier
       licenseeIdentifier
+      strain: strainByStrainId {
+        id
+        name
+      }
+      area: areaByAreaId {
+        id
+        name
+      }
       histInventoryLots: histInventoryLotsByInventoryLotId {
         nodes {
           id
@@ -28,11 +34,11 @@ mutation DestroyInventoryLotIds ($ids: [String]!) {
           updatedAt
           lotType
           inventoryType
-          strainName
           description
           quantity
-          areaIdentifier
           licenseeIdentifier
+          strainId
+          areaId
         }
       }
     }

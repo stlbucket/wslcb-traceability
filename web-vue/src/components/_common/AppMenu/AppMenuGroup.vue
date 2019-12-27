@@ -27,7 +27,7 @@ export default {
   },
   methods: {
     appSelected (app) {
-      this.$router.push({name: app.routeName})
+      this.$router.push({name: app.routeName}).catch(err => { err })
     //  this.$eventHub.$emit('app-selected');
     },
   },

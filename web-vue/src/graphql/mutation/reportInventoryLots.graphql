@@ -16,11 +16,17 @@ mutation ReportInventoryLots(
         description
         units
       }
-      strainName
       description
       quantity
-      areaIdentifier
       licenseeIdentifier
+      strain: strainByStrainId {
+        id
+        name
+      }
+      area: areaByAreaId {
+        id
+        name
+      }
       histInventoryLots: histInventoryLotsByInventoryLotId {
         nodes {
           id
@@ -30,11 +36,11 @@ mutation ReportInventoryLots(
           updatedAt
           lotType
           inventoryType
-          strainName
           description
           quantity
-          areaIdentifier
           licenseeIdentifier
+          strainId
+          areaId
         }
       }
     }

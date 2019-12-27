@@ -198,6 +198,51 @@ select * from app.license;
   do nothing
   ;
 
+--------------------------------------------------   manifest manager
+  insert into app.application(
+    name 
+    ,key
+  ) 
+  values (
+    'Manifests'
+    ,'trc-manifest'
+  )
+  on conflict(key) 
+  do nothing
+  ;
+
+  insert into app.license_type(
+    name
+    ,key
+    ,application_id
+  )
+  values
+  (
+    'Manifests'
+    ,'trc-manifest'
+    ,(select id from app.application where key = 'trc-manifest')
+  )
+  on conflict(key) 
+  do nothing
+  ;
+
+  insert into app.license(
+    app_tenant_id
+    ,license_type_id
+    ,name
+    ,assigned_to_app_user_id
+  )
+  select
+    au.app_tenant_id
+    ,(select id from app.license_type where key = 'trc-manifest')
+    ,au.username || ' - ' || (select name from app.license_type where key = 'trc-manifest')
+    ,au.id
+  from auth.app_user au
+  where au.permission_key in ('SuperAdmin', 'Admin', 'User')
+  on conflict (assigned_to_app_user_id, license_type_id)
+  do nothing
+  ;
+
 --------------------------------------------------   transfer manager
   insert into app.application(
     name 
@@ -236,6 +281,51 @@ select * from app.license;
     au.app_tenant_id
     ,(select id from app.license_type where key = 'trc-xfer')
     ,au.username || ' - ' || (select name from app.license_type where key = 'trc-xfer')
+    ,au.id
+  from auth.app_user au
+  where au.permission_key in ('SuperAdmin', 'Admin', 'User')
+  on conflict (assigned_to_app_user_id, license_type_id)
+  do nothing
+  ;
+
+--------------------------------------------------   delivery manager
+  insert into app.application(
+    name 
+    ,key
+  ) 
+  values (
+    'Deliveries'
+    ,'trc-delivery'
+  )
+  on conflict(key) 
+  do nothing
+  ;
+
+  insert into app.license_type(
+    name
+    ,key
+    ,application_id
+  )
+  values
+  (
+    'Deliveries'
+    ,'trc-delivery'
+    ,(select id from app.application where key = 'trc-delivery')
+  )
+  on conflict(key) 
+  do nothing
+  ;
+
+  insert into app.license(
+    app_tenant_id
+    ,license_type_id
+    ,name
+    ,assigned_to_app_user_id
+  )
+  select
+    au.app_tenant_id
+    ,(select id from app.license_type where key = 'trc-delivery')
+    ,au.username || ' - ' || (select name from app.license_type where key = 'trc-delivery')
     ,au.id
   from auth.app_user au
   where au.permission_key in ('SuperAdmin', 'Admin', 'User')
@@ -333,14 +423,14 @@ select * from app.license;
   do nothing
   ;
 
---------------------------------------------------   qa manager
+--------------------------------------------------   qa sampling
   insert into app.application(
     name 
     ,key
   ) 
   values (
-    'QA'
-    ,'trc-qa'
+    'Qa Sampling'
+    ,'trc-qa-sampling'
   )
   on conflict(key) 
   do nothing
@@ -353,9 +443,9 @@ select * from app.license;
   )
   values
   (
-    'QA'
-    ,'trc-qa'
-    ,(select id from app.application where key = 'trc-qa')
+    'Qa Sampling'
+    ,'trc-qa-sampling'
+    ,(select id from app.application where key = 'trc-qa-sampling')
   )
   on conflict(key) 
   do nothing
@@ -369,8 +459,143 @@ select * from app.license;
   )
   select
     au.app_tenant_id
-    ,(select id from app.license_type where key = 'trc-qa')
-    ,au.username || ' - ' || (select name from app.license_type where key = 'trc-qa')
+    ,(select id from app.license_type where key = 'trc-qa-sampling')
+    ,au.username || ' - ' || (select name from app.license_type where key = 'trc-qa-sampling')
+    ,au.id
+  from auth.app_user au
+  where au.permission_key in ('SuperAdmin', 'Admin', 'User')
+  on conflict (assigned_to_app_user_id, license_type_id)
+  do nothing
+  ;
+
+--------------------------------------------------   qa lab reporting
+  insert into app.application(
+    name 
+    ,key
+  ) 
+  values (
+    'Qa Lab Reporting'
+    ,'trc-qa-lab-reporting'
+  )
+  on conflict(key) 
+  do nothing
+  ;
+
+  insert into app.license_type(
+    name
+    ,key
+    ,application_id
+  )
+  values
+  (
+    'Qa Lab Reporting'
+    ,'trc-qa-lab-reporting'
+    ,(select id from app.application where key = 'trc-qa-lab-reporting')
+  )
+  on conflict(key) 
+  do nothing
+  ;
+
+  insert into app.license(
+    app_tenant_id
+    ,license_type_id
+    ,name
+    ,assigned_to_app_user_id
+  )
+  select
+    au.app_tenant_id
+    ,(select id from app.license_type where key = 'trc-qa-lab-reporting')
+    ,au.username || ' - ' || (select name from app.license_type where key = 'trc-qa-lab-reporting')
+    ,au.id
+  from auth.app_user au
+  where au.permission_key in ('SuperAdmin', 'Admin', 'User')
+  on conflict (assigned_to_app_user_id, license_type_id)
+  do nothing
+  ;
+
+--------------------------------------------------   retail sampling
+  insert into app.application(
+    name 
+    ,key
+  ) 
+  values (
+    'Retail Sampling'
+    ,'trc-retail-sampling'
+  )
+  on conflict(key) 
+  do nothing
+  ;
+
+  insert into app.license_type(
+    name
+    ,key
+    ,application_id
+  )
+  values
+  (
+    'Retail Sampling'
+    ,'trc-retail-sampling'
+    ,(select id from app.application where key = 'trc-retail-sampling')
+  )
+  on conflict(key) 
+  do nothing
+  ;
+
+  insert into app.license(
+    app_tenant_id
+    ,license_type_id
+    ,name
+    ,assigned_to_app_user_id
+  )
+  select
+    au.app_tenant_id
+    ,(select id from app.license_type where key = 'trc-retail-sampling')
+    ,au.username || ' - ' || (select name from app.license_type where key = 'trc-retail-sampling')
+    ,au.id
+  from auth.app_user au
+  where au.permission_key in ('SuperAdmin', 'Admin', 'User')
+  on conflict (assigned_to_app_user_id, license_type_id)
+  do nothing
+  ;
+
+--------------------------------------------------   retail sales reporting
+  insert into app.application(
+    name 
+    ,key
+  ) 
+  values (
+    'Retail Sales Reporting'
+    ,'trc-retail-sales-reporting'
+  )
+  on conflict(key) 
+  do nothing
+  ;
+
+  insert into app.license_type(
+    name
+    ,key
+    ,application_id
+  )
+  values
+  (
+    'Retail Sales Reporting'
+    ,'trc-retail-sales-reporting'
+    ,(select id from app.application where key = 'trc-retail-sales-reporting')
+  )
+  on conflict(key) 
+  do nothing
+  ;
+
+  insert into app.license(
+    app_tenant_id
+    ,license_type_id
+    ,name
+    ,assigned_to_app_user_id
+  )
+  select
+    au.app_tenant_id
+    ,(select id from app.license_type where key = 'trc-retail-sales-reporting')
+    ,au.username || ' - ' || (select name from app.license_type where key = 'trc-retail-sales-reporting')
     ,au.id
   from auth.app_user au
   where au.permission_key in ('SuperAdmin', 'Admin', 'User')

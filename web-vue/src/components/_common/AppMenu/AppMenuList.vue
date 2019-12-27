@@ -109,8 +109,31 @@ export default {
           ]
         },
         {
-          name: 'Move',
+          name: 'Verify',
           appList: [
+            {
+              key: 'trc-qa-sampling',
+              name: 'QA Sampling',
+              routeName: 'trc-qa-sampling',
+              iconKey: 'check_circle_outline'
+            },
+            {
+              key: 'trc-qa-lab-reporting',
+              name: 'QA Results',
+              routeName: 'trc-qa-lab-reporting',
+              iconKey: 'check_circle'
+            },
+          ]
+        },
+        {
+          name: 'Transport',
+          appList: [
+            {
+              key: 'trc-manifest',
+              name: 'Manifest',
+              routeName: 'trc-manifest',
+              iconKey: 'format_list_numbered'
+            },
             {
               key: 'trc-xfer',
               name: 'Transfers',
@@ -129,11 +152,22 @@ export default {
               routeName: 'trc-ret',
               iconKey: 'keyboard_return'
             },
+          ]
+        },
+        {
+          name: 'Sell',
+          appList: [
             {
-              key: 'trc-qa',
-              name: 'QA Manager',
-              routeName: 'trc-qa',
-              iconKey: 'check'
+              key: 'trc-retail-sampling',
+              name: 'Retail Sampling',
+              routeName: 'trc-retail-sampling',
+              iconKey: 'blur_on'
+            },
+            {
+              key: 'trc-retail-sales-reporting',
+              name: 'Retail Sales',
+              routeName: 'trc-retail-sales-reporting',
+              iconKey: 'attach_money'
             },
           ]
         },

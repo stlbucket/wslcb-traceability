@@ -6,9 +6,19 @@ create type lcb_fn.convert_inventory_source_input as (
   quantity numeric(10,2)
 );
 
+create type lcb_fn.convert_inventory_result_input as (
+  id text,
+  licensee_identifier text,
+  inventory_type text,
+  description text,
+  quantity numeric(10,2),
+  area_identifier text
+);
+
 CREATE OR REPLACE FUNCTION lcb_fn.convert_inventory(
+  _to_inventory_type_id text,
   _sources_info lcb_fn.convert_inventory_source_input[],
-  _new_lots_info lcb_fn.report_inventory_lot_input[]
+  _new_lots_info lcb_fn.convert_inventory_result_input[]
 ) 
 RETURNS setof lcb.inventory_lot
     LANGUAGE plpgsql STRICT
@@ -17,7 +27,7 @@ RETURNS setof lcb.inventory_lot
     _current_app_user auth.app_user;
     _lcb_license_holder_id text;
     _source_input lcb_fn.convert_inventory_source_input;
-    _result_input lcb_fn.report_inventory_lot_input;
+    _result_input lcb_fn.convert_inventory_result_input;
     _inventory_lot_id text;
     _result_lot lcb.inventory_lot;
     _parent_lot lcb.inventory_lot;
@@ -27,10 +37,24 @@ RETURNS setof lcb.inventory_lot
     _conversion_source lcb.conversion_source;
     _source_inventory_type text;
     _result_inventory_type text;
+    _conversion_rule lcb_ref.conversion_rule;
+    _conversion_source_allowed boolean;
+    _strain lcb.strain;
+    _area lcb.area;
   BEGIN
     _current_app_user := auth_fn.current_app_user();
     _total_sourced_quantity := 0;
     _total_converted_quantity := 0;
+
+    select *
+    into _conversion_rule
+    from lcb_ref.conversion_rule
+    where to_inventory_type_id = _to_inventory_type_id
+    ;
+
+    if _conversion_rule.to_inventory_type_id is null then
+        raise exception 'illegal operation - batch cancelled:  no inventory type for id: %', _to_inventory_type_id;
+    end if;
 
     -- this is not really correct.  need mechanism to switch between licenses
     select id
@@ -39,7 +63,7 @@ RETURNS setof lcb.inventory_lot
     where app_tenant_id = _current_app_user.app_tenant_id;
 
     insert into lcb.conversion(app_tenant_id) 
-    values (_current_app_user.app_tenant_id) 
+    values (_current_app_user.app_tenant_id)
     returning * into _conversion;
 
     foreach _source_input in ARRAY _sources_info
@@ -51,6 +75,17 @@ RETURNS setof lcb.inventory_lot
 
       if _parent_lot.id is null then
         raise exception 'illegal operation - batch cancelled:  no inventory lot exists for parent lot id: %', _source_input.id;
+      end if;
+
+      select (count(*) > 0)
+      into _conversion_source_allowed
+      from lcb_ref.conversion_rule_source
+      where to_inventory_type_id = _to_inventory_type_id
+      and inventory_type_id = _parent_lot.inventory_type
+      ;
+
+      if _conversion_source_allowed = false then
+        raise exception 'illegal operation - batch cancelled:  inventory type: %  cannot be converted to inventory type: %', _parent_lot.inventory_type, _to_inventory_type_id;
       end if;
 
       _source_inventory_type := coalesce(_source_inventory_type, _parent_lot.inventory_type);
@@ -115,8 +150,8 @@ RETURNS setof lcb.inventory_lot
         lot_type,
         description,
         quantity,
-        strain_name,
-        area_identifier,
+        strain_id,
+        area_id,
         source_conversion_id
       )
       SELECT
@@ -131,8 +166,8 @@ RETURNS setof lcb.inventory_lot
         'INVENTORY',
         _result_input.description::text,
         _result_input.quantity,
-        _result_input.strain_name::text,
-        _result_input.area_identifier::text,
+        _strain.id,
+        _area.id,
         _conversion.id
       RETURNING * INTO _result_lot;
 

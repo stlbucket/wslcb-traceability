@@ -2279,7 +2279,7 @@ ALTER TABLE lcb_hist.hist_inventory_lot OWNER TO app;
 CREATE TABLE lcb_ref.conversion_rule (
     id text DEFAULT util_fn.generate_ulid() NOT NULL,
     from_type_id text NOT NULL,
-    to_type_id text NOT NULL
+    to_inventory_type_id text NOT NULL
 );
 
 
@@ -2536,7 +2536,7 @@ COPY lcb_hist.hist_inventory_lot (id, parent_id, licensee_identifier, inventory_
 -- Data for Name: conversion_rule; Type: TABLE DATA; Schema: lcb_ref; Owner: app
 --
 
-COPY lcb_ref.conversion_rule (id, from_type_id, to_type_id) FROM stdin;
+COPY lcb_ref.conversion_rule (id, from_type_id, to_inventory_type_id) FROM stdin;
 01DV777KN09DH2E7BDK0QEQ9MN	SD	CL
 01DV777KN02C4C2XS9502NWBA9	CL	PL
 01DV777KN0047KEQ1K8AWQB6ZH	PL	WF
@@ -3405,7 +3405,7 @@ ALTER TABLE ONLY lcb_ref.conversion_rule
 --
 
 ALTER TABLE ONLY lcb_ref.conversion_rule
-    ADD CONSTRAINT fk_conversion_rule_to FOREIGN KEY (to_type_id) REFERENCES lcb_ref.inventory_type(id);
+    ADD CONSTRAINT fk_conversion_rule_to FOREIGN KEY (to_inventory_type_id) REFERENCES lcb_ref.inventory_type(id);
 
 
 --

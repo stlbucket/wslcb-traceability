@@ -21,23 +21,33 @@ import ProjectDetail from './views/Prj/ProjectDetailView'
 
 import InventoryManager from '@/apps/traceability/inventory/InventoryManager'
 import TransferManager from '@/apps/traceability/transfers/TransferManager'
+import ManifestManager from '@/apps/traceability/manifests/ManifestManager'
 import ManifestDetail from '@/apps/traceability/transfers/ManifestDetail'
 import ReceivingManager from '@/apps/traceability/receiving/ReceivingManager'
 import ReturnsManager from '@/apps/traceability/returns/ReturnsManager'
-import QaManager from '@/apps/traceability/qa/QaManager'
-import Planting from '@/apps/traceability/grow/Planting'
-import Cloning from '@/apps/traceability/grow/Cloning'
-import Growing from '@/apps/traceability/grow/Growing'
+import QaSampling from '@/apps/traceability/qa/QaSampling'
+import QaLabReporting from '@/apps/traceability/qa/QaLabReporting'
+import RetailSampling from '@/apps/traceability/retail/RetailSampling'
+import RetailSalesReporting from '@/apps/traceability/retail/RetailSalesReporting'
+// import Planting from '@/apps/traceability/grow/Planting'
+// import Cloning from '@/apps/traceability/grow/Cloning'
+// import Growing from '@/apps/traceability/grow/Growing'
 import Harvesting from '@/apps/traceability/grow/Harvesting'
 import Curing from '@/apps/traceability/grow/Curing'
 import FlowerLotting from '@/apps/traceability/grow/FlowerLotting'
 import FlowerProcessing from '@/apps/traceability/grow/FlowerProcessing'
 import ProductProcessing from '@/apps/traceability/grow/ProductProcessing'
 import ProductPackaging from '@/apps/traceability/grow/ProductPackaging'
+import BatchConversion from '@/apps/traceability/grow/BatchConversion'
 
 Vue.use(Router)
 
 export default new Router({
+  beforeEach: (to, from, next) => {
+  // just use `this`
+    console.log('beforeEach', to,from)
+    next()
+  },
   routes: [
     {
       path: '/',
@@ -111,6 +121,11 @@ export default new Router({
       component: InventoryManager
     },
     {
+      path: '/trc-manifest',
+      name: 'trc-manifest',
+      component: ManifestManager
+    },
+    {
       path: '/trc-xfer',
       name: 'trc-xfer',
       component: TransferManager
@@ -132,25 +147,82 @@ export default new Router({
       component: ReturnsManager
     },
     {
-      path: '/trc-qa',
-      name: 'trc-qa',
-      component: QaManager
+      path: '/trc-qa-sampling',
+      name: 'trc-qa-sampling',
+      component: QaSampling
     },
     {
-      path: '/trc-planting',
+      path: '/trc-qa-lab-reporting',
+      name: 'trc-qa-lab-reporting',
+      component: QaLabReporting
+    },
+    {
+      path: '/trc-retail-sampling',
+      name: 'trc-retail-sampling',
+      component: RetailSampling
+    },
+    {
+      path: '/trc-retail-sales-reporting',
+      name: 'trc-retail-sales-reporting',
+      component: RetailSalesReporting
+    },
+    {
+      path: '/trc-batch-conversion',
       name: 'trc-planting',
-      component: Planting
+      component: BatchConversion,
+      props: {
+        recipeDefinition: {
+          name: 'Planting',
+          sourceTypes: ['SD'],
+          targetType: 'SL'
+        }
+      }
     },
     {
-      path: '/trc-cloning',
+      path: '/trc-batch-conversion',
       name: 'trc-cloning',
-      component: Cloning
+      component: BatchConversion,
+      props: {
+        recipeDefinition: {
+          name: 'Planting',
+          sourceTypes: ['PL'],
+          targetType: 'CL'
+        }
+      },
     },
+      // beforeUpdate (to, from, next) {
+      //   // just use `this`
+      //     console.log('beforeUpdate', to,from)
+      //     next()
+      //   }
+      // },
     {
-      path: '/trc-growing',
+      path: '/trc-batch-conversion',
       name: 'trc-growing',
-      component: Growing
+      component: BatchConversion,
+      props: {
+        recipeDefinition: {
+          name: 'Planting',
+          sourceTypes: ['SL','CL'],
+          targetType: 'PL'
+        }
+      }
     },
+    // {
+    //   path: '/trc-growing',
+    //   name: 'trc-growing',
+    //   component: Growing
+    // },
+    // {
+    //   path: '/trc-planting',
+    //   name: 'trc-planting',
+    //   component: Planting
+    // },
+    // {
+    //   path: '/trc-cloning',
+    //   name: 'trc-cloning',
+    //   component: Cloning
+    // },
     {
       path: '/trc-harvesting',
       name: 'trc-harvesting',

@@ -386,6 +386,9 @@ AS $function$
 			<fk name="fk_area_lcb_license_holder" to_schema="lcb.lcb" to_table="lcb_license_holder" >
 				<fk_column name="lcb_license_holder_id" pk="id" />
 			</fk>
+			<fk name="fk_area_app_tenant_id" to_schema="lcb.auth" to_table="app_tenant" >
+				<fk_column name="app_tenant_id" pk="id" />
+			</fk>
 		</table>
 		<table name="batch" >
 			<column name="id" type="text" decimal="0" jt="12" mandatory="y" >
@@ -412,6 +415,9 @@ AS $function$
 			<fk name="fk_batch_lcb_license_holder" to_schema="lcb.lcb" to_table="lcb_license_holder" >
 				<fk_column name="lcb_license_holder_id" pk="id" />
 			</fk>
+			<fk name="fk_batch_app_tenant_id" to_schema="lcb.auth" to_table="app_tenant" >
+				<fk_column name="app_tenant_id" pk="id" />
+			</fk>
 		</table>
 		<table name="conversion" >
 			<column name="id" type="text" decimal="0" jt="12" mandatory="y" >
@@ -422,9 +428,16 @@ AS $function$
 			</column>
 			<column name="updated_at" type="timestamptz" length="35" decimal="6" jt="93" mandatory="y" />
 			<column name="app_tenant_id" type="text" decimal="0" jt="12" mandatory="y" />
+			<column name="recipe_id" type="text" decimal="0" jt="12" />
 			<index name="pk_conversion" unique="PRIMARY_KEY" >
 				<column name="id" />
 			</index>
+			<fk name="fk_conversion_app_tenant" to_schema="lcb.auth" to_table="app_tenant" >
+				<fk_column name="app_tenant_id" pk="id" />
+			</fk>
+			<fk name="fk_conversion_recipe" to_schema="lcb.lcb" to_table="recipe" >
+				<fk_column name="recipe_id" pk="id" />
+			</fk>
 		</table>
 		<table name="conversion_source" >
 			<column name="id" type="text" decimal="0" jt="12" mandatory="y" >
@@ -446,6 +459,9 @@ AS $function$
 			</fk>
 			<fk name="fk_conversion_source_to_inventory_lot" to_schema="lcb.lcb" to_table="inventory_lot" >
 				<fk_column name="inventory_lot_id" pk="id" />
+			</fk>
+			<fk name="fk_conversion_app_tenant" to_schema="lcb.auth" to_table="app_tenant" >
+				<fk_column name="app_tenant_id" pk="id" />
 			</fk>
 		</table>
 		<table name="inventory_lot" >
@@ -472,6 +488,8 @@ AS $function$
 			<column name="qa_result_id" type="text" decimal="0" jt="12" />
 			<column name="strain_id" type="text" decimal="0" jt="12" />
 			<column name="area_id" type="text" decimal="0" jt="12" />
+			<column name="strain_name" type="text" decimal="0" jt="12" />
+			<column name="area_identifier" type="text" decimal="0" jt="12" />
 			<index name="pk_inventory_lot" unique="PRIMARY_KEY" >
 				<column name="id" />
 			</index>
@@ -651,6 +669,25 @@ AS $function$
 				<fk_column name="licensee_app_tenant_id" pk="id" />
 			</fk>
 		</table>
+		<table name="recipe" >
+			<column name="id" type="text" decimal="0" jt="12" mandatory="y" >
+				<defo>util_fn.generate_ulid()</defo>
+			</column>
+			<column name="created_at" type="timestamptz" length="35" decimal="6" jt="93" mandatory="y" >
+				<defo>CURRENT_TIMESTAMP</defo>
+			</column>
+			<column name="updated_at" type="timestamptz" length="35" decimal="6" jt="93" mandatory="y" />
+			<column name="app_tenant_id" type="text" decimal="0" jt="12" mandatory="y" />
+			<column name="conversion_rule_id" type="text" decimal="0" jt="12" mandatory="y" />
+			<column name="name" type="text" decimal="0" jt="12" mandatory="y" />
+			<index name="pk_recipe" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+			<fk name="fk_recipe_app_tenant" to_schema="lcb.auth" to_table="app_tenant" >
+				<fk_column name="app_tenant_id" pk="id" />
+			</fk>
+			<fk name="fk_recipe_conversion_rule" to_schema="lcb.lcb_ref" to_table="conversion_rule" />
+		</table>
 		<table name="strain" >
 			<column name="id" type="text" decimal="0" jt="12" mandatory="y" >
 				<defo>util_fn.generate_ulid()</defo>
@@ -672,7 +709,106 @@ AS $function$
 			<fk name="fk_strain_lcb_license_holder" to_schema="lcb.lcb" to_table="lcb_license_holder" >
 				<fk_column name="lcb_license_holder_id" pk="id" />
 			</fk>
+			<fk name="fk_strain_app_tenant_id" to_schema="lcb.auth" to_table="app_tenant" >
+				<fk_column name="app_tenant_id" pk="id" />
+			</fk>
 		</table>
+		<procedure name="fn_timestamp_update_conversion" id="Procedure_d351c9" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION lcb.fn_timestamp_update_conversion()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+  BEGIN
+    NEW.updated_at = current_timestamp;
+    RETURN NEW;
+  END; $function$
+;]]></string>
+			<result_param name="returnValue" jt="1111" type="trigger" />
+		</procedure>
+		<procedure name="fn_timestamp_update_conversion_source" id="Procedure_2671050" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION lcb.fn_timestamp_update_conversion_source()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+  BEGIN
+    NEW.updated_at = current_timestamp;
+    RETURN NEW;
+  END; $function$
+;]]></string>
+			<result_param name="returnValue" jt="1111" type="trigger" />
+		</procedure>
+		<procedure name="fn_timestamp_update_inventory_lot" id="Procedure_39a3f28" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION lcb.fn_timestamp_update_inventory_lot()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+  BEGIN
+    NEW.updated_at = current_timestamp;
+    RETURN NEW;
+  END; $function$
+;]]></string>
+			<result_param name="returnValue" jt="1111" type="trigger" />
+		</procedure>
+		<procedure name="fn_timestamp_update_lcb_license" id="Procedure_a4fda8" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION lcb.fn_timestamp_update_lcb_license()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+  BEGIN
+    NEW.updated_at = current_timestamp;
+    RETURN NEW;
+  END; $function$
+;]]></string>
+			<result_param name="returnValue" jt="1111" type="trigger" />
+		</procedure>
+		<procedure name="fn_timestamp_update_lcb_license_holder" id="Procedure_16bc928" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION lcb.fn_timestamp_update_lcb_license_holder()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+  BEGIN
+    NEW.updated_at = current_timestamp;
+    RETURN NEW;
+  END; $function$
+;]]></string>
+			<result_param name="returnValue" jt="1111" type="trigger" />
+		</procedure>
+		<procedure name="fn_timestamp_update_manifest" id="Procedure_549ccff" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION lcb.fn_timestamp_update_manifest()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+  BEGIN
+    NEW.updated_at = current_timestamp;
+    RETURN NEW;
+  END; $function$
+;]]></string>
+			<result_param name="returnValue" jt="1111" type="trigger" />
+		</procedure>
+		<procedure name="fn_timestamp_update_manifest_item" id="Procedure_4a2c733" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION lcb.fn_timestamp_update_manifest_item()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+  BEGIN
+    NEW.updated_at = current_timestamp;
+    RETURN NEW;
+  END; $function$
+;]]></string>
+			<result_param name="returnValue" jt="1111" type="trigger" />
+		</procedure>
+		<procedure name="fn_timestamp_update_recipe" id="Procedure_1245f6e" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION lcb.fn_timestamp_update_recipe()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+  BEGIN
+    NEW.updated_at = current_timestamp;
+    RETURN NEW;
+  END; $function$
+;]]></string>
+			<result_param name="returnValue" jt="1111" type="trigger" />
+		</procedure>
 		<trigger name="tg_capture_hist_inventory_lot" table="inventory_lot" id="Trigger_4786484" isSystem="false" >
 			<string><![CDATA[CREATE TRIGGER tg_capture_hist_inventory_lot AFTER UPDATE ON lcb.inventory_lot FOR EACH ROW EXECUTE PROCEDURE lcb_hist.fn_capture_hist_inventory_lot()]]></string>
 		</trigger>
@@ -697,6 +833,9 @@ AS $function$
 		<trigger name="tg_timestamp_update_manifest_item" table="manifest_item" id="Trigger_4746fb6" isSystem="false" >
 			<string><![CDATA[CREATE TRIGGER tg_timestamp_update_manifest_item BEFORE INSERT OR UPDATE ON lcb.manifest_item FOR EACH ROW EXECUTE PROCEDURE lcb.fn_timestamp_update_manifest_item()]]></string>
 		</trigger>
+		<trigger name="tg_timestamp_update_recipe" table="recipe" id="Trigger_4bfac29" isSystem="false" >
+			<string><![CDATA[CREATE TRIGGER tg_timestamp_update_recipe BEFORE INSERT OR UPDATE ON lcb.recipe FOR EACH ROW EXECUTE PROCEDURE lcb.fn_timestamp_update_recipe()]]></string>
+		</trigger>
 	</schema>
 	<schema name="lcb_hist" catalogname="lcb" >
 		<table name="hist_inventory_lot" >
@@ -720,6 +859,8 @@ AS $function$
 			<column name="lot_type" type="text" decimal="0" jt="12" mandatory="y" />
 			<column name="strain_id" type="text" decimal="0" jt="12" />
 			<column name="area_id" type="text" decimal="0" jt="12" />
+			<column name="strain_name" type="text" decimal="0" jt="12" />
+			<column name="area_identifier" type="text" decimal="0" jt="12" />
 			<index name="hist_inventory_lot_id_key" unique="UNIQUE" >
 				<column name="id" options="ASC" />
 			</index>
@@ -730,22 +871,83 @@ AS $function$
 				<fk_column name="app_tenant_id" pk="id" />
 			</fk>
 		</table>
+		<procedure name="fn_capture_hist_inventory_lot" id="Procedure_1076da0" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION lcb_hist.fn_capture_hist_inventory_lot()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+  BEGIN
+    insert into lcb_hist.hist_inventory_lot(
+        inventory_lot_id,
+        updated_by_app_user_id,
+        licensee_identifier,
+        app_tenant_id,
+        lcb_license_holder_id,
+        created_at,
+        updated_at,
+        deleted_at,
+        id_origin,
+        reporting_status,
+        inventory_type,
+        lot_type,
+        description,
+        quantity,
+        strain_name,
+        area_identifier,
+        strain_id,
+        area_id
+    )
+    values (
+        OLD.id,
+        OLD.updated_by_app_user_id,
+        OLD.licensee_identifier,
+        OLD.app_tenant_id,
+        OLD.lcb_license_holder_id,
+        OLD.created_at,
+        OLD.updated_at,
+        OLD.deleted_at,
+        OLD.id_origin,
+        OLD.reporting_status,
+        OLD.inventory_type,
+        OLD.lot_type,
+        OLD.description,
+        OLD.quantity,
+        OLD.strain_name,
+        OLD.area_identifier,
+        OLD.strain_id,
+        OLD.area_id
+    )
+    ;
+    RETURN OLD;
+  END; $function$
+;]]></string>
+			<result_param name="returnValue" jt="1111" type="trigger" />
+		</procedure>
 	</schema>
 	<schema name="lcb_ref" catalogname="lcb" >
 		<table name="conversion_rule" >
+			<column name="name" type="text" decimal="0" jt="12" mandatory="y" />
+			<column name="secondary_resultants" type="_text" decimal="0" jt="2003" />
+			<column name="to_inventory_type_id" type="text" decimal="0" jt="12" mandatory="y" />
+			<index name="pk_conversion_rule" unique="PRIMARY_KEY" >
+				<column name="to_inventory_type_id" />
+			</index>
+			<fk name="fk_conversion_rule_to_type" to_schema="lcb.lcb_ref" to_table="inventory_type" />
+		</table>
+		<table name="conversion_rule_source" >
 			<column name="id" type="text" decimal="0" jt="12" mandatory="y" >
 				<defo>util_fn.generate_ulid()</defo>
 			</column>
-			<column name="from_type_id" type="text" decimal="0" jt="12" mandatory="y" />
-			<column name="to_type_id" type="text" decimal="0" jt="12" mandatory="y" />
-			<index name="pk_conversion_rule" unique="PRIMARY_KEY" >
+			<column name="inventory_type_id" type="text" decimal="0" jt="12" mandatory="y" />
+			<column name="to_inventory_type_id" type="text" decimal="0" jt="12" mandatory="y" />
+			<index name="conversion_rule_source_id_key" unique="UNIQUE" >
 				<column name="id" />
 			</index>
-			<fk name="fk_conversion_rule_from" to_schema="lcb.lcb_ref" to_table="inventory_type" >
-				<fk_column name="from_type_id" pk="id" />
+			<fk name="fk_conversion_rule_source_inventory_type" to_schema="lcb.lcb_ref" to_table="inventory_type" >
+				<fk_column name="inventory_type_id" pk="id" />
 			</fk>
-			<fk name="fk_conversion_rule_to" to_schema="lcb.lcb_ref" to_table="inventory_type" >
-				<fk_column name="to_type_id" pk="id" />
+			<fk name="fk_conversion_rule_source_to_type" to_schema="lcb.lcb_ref" to_table="conversion_rule" >
+				<fk_column name="to_inventory_type_id" pk="to_inventory_type_id" />
 			</fk>
 		</table>
 		<table name="inventory_lot_reporting_status" >
@@ -1127,24 +1329,26 @@ AS $function$
 		<entity schema="lcb.auth" name="token" color="BED3F4" x="608" y="48" />
 	</layout>
 	<layout name="lcb" id="Layout_387048f" show_relation="columns" >
-		<entity schema="lcb.lcb" name="qa_result" color="3986C1" x="528" y="240" />
 		<entity schema="lcb.lcb" name="lcb_license_holder" color="BED3F4" x="256" y="336" />
-		<entity schema="lcb.lcb" name="inventory_lot" color="3986C1" x="832" y="352" />
-		<entity schema="lcb.lcb" name="strain" color="3986C1" x="528" y="480" />
-		<entity schema="lcb.lcb" name="area" color="3986C1" x="528" y="640" />
-		<entity schema="lcb.lcb" name="batch" color="3986C1" x="528" y="64" />
-		<entity schema="lcb.lcb_ref" name="inventory_lot_reporting_status" color="3986C1" x="1232" y="512" />
-		<entity schema="lcb.lcb_ref" name="inventory_lot_type" color="3986C1" x="1232" y="400" />
-		<entity schema="lcb.lcb_ref" name="conversion_rule" color="3986C1" x="1072" y="144" />
 		<entity schema="lcb.lcb_ref" name="inventory_type" color="3986C1" x="896" y="48" />
-		<entity schema="lcb.lcb" name="conversion" color="3986C1" x="1248" y="608" />
-		<entity schema="lcb.lcb" name="manifest" color="3986C1" x="128" y="800" />
 		<entity schema="lcb.lcb" name="conversion_source" color="3986C1" x="1248" y="752" />
-		<entity schema="lcb.lcb" name="manifest_item" color="3986C1" x="576" y="864" />
 		<entity schema="lcb.lcb_hist" name="hist_inventory_lot" color="3986C1" x="944" y="864" />
 		<entity schema="lcb.lcb_ref" name="manifest_status" color="3986C1" x="208" y="1072" />
 		<entity schema="lcb.lcb_ref" name="lcb_license_holder_status" color="3986C1" x="208" y="80" />
 		<entity schema="lcb.lcb" name="lcb_license" color="BED3F4" x="48" y="352" />
+		<entity schema="lcb.lcb" name="conversion" color="3986C1" x="1248" y="608" />
+		<entity schema="lcb.lcb" name="qa_result" color="3986C1" x="528" y="240" />
+		<entity schema="lcb.lcb" name="batch" color="3986C1" x="528" y="64" />
+		<entity schema="lcb.lcb" name="strain" color="3986C1" x="528" y="480" />
+		<entity schema="lcb.lcb" name="area" color="3986C1" x="528" y="640" />
+		<entity schema="lcb.lcb" name="manifest" color="3986C1" x="128" y="800" />
+		<entity schema="lcb.lcb" name="manifest_item" color="3986C1" x="576" y="864" />
+		<entity schema="lcb.lcb" name="inventory_lot" color="3986C1" x="832" y="352" />
+		<entity schema="lcb.lcb_ref" name="inventory_lot_type" color="3986C1" x="1184" y="288" />
+		<entity schema="lcb.lcb_ref" name="inventory_lot_reporting_status" color="3986C1" x="1184" y="400" />
+		<entity schema="lcb.lcb_ref" name="conversion_rule_source" color="3986C1" x="1408" y="48" />
+		<entity schema="lcb.lcb_ref" name="conversion_rule" color="3986C1" x="1408" y="192" />
+		<entity schema="lcb.lcb" name="recipe" color="3986C1" x="1456" y="416" />
 	</layout>
 	<layout name="org" id="Layout_16ad517" show_relation="columns" >
 		<entity schema="lcb.org" name="config_org" color="3986C1" x="1072" y="48" />
