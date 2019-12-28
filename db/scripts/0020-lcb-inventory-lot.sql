@@ -261,6 +261,7 @@ CREATE TABLE lcb.conversion (
     id text NOT NULL UNIQUE default util_fn.generate_ulid(),
     created_at timestamptz DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at timestamptz NOT NULL,
+    conversion_rule_to_inventory_type_id text NOT NULL,
     recipe_id text NULL,
     app_tenant_id text NOT NULL
 );
@@ -282,6 +283,8 @@ ALTER TABLE ONLY lcb.conversion
     ADD CONSTRAINT fk_conversion_recipe FOREIGN KEY (recipe_id) REFERENCES lcb.recipe (id);
 ALTER TABLE ONLY lcb.inventory_lot
     ADD CONSTRAINT fk_inventory_lot_source_conversion FOREIGN KEY (source_conversion_id) REFERENCES lcb.conversion (id);
+ALTER TABLE ONLY lcb.conversion
+    ADD CONSTRAINT fk_conversion_conversion_rule FOREIGN KEY (conversion_rule_to_inventory_type_id) REFERENCES lcb_ref.conversion_rule (to_inventory_type_id);
 
 CREATE TABLE lcb.conversion_source (
     id text NOT NULL UNIQUE default util_fn.generate_ulid(),

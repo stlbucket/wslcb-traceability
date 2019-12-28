@@ -1,0 +1,8 @@
+query AllStrains {
+  allStrains {
+    nodes {
+      id
+      name
+    }
+  }
+}

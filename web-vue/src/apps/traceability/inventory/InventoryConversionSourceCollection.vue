@@ -1,5 +1,6 @@
 <template>
   <v-container>
+    <h3 v-if="conversionRule.isNonDestructive">* non-destructive conversions do not require source quantities</h3>
     <v-data-table
       :headers="headers"
       :items="mappedInventoryLots"
@@ -11,8 +12,6 @@
       @click:row="inventoryLotSelected"
       :sort-by="'updatedAt'"
       :sort-desc="true"
-      show-select
-      v-model="selectedItems"
     >
       <template v-slot:item.sourcedQuantity="{item}">
         <v-text-field
@@ -31,6 +30,14 @@ export default {
   components: {
   },
   props: {
+    inventoryType: {
+      type: Object,
+      required: true
+    },
+    conversionRule: {
+      type: Object,
+      required: true
+    },
     inventoryLots: {
       type: Array,
       required: true
@@ -64,6 +71,7 @@ export default {
 
       return {
         ...il,
+        units: il.inventoryType.units,
         updatedAtDisplay: updatedAtDisplay,
         descriptionDisplay: descriptionDisplay,
         histInventoryLots: {
@@ -117,16 +125,8 @@ export default {
           }
         )
     },
-
-  },
-  data () {
-    return {
-      expanded: [],
-      recentExpanded: [],
-      singleExpand: false,
-      itemSourcedQuantities: {},
-      selectedItems: [],
-      headers: [
+    headers () {
+      const qtyHeaders = [
         {
           text: 'sourced quantity',
           value: 'sourcedQuantity'
@@ -135,6 +135,12 @@ export default {
           text: 'available quantity',
           value: 'quantity'
         },
+        {
+          text: 'units',
+          value: 'units'
+        }
+      ]
+      const idHeaders = [
         {
           text: 'ULID',
           value: 'id'
@@ -146,19 +152,20 @@ export default {
         {
           text: 'strain',
           value: 'strainName'
-        },
+        }
       ]
+
+      return this.conversionRule.isNonDestructive ? [...idHeaders] : [...qtyHeaders, ...idHeaders]
     }
   },
-  // mounted () {
-  //   this.itemSourcedQuantities = this.inventoryLots.reduce(
-  //     (sq, il) => {
-  //       return {
-  //         ...sq,
-  //         [il.id]: il.quantity
-  //       }
-  //     }, {}
-  //   )
-  // }
+  data () {
+    return {
+      expanded: [],
+      recentExpanded: [],
+      singleExpand: false,
+      itemSourcedQuantities: {},
+      selectedItems: [],
+    }
+  },
 }
 </script>

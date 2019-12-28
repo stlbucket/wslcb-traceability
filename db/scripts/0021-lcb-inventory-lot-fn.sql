@@ -172,7 +172,7 @@ RETURNS setof lcb.inventory_lot
           _inventory_lot_input.strain_name::text
         )
         on conflict(lcb_license_holder_id, name)
-        do nothing
+        do update set lcb_license_holder_id = _lcb_license_holder_id
         returning id into _strain_id
         ;
       else
@@ -191,7 +191,7 @@ RETURNS setof lcb.inventory_lot
           _inventory_lot_input.area_name::text
         )
         on conflict(lcb_license_holder_id, name)
-        do nothing
+        do update set lcb_license_holder_id = _lcb_license_holder_id
         returning id into _area_id
         ;
       else

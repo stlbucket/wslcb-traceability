@@ -9,13 +9,18 @@
 import BatchConversion from './BatchConversion'
 
 export default {
-  name: 'FlowerProcessing',
+  name: 'Recipe',
   components: {
     BatchConversion
   },
+  props: {
+    recipeId: {
+      type: String,
+      required: true
+    }
+  },
   data () {
     return {
-      toInventoryType: 'UM'
     }
   }
 }

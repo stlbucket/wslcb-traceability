@@ -1,0 +1,31 @@
+query ConversionRuleByToInventoryTypeId (
+  $toInventoryTypeId: String!
+){
+  conversionRuleByToInventoryTypeId(toInventoryTypeId: $toInventoryTypeId) {
+    name
+    isNonDestructive
+    toInventoryType: inventoryTypeByToInventoryTypeId {
+      id
+      name
+      isSingleLotted
+      isStrainMixable
+      isStrainOptional
+      description
+      units
+    }
+    conversionRuleSources: conversionRuleSourcesByToInventoryTypeId {
+      nodes {
+        id
+        inventoryType: inventoryTypeByInventoryTypeId {
+          id
+          name
+          isSingleLotted
+          isStrainMixable
+          isStrainOptional
+          description
+          units
+        }
+      }
+    }
+  }
+}

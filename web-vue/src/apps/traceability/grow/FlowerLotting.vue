@@ -1,10 +1,23 @@
 <template>
-  <h1>Flower Lotting</h1>
+  <batch-conversion
+    :toInventoryType="toInventoryType"
+  >
+  </batch-conversion>
 </template>
 
 <script>
+import BatchConversion from './BatchConversion'
+
 export default {
   name: 'FlowerLotting',
+  components: {
+    BatchConversion
+  },
+  data () {
+    return {
+      toInventoryType: 'LF'
+    }
+  }
 }
 </script>
 

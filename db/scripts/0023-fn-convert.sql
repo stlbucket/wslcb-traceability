@@ -33,6 +33,7 @@ RETURNS setof lcb.inventory_lot
     _result_lot lcb.inventory_lot;
     _parent_lot lcb.inventory_lot;
     _total_sourced_quantity numeric(10,2);
+    _current_sourced_quantity numeric(10,2);
     _total_converted_quantity numeric(10,2);
     _conversion lcb.conversion;
     _conversion_source lcb.conversion_source;
@@ -48,6 +49,7 @@ RETURNS setof lcb.inventory_lot
     _total_sourced_quantity := 0;
     _total_converted_quantity := 0;
 
+    -- get the conversion rule
     select *
     into _conversion_rule
     from lcb_ref.conversion_rule
@@ -58,6 +60,7 @@ RETURNS setof lcb.inventory_lot
         raise exception 'illegal operation - batch cancelled:  no conversion rule for inventory type id: %', _to_inventory_type_id;
     end if;
 
+    -- get the inventory type we are converting to
     select *
     into _to_inventory_type
     from lcb_ref.inventory_type
@@ -74,12 +77,15 @@ RETURNS setof lcb.inventory_lot
     from lcb.lcb_license_holder
     where app_tenant_id = _current_app_user.app_tenant_id;
 
-    insert into lcb.conversion(app_tenant_id) 
-    values (_current_app_user.app_tenant_id)
+    -- create the base record for this conversion
+    insert into lcb.conversion(app_tenant_id, conversion_rule_to_inventory_type_id) 
+    values (_current_app_user.app_tenant_id, _to_inventory_type_id)
     returning * into _conversion;
 
+    -- loop through all source inventory lots
     foreach _source_input in ARRAY _sources_info
     loop
+      -- find the parent lot
       select *
       into _parent_lot
       from lcb.inventory_lot
@@ -89,6 +95,7 @@ RETURNS setof lcb.inventory_lot
         raise exception 'illegal operation - batch cancelled:  no inventory lot exists for parent lot id: %', _source_input.id;
       end if;
 
+      -- the strain_id for all resultant lots.   all source inputs must have the same value here or we throw an exception
       _result_strain_id := coalesce(_result_strain_id, _parent_lot.strain_id);
 
       if _result_strain_id != _parent_lot.strain_id then
@@ -104,6 +111,7 @@ RETURNS setof lcb.inventory_lot
         end if;
       end if;
 
+      -- make sure this inventory type can be used as a conversion source for the intended target
       select (count(*) > 0)
       into _conversion_source_allowed
       from lcb_ref.conversion_rule_source
@@ -115,26 +123,34 @@ RETURNS setof lcb.inventory_lot
         raise exception 'illegal operation - batch cancelled:  inventory type: %  cannot be converted to inventory type: %', _parent_lot.inventory_type, _to_inventory_type_id;
       end if;
 
+      -- the strain_id for all resultant lots.   all source inputs must have the same value here or we throw an exception
       _source_inventory_type := coalesce(_source_inventory_type, _parent_lot.inventory_type);
 
       if _parent_lot.inventory_type != _source_inventory_type then
         raise exception 'illegal operation - batch cancelled:  all source lots must have same inventory type';
       end if;
 
-      if _parent_lot.quantity < _source_input.quantity then
-        raise exception 'illegal operation - batch cancelled:  source quantity (%) greater than parent lot quantity(%) parent lot id: %', _source_input.quantity, _parent_lot.quantity, _parent_lot.id;
+      _current_sourced_quantity := 0;
+      if _conversion_rule.is_non_destructive = false then
+        _current_sourced_quantity := _source_input.quantity;
+        -- make sure the parent lot has enough quantity to source
+        if _parent_lot.quantity < _current_sourced_quantity then
+          raise exception 'illegal operation - batch cancelled:  source quantity (%) greater than parent lot quantity(%) parent lot id: %', _current_sourced_quantity, _parent_lot.quantity, _parent_lot.id;
+        end if;
+
+        -- remove sourced quantity from parent
+        update lcb.inventory_lot set
+          quantity = (quantity - _current_sourced_quantity),
+          reporting_status = case when (quantity - _current_sourced_quantity) > 0 then 'ACTIVE' else 'DEPLETED' end
+        where id = _source_input.id
+        returning * into _parent_lot;
+
+        -- add to the running sourced total
+        _total_sourced_quantity := _total_sourced_quantity + _current_sourced_quantity;
       end if;
 
-      _total_sourced_quantity := _total_sourced_quantity + _source_input.quantity;
-
       insert into lcb.conversion_source(app_tenant_id, conversion_id, inventory_lot_id, sourced_quantity)
-      values (_current_app_user.app_tenant_id, _conversion.id, _parent_lot.id, _source_input.quantity);
-
-      update lcb.inventory_lot set
-        quantity = (quantity - _source_input.quantity),
-        reporting_status = case when (quantity - _source_input.quantity) > 0 then 'ACTIVE' else 'DEPLETED' end
-      where id = _source_input.id
-      returning * into _parent_lot;
+      values (_current_app_user.app_tenant_id, _conversion.id, _parent_lot.id, _current_sourced_quantity);
 
       return next _parent_lot;
 
@@ -271,7 +287,7 @@ RETURNS setof lcb.inventory_lot
       end if;
     end loop;
 
-    if _total_converted_quantity != _total_sourced_quantity then
+    if _total_converted_quantity != _total_sourced_quantity AND _conversion_rule.is_non_destructive = false then
       raise exception 'illegal operation - batch cancelled:  total converted quantity must equal total sourced quantity';
     end if;
 

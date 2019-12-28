@@ -10,7 +10,7 @@
       item-key="id"
       show-expand
       hide-default-footer
-      :items-per-page="100"
+      :items-per-page="itemsPerPage"
       @click:row="inventoryLotSelected"
       :sort-by="'updatedAt'"
       :sort-desc="true"
@@ -60,6 +60,10 @@ export default {
     onSelectedInventoryLots: {
       type: Function,
       required: false
+    },
+    itemsPerPage: {
+      type: Number,
+      default: 100
     }
   },
   methods: {
@@ -73,12 +77,13 @@ export default {
 
       return {
         ...il,
+        units: il.inventoryType.units,
         updatedAtDisplay: updatedAtDisplay,
         descriptionDisplay: descriptionDisplay,
         strainName: il.strain ? il.strain.name : 'n/a',
         areaName: il.area ? il.area.name : 'n/a',
         histInventoryLots: {
-          nodes: il.histInventoryLots.nodes
+          nodes: (il.histInventoryLots || {nodes: []}).nodes
           .map(
             hil => {
               const date = new Date(hil.updatedAt)
@@ -158,6 +163,10 @@ export default {
         {
           text: 'quantity',
           value: 'quantity'
+        },
+        {
+          text: 'units',
+          value: 'units'
         }
       ],
       historyHeaders: [

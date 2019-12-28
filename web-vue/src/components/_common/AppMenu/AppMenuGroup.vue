@@ -19,16 +19,17 @@
 </template>
 
 <script>
-// import AppMenuListScript from './AppMenuListScript'
-
 export default {
   name: "AppMenuGroup",
   components: {
   },
   methods: {
     appSelected (app) {
-      this.$router.push({name: app.routeName}).catch(err => { err })
-    //  this.$eventHub.$emit('app-selected');
+      this.$router.push({
+        path: app.path,
+        params: app.params
+      })
+      .catch(err => { err })
     },
   },
   computed: {

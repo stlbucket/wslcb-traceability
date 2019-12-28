@@ -1,6 +1,6 @@
 <template>
   <v-container>
-    <h1>{{recipeDefinition.name}}</h1>
+    <h1>{{titleDisplay}}</h1>
     <v-row>
       <v-col :cols="3">
         <h2>Source Types</h2>
@@ -175,36 +175,35 @@
 </template>
 
 <script>
-// import lcbLookupSets from '@/graphql/query/lcbLookupSets.graphql'
 import allInventoryLots from '@/graphql/query/allInventoryLots.graphql'
+import conversionRuleByInventoryTypeId from '@/graphql/query/conversionRuleByInventoryTypeId.graphql'
 import InventoryConversionSourceCollection from '../inventory/InventoryConversionSourceCollection'
 import InventoryLotCollection from '../inventory/InventoryLotCollection'
 
 export default {
-  name: 'Planting',
+  name: 'BatchConversion',
   components: {
     InventoryLotCollection,
     InventoryConversionSourceCollection
   },
   props: {
-    recipeDefinition: {
-      type: Object,
+    toInventoryType: {
+      type: String,
       required: true
+    },
+    appName: {
+      type: String,
+      required: false
     }
   },
   data () {
     return {
       currentStep: 1,
       selectedInventoryLots: [],
-      inventoryLots: [],
-      // inventoryTypes: [],
+      inventoryLots: null,
       newSeedlings: [],
       itemSourcedQuantities: {},
-      // recipeDefinition: {
-      //   name: 'Planting',
-      //   sourceTypes: ['SD'],
-      //   targetType: 'SL'
-      // },
+      conversionRule: null,
       sourceQuantitiesConfig: [
         {
           inventoryType: { id: 'N/A', name: 'N/A' },
@@ -258,21 +257,43 @@ export default {
       //   alert(error.toString())
       //   console.error(error)
       // })
+    },
+    buildSourceQuantitiesConfig () {
+      if (!this.conversionRule || !this.inventoryLots) { return }
+
+      this.sourceQuantitiesConfig = this.conversionRule.conversionRuleSources.nodes
+      .map(
+        st => {
+          const inventoryType = st.inventoryType
+          const inventoryLots = this.inventoryLots.filter(il => il.inventoryType.id === inventoryType.id && il.reportingStatus === 'ACTIVE')
+
+          return {
+            inventoryType: inventoryType,
+            inventoryLots: inventoryLots
+          }
+        }
+      )
     }
   },
   computed: {
+    titleDisplay () {
+      return this.conversionRule ? `Batch Conversion to ${this.conversionRule.name}` : 'Batch Conversion'
+      // return this.conversionRule ? `Batch Conversion to ${this.conversionRule.toInventoryType.name}` : 'Batch Conversion'
+    },
     inventoryTypes () {
       return this.$store.state.inventoryTypes
     },
     sourceTypesDisplay () {
-      return this.inventoryTypes
-        .filter(it => this.recipeDefinition.sourceTypes.indexOf(it.id) > -1)
-        .map(it => `${it.id}: ${it.name}`)
+      if (!this.conversionRule) return []
+
+      return this.conversionRule.conversionRuleSources.nodes
+        .map(crs => `${crs.inventoryType.id}: ${crs.inventoryType.name}`)
     },
     targetTypeDisplay () {
-      return this.inventoryTypes
-        .filter(it => it.id === this.recipeDefinition.targetType)
-        .map(it => `${it.id}: ${it.name}`)[0]
+      if (!this.conversionRule) return []
+
+      const it = this.conversionRule.toInventoryType
+      return `${it.id}: ${it.name}`
     },
     totalSourcedQuantity () {
       return Object.values(this.itemSourcedQuantities).reduce(
@@ -303,35 +324,45 @@ export default {
     convertDisabled () {
       return this.selectedInventoryLots.length === 0
     },
-    // totalSourcedQuantity () {
-    //   return this.selectedInventoryLots.reduce(
-    //     (total, il) => {
-    //       return total + il.sourced
-    //     }
-    //   )
-    // }
+  },
+  watch: {
+    conversionRule () {
+      this.buildSourceQuantitiesConfig()
+    },
+    inventoryLots () {
+      this.buildSourceQuantitiesConfig()
+    }
   },
   apollo: {
+    initConversionRule: {
+      query: conversionRuleByInventoryTypeId,
+      fetchPolicy: 'network-only',
+      variables () {
+        return {
+          toInventoryTypeId: this.toInventoryType
+        }
+      },
+      update (data) {
+        this.conversionRule = data.conversionRuleByToInventoryTypeId
+        // this.sourceQuantitiesConfig = this.conversionRule.conversionRuleSources.nodes
+        // .map(
+        //   st => {
+        //     const inventoryType = st.inventoryType
+        //     const inventoryLots = this.inventoryLots.filter(il => il.inventoryType.id === inventoryType.id && il.reportingStatus === 'ACTIVE')
+
+        //     return {
+        //       inventoryType: inventoryType,
+        //       inventoryLots: inventoryLots
+        //     }
+        //   }
+        // )
+      }
+    },
     getInventoryLots: {
       query: allInventoryLots
       ,fetchPolicy: 'network-only'
       ,update (data) {
-        // this.inventoryLots = (data.inventoryLots || {nodes:[]}).nodes.filter(il => this.recipeDefinition.sourceTypes.indexOf(il.inventoryType.id) !== -1)
         this.inventoryLots = (data.inventoryLots || {nodes:[]}).nodes
-        console.log('heyoo', data)
-        this.sourceQuantitiesConfig = this.recipeDefinition.sourceTypes
-        .map(
-          st => {
-            const inventoryType = this.inventoryTypes.find(it => it.id === st)
-            const inventoryLots = this.inventoryLots.filter(il => il.inventoryType.id === st && il.reportingStatus === 'ACTIVE')
-
-            return {
-              inventoryType: inventoryType,
-              inventoryLots: inventoryLots
-            }
-          }
-        )
-        console.log('bayou', this.sourceQuantitiesConfig)
       }
     },
   }

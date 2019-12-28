@@ -1,0 +1,8 @@
+query AllAreas {
+  allAreas {
+    nodes {
+      id
+      name
+    }
+  }
+}

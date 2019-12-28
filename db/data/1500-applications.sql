@@ -603,6 +603,51 @@ select * from app.license;
   do nothing
   ;
 
+--------------------------------------------------   seed-sourcing
+  insert into app.application(
+    name 
+    ,key
+  ) 
+  values (
+    'Seed Sourcing'
+    ,'trc-seed-sourcing'
+  )
+  on conflict(key) 
+  do nothing
+  ;
+
+  insert into app.license_type(
+    name
+    ,key
+    ,application_id
+  )
+  values
+  (
+    'Seed Sourcing'
+    ,'trc-seed-sourcing'
+    ,(select id from app.application where key = 'trc-seed-sourcing')
+  )
+  on conflict(key) 
+  do nothing
+  ;
+
+  insert into app.license(
+    app_tenant_id
+    ,license_type_id
+    ,name
+    ,assigned_to_app_user_id
+  )
+  select
+    au.app_tenant_id
+    ,(select id from app.license_type where key = 'trc-seed-sourcing')
+    ,au.username || ' - ' || (select name from app.license_type where key = 'trc-seed-sourcing')
+    ,au.id
+  from auth.app_user au
+  where au.permission_key in ('SuperAdmin', 'Admin', 'User')
+  on conflict (assigned_to_app_user_id, license_type_id)
+  do nothing
+  ;
+
 --------------------------------------------------   planting
   insert into app.application(
     name 

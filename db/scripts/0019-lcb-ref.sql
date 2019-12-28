@@ -41,7 +41,8 @@ values
 CREATE TABLE lcb_ref.conversion_rule (
     to_inventory_type_id text NOT NULL UNIQUE,
     name text NOT NULL,
-    secondary_resultants text[]
+    secondary_resultants text[],
+    is_non_destructive boolean NOT NULL
 );
 ALTER TABLE lcb_ref.conversion_rule OWNER TO app;
 ALTER TABLE ONLY lcb_ref.conversion_rule
@@ -50,25 +51,29 @@ ALTER TABLE ONLY lcb_ref.conversion_rule
     ADD CONSTRAINT fk_conversion_rule_to_type FOREIGN KEY (to_inventory_type_id) REFERENCES lcb_ref.inventory_type (id);
 
 CREATE TABLE lcb_ref.conversion_rule_source (
-    id text NOT NULL UNIQUE default util_fn.generate_ulid(),
-    to_inventory_type_id text NOT NULL,
-    inventory_type_id text NOT NULL
+  id text NOT NULL UNIQUE default util_fn.generate_ulid(),
+  to_inventory_type_id text NOT NULL,
+  inventory_type_id text NOT NULL
 );
 ALTER TABLE lcb_ref.conversion_rule_source OWNER TO app;
 ALTER TABLE ONLY lcb_ref.conversion_rule_source
     ADD CONSTRAINT fk_conversion_rule_source_to_type FOREIGN KEY (to_inventory_type_id) REFERENCES lcb_ref.conversion_rule (to_inventory_type_id);
 ALTER TABLE ONLY lcb_ref.conversion_rule_source
     ADD CONSTRAINT fk_conversion_rule_source_inventory_type FOREIGN KEY (inventory_type_id) REFERENCES lcb_ref.inventory_type (id);
+ALTER TABLE ONLY lcb_ref.conversion_rule_source
+    ADD CONSTRAINT uq_conversion_rule_source UNIQUE (to_inventory_type_id, inventory_type_id);    
 
 insert into lcb_ref.conversion_rule (
   to_inventory_type_id,
   name,
-  secondary_resultants
+  secondary_resultants,
+  is_non_destructive
 )
 select
   id,
   name,
-  case when id not in ('SD', 'WW') then '{"WW"}' else '{}'::text[] end
+  case when id not in ('SD', 'WW') then '{"WW"}' else '{}'::text[] end,
+  case when id not in ('SD', 'CL', 'WF') then false else true end
 from lcb_ref.inventory_type
 ;
 
@@ -77,16 +82,20 @@ insert into lcb_ref.conversion_rule_source(
   to_inventory_type_id
 )
 values
+  ('PL','SD'),
   ('SD','SL'),
   ('SL','PL'),
-  ('CL','PL'),
+  ('CL','SL'),
+  ('PL','CL'),
   ('PL','WF'),
   ('WF','BF'),
   ('BF','LF'),
   ('LF','UM'),
   ('LF','PM'),
+  ('UM','PM'),
   ('LF','PR'),
   ('LF','UM')
+on conflict do nothing
 ;
 
 -- insert into lcb_ref.conversion_rule (

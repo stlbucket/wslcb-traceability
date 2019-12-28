@@ -32,10 +32,10 @@ import RetailSalesReporting from '@/apps/traceability/retail/RetailSalesReportin
 // import Planting from '@/apps/traceability/grow/Planting'
 // import Cloning from '@/apps/traceability/grow/Cloning'
 // import Growing from '@/apps/traceability/grow/Growing'
-import Harvesting from '@/apps/traceability/grow/Harvesting'
-import Curing from '@/apps/traceability/grow/Curing'
-import FlowerLotting from '@/apps/traceability/grow/FlowerLotting'
-import FlowerProcessing from '@/apps/traceability/grow/FlowerProcessing'
+// import Harvesting from '@/apps/traceability/grow/Harvesting'
+// import Curing from '@/apps/traceability/grow/Curing'
+// import FlowerLotting from '@/apps/traceability/grow/FlowerLotting'
+// import FlowerProcessing from '@/apps/traceability/grow/FlowerProcessing'
 import ProductProcessing from '@/apps/traceability/grow/ProductProcessing'
 import ProductPackaging from '@/apps/traceability/grow/ProductPackaging'
 import BatchConversion from '@/apps/traceability/grow/BatchConversion'
@@ -167,81 +167,10 @@ export default new Router({
       component: RetailSalesReporting
     },
     {
-      path: '/trc-batch-conversion',
-      name: 'trc-planting',
+      path: '/batch-conversion/:toInventoryType',
+      name: 'batch-conversion',
       component: BatchConversion,
-      props: {
-        recipeDefinition: {
-          name: 'Planting',
-          sourceTypes: ['SD'],
-          targetType: 'SL'
-        }
-      }
-    },
-    {
-      path: '/trc-batch-conversion',
-      name: 'trc-cloning',
-      component: BatchConversion,
-      props: {
-        recipeDefinition: {
-          name: 'Planting',
-          sourceTypes: ['PL'],
-          targetType: 'CL'
-        }
-      },
-    },
-      // beforeUpdate (to, from, next) {
-      //   // just use `this`
-      //     console.log('beforeUpdate', to,from)
-      //     next()
-      //   }
-      // },
-    {
-      path: '/trc-batch-conversion',
-      name: 'trc-growing',
-      component: BatchConversion,
-      props: {
-        recipeDefinition: {
-          name: 'Planting',
-          sourceTypes: ['SL','CL'],
-          targetType: 'PL'
-        }
-      }
-    },
-    // {
-    //   path: '/trc-growing',
-    //   name: 'trc-growing',
-    //   component: Growing
-    // },
-    // {
-    //   path: '/trc-planting',
-    //   name: 'trc-planting',
-    //   component: Planting
-    // },
-    // {
-    //   path: '/trc-cloning',
-    //   name: 'trc-cloning',
-    //   component: Cloning
-    // },
-    {
-      path: '/trc-harvesting',
-      name: 'trc-harvesting',
-      component: Harvesting
-    },
-    {
-      path: '/trc-curing',
-      name: 'trc-curing',
-      component: Curing
-    },
-    {
-      path: '/trc-flower-lotting',
-      name: 'trc-flower-lotting',
-      component: FlowerLotting
-    },
-    {
-      path: '/trc-flower-processing',
-      name: 'trc-flower-processing',
-      component: FlowerProcessing
+      props: true
     },
     {
       path: '/trc-product-processing',

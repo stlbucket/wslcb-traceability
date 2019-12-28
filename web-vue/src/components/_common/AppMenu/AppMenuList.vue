@@ -48,47 +48,54 @@ export default {
           name: 'Grow',
           appList: [
             {
+              key: 'trc-seed-sourcing',
+              name: 'Seed Sourcing',
+              path: '/batch-conversion/SD',
+              iconKey: 'grain'
+            },
+            {
               key: 'trc-planting',
               name: 'Planting',
-              routeName: 'trc-planting',
+              path: '/batch-conversion/SL',
               iconKey: 'adjust'
             },
             {
               key: 'trc-cloning',
               name: 'Cloning',
-              routeName: 'trc-cloning',
+              path: '/batch-conversion/CL',
               iconKey: 'people'
             },
             {
               key: 'trc-growing',
               name: 'Growing',
-              routeName: 'trc-growing',
+              path: '/batch-conversion/PL',
               iconKey: 'add_alarm'
             },
             {
               key: 'trc-harvesting',
               name: 'Harvesting',
-              routeName: 'trc-harvesting',
+              path: '/batch-conversion/WF',
               iconKey: 'graphic_eq'
             },
             {
               key: 'trc-curing',
               name: 'Curing',
-              routeName: 'trc-curing',
+              path: '/batch-conversion/BF',
               iconKey: 'access_time'
             },
             {
               key: 'trc-flower-lotting',
               name: 'Flower Lotting',
               routeName: 'trc-flower-lotting',
+              path: '/batch-conversion/LF',
               iconKey: 'storage'
             },
-            {
-              key: 'trc-flower-processing',
-              name: 'Flower Processing',
-              routeName: 'trc-flower-processing',
-              iconKey: 'flip_camera_android'
-            },
+            // {
+            //   key: 'trc-flower-processing',
+            //   name: 'Flower Processing',
+            //   routeName: 'trc-flower-processing',
+            //   iconKey: 'flip_camera_android'
+            // },
           ]
         },
         {
@@ -178,6 +185,7 @@ export default {
               key: 'trc-inv',
               name: 'Inventory Admin',
               routeName: 'trc-inv',
+              path: '/trc-inv',
               iconKey: 'apartment'
             },
             {

@@ -1,0 +1,11 @@
+query strainCountsForInventoryTypes($inventoryTypeIds: [String!]) {
+  allStrains {
+    nodes {
+      id
+      name
+      inventoryLots: inventoryLotsByStrainId(filter: { inventoryType: { in: $inventoryTypeIds } }) {
+        totalCount
+      }
+    }
+  }
+}

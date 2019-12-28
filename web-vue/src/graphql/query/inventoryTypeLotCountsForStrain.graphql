@@ -1,0 +1,21 @@
+query inventoryTypeLotCountsForStrain(
+  $strainId: String!
+) {
+  CL: allInventoryLots(
+    filter: {
+      strainId: { eq: $strainId}
+      inventoryType: { eq: "CL" }
+    }
+  ) {
+    totalCount
+  }
+
+  SD: allInventoryLots(
+    filter: {
+      strainId: { eq: $strainId}
+      inventoryType: { eq: "SD" }
+    }
+  ) {
+    totalCount
+  }
+}

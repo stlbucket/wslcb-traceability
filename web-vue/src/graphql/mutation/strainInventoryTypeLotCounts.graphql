@@ -1,0 +1,5 @@
+mutation {
+  strainInventoryTypeLotCounts(input:{}) {
+    json
+  }
+}

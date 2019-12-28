@@ -373,7 +373,6 @@ AS $function$
 			<column name="created_at" type="timestamptz" length="35" decimal="6" jt="93" mandatory="y" >
 				<defo>CURRENT_TIMESTAMP</defo>
 			</column>
-			<column name="updated_at" type="timestamptz" length="35" decimal="6" jt="93" mandatory="y" />
 			<column name="name" type="text" decimal="0" jt="12" />
 			<column name="lcb_license_holder_id" type="text" decimal="0" jt="12" mandatory="y" />
 			<index name="pk_area" unique="PRIMARY_KEY" >
@@ -488,8 +487,6 @@ AS $function$
 			<column name="qa_result_id" type="text" decimal="0" jt="12" />
 			<column name="strain_id" type="text" decimal="0" jt="12" />
 			<column name="area_id" type="text" decimal="0" jt="12" />
-			<column name="strain_name" type="text" decimal="0" jt="12" />
-			<column name="area_identifier" type="text" decimal="0" jt="12" />
 			<index name="pk_inventory_lot" unique="PRIMARY_KEY" >
 				<column name="id" />
 			</index>
@@ -696,7 +693,6 @@ AS $function$
 			<column name="created_at" type="timestamptz" length="35" decimal="6" jt="93" mandatory="y" >
 				<defo>CURRENT_TIMESTAMP</defo>
 			</column>
-			<column name="updated_at" type="timestamptz" length="35" decimal="6" jt="93" mandatory="y" />
 			<column name="name" type="text" decimal="0" jt="12" />
 			<column name="lcb_license_holder_id" type="text" decimal="0" jt="12" mandatory="y" />
 			<index name="pk_strain" unique="PRIMARY_KEY" >
@@ -859,8 +855,6 @@ AS $function$
 			<column name="lot_type" type="text" decimal="0" jt="12" mandatory="y" />
 			<column name="strain_id" type="text" decimal="0" jt="12" />
 			<column name="area_id" type="text" decimal="0" jt="12" />
-			<column name="strain_name" type="text" decimal="0" jt="12" />
-			<column name="area_identifier" type="text" decimal="0" jt="12" />
 			<index name="hist_inventory_lot_id_key" unique="UNIQUE" >
 				<column name="id" options="ASC" />
 			</index>
@@ -892,8 +886,6 @@ AS $function$
         lot_type,
         description,
         quantity,
-        strain_name,
-        area_identifier,
         strain_id,
         area_id
     )
@@ -912,8 +904,6 @@ AS $function$
         OLD.lot_type,
         OLD.description,
         OLD.quantity,
-        OLD.strain_name,
-        OLD.area_identifier,
         OLD.strain_id,
         OLD.area_id
     )
@@ -921,6 +911,7 @@ AS $function$
     RETURN OLD;
   END; $function$
 ;]]></string>
+			<result_param name="returnValue" jt="1111" type="trigger" />
 			<result_param name="returnValue" jt="1111" type="trigger" />
 		</procedure>
 	</schema>
@@ -968,6 +959,8 @@ AS $function$
 			<column name="description" type="text" decimal="0" jt="12" />
 			<column name="units" type="text" decimal="0" jt="12" mandatory="y" />
 			<column name="is_single_lotted" type="bool" length="1" decimal="0" jt="-7" mandatory="y" />
+			<column name="is_strain_mixable" type="bool" length="1" decimal="0" jt="-7" mandatory="y" />
+			<column name="is_strain_optional" type="bool" length="1" decimal="0" jt="-7" mandatory="y" />
 			<index name="pk_inventory_type" unique="PRIMARY_KEY" >
 				<column name="id" />
 			</index>
@@ -1330,7 +1323,6 @@ AS $function$
 	</layout>
 	<layout name="lcb" id="Layout_387048f" show_relation="columns" >
 		<entity schema="lcb.lcb" name="lcb_license_holder" color="BED3F4" x="256" y="336" />
-		<entity schema="lcb.lcb_ref" name="inventory_type" color="3986C1" x="896" y="48" />
 		<entity schema="lcb.lcb" name="conversion_source" color="3986C1" x="1248" y="752" />
 		<entity schema="lcb.lcb_hist" name="hist_inventory_lot" color="3986C1" x="944" y="864" />
 		<entity schema="lcb.lcb_ref" name="manifest_status" color="3986C1" x="208" y="1072" />
@@ -1347,8 +1339,9 @@ AS $function$
 		<entity schema="lcb.lcb_ref" name="inventory_lot_type" color="3986C1" x="1184" y="288" />
 		<entity schema="lcb.lcb_ref" name="inventory_lot_reporting_status" color="3986C1" x="1184" y="400" />
 		<entity schema="lcb.lcb_ref" name="conversion_rule_source" color="3986C1" x="1408" y="48" />
-		<entity schema="lcb.lcb_ref" name="conversion_rule" color="3986C1" x="1408" y="192" />
 		<entity schema="lcb.lcb" name="recipe" color="3986C1" x="1456" y="416" />
+		<entity schema="lcb.lcb_ref" name="inventory_type" color="3986C1" x="896" y="48" />
+		<entity schema="lcb.lcb_ref" name="conversion_rule" color="3986C1" x="1408" y="192" />
 	</layout>
 	<layout name="org" id="Layout_16ad517" show_relation="columns" >
 		<entity schema="lcb.org" name="config_org" color="3986C1" x="1072" y="48" />

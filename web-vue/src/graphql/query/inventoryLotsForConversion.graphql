@@ -1,0 +1,40 @@
+query inventoryLotsForConversion(
+  $strainId: String!
+  $inventoryTypeIds: [String!]
+) {
+  allInventoryLots(
+    filter: {
+      strainId: {
+        eq: $strainId
+      }
+      inventoryType: {
+        in: $inventoryTypeIds
+      }
+    }
+  ) {
+    nodes {
+      id
+      createdAt
+      updatedAt
+      reportingStatus
+      lotType
+      inventoryType: inventoryTypeByInventoryType {
+        id
+        name
+        description
+        units
+      }
+      description
+      quantity
+      licenseeIdentifier
+      strain: strainByStrainId {
+        id
+        name
+      }
+      area: areaByAreaId {
+        id
+        name
+      }
+    }
+  }
+}

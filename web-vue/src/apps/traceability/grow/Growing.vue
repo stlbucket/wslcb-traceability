@@ -1,6 +1,6 @@
 <template>
   <batch-conversion
-    :recipeDefinition="recipeDefinition"
+    :toInventoryType="toInventoryType"
   >
   </batch-conversion>
 </template>
@@ -15,11 +15,7 @@ export default {
   },
   data () {
     return {
-      recipeDefinition: {
-        name: 'Growing',
-        sourceTypes: ['CL', 'SL'],
-        targetType: 'PL'
-      },
+      toInventoryType: 'PL'
     }
   }
 }
