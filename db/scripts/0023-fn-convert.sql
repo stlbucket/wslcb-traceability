@@ -278,17 +278,16 @@ RETURNS setof lcb.inventory_lot
             _conversion.id
           RETURNING * INTO _result_lot;
 
-          _total_converted_quantity := _total_converted_quantity + _result_input.quantity;
+          _total_converted_quantity := _total_converted_quantity + 1;
           _lot_count := _lot_count + 1;
 
           return next _result_lot;
         end loop;
-        RETURN;
       end if;
     end loop;
 
     if _total_converted_quantity != _total_sourced_quantity AND _conversion_rule.is_non_destructive = false then
-      raise exception 'illegal operation - batch cancelled:  total converted quantity must equal total sourced quantity';
+      raise exception 'illegal operation - batch cancelled:  total converted quantity (%) must equal total sourced quantity (%).', _total_converted_quantity, _total_sourced_quantity;
     end if;
 
     RETURN;

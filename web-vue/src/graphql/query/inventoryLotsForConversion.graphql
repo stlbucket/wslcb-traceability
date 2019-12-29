@@ -4,6 +4,9 @@ query inventoryLotsForConversion(
 ) {
   allInventoryLots(
     filter: {
+      reportingStatus: {
+        eq: "ACTIVE"
+      }
       strainId: {
         eq: $strainId
       }
@@ -23,6 +26,9 @@ query inventoryLotsForConversion(
         name
         description
         units
+        isSingleLotted
+        isStrainMixable
+        isStrainOptional
       }
       description
       quantity
@@ -34,6 +40,22 @@ query inventoryLotsForConversion(
       area: areaByAreaId {
         id
         name
+      }
+      histInventoryLots: histInventoryLotsByInventoryLotId {
+        nodes {
+          id
+          inventoryLotId
+		      reportingStatus
+          createdAt
+          updatedAt
+          lotType
+          inventoryType
+          description
+          quantity
+          licenseeIdentifier
+          strainId
+          areaId
+        }
       }
     }
   }

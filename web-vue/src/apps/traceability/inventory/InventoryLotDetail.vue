@@ -28,6 +28,12 @@
             disabled
           ></v-text-field>
         </v-col>
+        <v-col cols="1"></v-col>
+        <v-col cols="2">
+          <v-btn
+            @click="makeDemoData"
+          >Make Demo Data</v-btn>
+        </v-col>
       </v-row>
       <v-row>
         <v-col cols="2">
@@ -163,6 +169,23 @@ export default {
         console.error(error)
       })
     },
+    makeDemoData () {
+      this.$apollo.mutate({
+        mutation: reportInventoryLots,
+        variables: {
+          input: demoDataVariables
+        }
+      })
+      .then(result => {
+        this.$store.commit('addRecentInventoryLotChange', { newChanges: result.data.reportInventoryLot.inventoryLots})
+        // this.inventoryLot = null
+        // this.$apollo.queries.getInventoryLots.refetch()
+      })
+      .catch(error => {
+        alert(error.toString())
+        console.error(error)
+      })
+    }
   },
   watch: {
     inventoryLot () {
@@ -342,4 +365,201 @@ export default {
     }
   }
 }
+
+const demoDataVariables = [
+  // seeds
+  {
+    "id": null,
+    "inventoryType": "SD",
+    "licenseeIdentifier": null,
+    "strainName": "boba fett",
+    "description": null,
+    "areaName": "hoth",
+    "quantity": "100"
+  },
+  {
+    "id": null,
+    "inventoryType": "SD",
+    "licenseeIdentifier": null,
+    "strainName": "yoda",
+    "description": null,
+    "areaName": "dagobah",
+    "quantity": "100"
+  },
+  {
+    "id": null,
+    "inventoryType": "SD",
+    "licenseeIdentifier": null,
+    "strainName": "yoda",
+    "description": null,
+    "areaName": "hoth",
+    "quantity": "100"
+  },
+  // seedlings
+  {
+    "id": null,
+    "inventoryType": "SL",
+    "licenseeIdentifier": null,
+    "strainName": "boba fett",
+    "description": null,
+    "areaName": "hoth",
+    "quantity": "1"
+  },
+  {
+    "id": null,
+    "inventoryType": "SL",
+    "licenseeIdentifier": null,
+    "strainName": "yoda",
+    "description": null,
+    "areaName": "dagobah",
+    "quantity": "1"
+  },
+  {
+    "id": null,
+    "inventoryType": "SL",
+    "licenseeIdentifier": null,
+    "strainName": "boba fett",
+    "description": null,
+    "areaName": "hoth",
+    "quantity": "1"
+  },
+  {
+    "id": null,
+    "inventoryType": "SL",
+    "licenseeIdentifier": null,
+    "strainName": "yoda",
+    "description": null,
+    "areaName": "dagobah",
+    "quantity": "1"
+  },
+  {
+    "id": null,
+    "inventoryType": "PL",
+    "licenseeIdentifier": null,
+    "strainName": "boba fett",
+    "description": null,
+    "areaName": "hoth",
+    "quantity": "1"
+  },
+  {
+    "id": null,
+    "inventoryType": "PL",
+    "licenseeIdentifier": null,
+    "strainName": "yoda",
+    "description": null,
+    "areaName": "dagobah",
+    "quantity": "1"
+  },
+  // plants
+  {
+    "id": null,
+    "inventoryType": "PL",
+    "licenseeIdentifier": null,
+    "strainName": "boba fett",
+    "description": null,
+    "areaName": "hoth",
+    "quantity": "1"
+  },
+  {
+    "id": null,
+    "inventoryType": "PL",
+    "licenseeIdentifier": null,
+    "strainName": "yoda",
+    "description": null,
+    "areaName": "dagobah",
+    "quantity": "1"
+  },
+  {
+    "id": null,
+    "inventoryType": "PL",
+    "licenseeIdentifier": null,
+    "strainName": "boba fett",
+    "description": null,
+    "areaName": "hoth",
+    "quantity": "1"
+  },
+  {
+    "id": null,
+    "inventoryType": "PL",
+    "licenseeIdentifier": null,
+    "strainName": "yoda",
+    "description": null,
+    "areaName": "dagobah",
+    "quantity": "1"
+  },
+  {
+    "id": null,
+    "inventoryType": "PL",
+    "licenseeIdentifier": null,
+    "strainName": "boba fett",
+    "description": null,
+    "areaName": "hoth",
+    "quantity": "1"
+  },
+  {
+    "id": null,
+    "inventoryType": "PL",
+    "licenseeIdentifier": null,
+    "strainName": "yoda",
+    "description": null,
+    "areaName": "dagobah",
+    "quantity": "1"
+  },
+  // clones
+  {
+    "id": null,
+    "inventoryType": "CL",
+    "licenseeIdentifier": null,
+    "strainName": "boba fett",
+    "description": null,
+    "areaName": "hoth",
+    "quantity": "1"
+  },
+  {
+    "id": null,
+    "inventoryType": "CL",
+    "licenseeIdentifier": null,
+    "strainName": "yoda",
+    "description": null,
+    "areaName": "dagobah",
+    "quantity": "1"
+  },
+  {
+    "id": null,
+    "inventoryType": "CL",
+    "licenseeIdentifier": null,
+    "strainName": "boba fett",
+    "description": null,
+    "areaName": "hoth",
+    "quantity": "1"
+  },
+  {
+    "id": null,
+    "inventoryType": "CL",
+    "licenseeIdentifier": null,
+    "strainName": "yoda",
+    "description": null,
+    "areaName": "dagobah",
+    "quantity": "1"
+  },
+  {
+    "id": null,
+    "inventoryType": "CL",
+    "licenseeIdentifier": null,
+    "strainName": "boba fett",
+    "description": null,
+    "areaName": "hoth",
+    "quantity": "1"
+  },
+  {
+    "id": null,
+    "inventoryType": "CL",
+    "licenseeIdentifier": null,
+    "strainName": "yoda",
+    "description": null,
+    "areaName": "dagobah",
+    "quantity": "1"
+  },
+
+]
 </script>

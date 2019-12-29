@@ -107,22 +107,6 @@
               }
             }
           )
-        // return this.inventoryTypes
-        //   .filter(
-        //     it => {
-        //       const fromIds = it.canConvertFrom.nodes.map(ccf => ccf.fromTypeId)
-        //       const sourceInventoryType = this.conversionConfig.parentLot ? this.conversionConfig.parentLot.inventoryType.id : 'N/A'
-        //       return fromIds.indexOf(sourceInventoryType) !== -1
-        //     }
-        //   )
-        //   .map(
-        //     it => {
-        //       return {
-        //         text: `${it.id}: ${it.name}`,
-        //         value: it.id
-        //       }
-        //     }
-        //   )
       },
       parentLotDisplay () {
         const parentLot = this.conversionConfig.parentLot

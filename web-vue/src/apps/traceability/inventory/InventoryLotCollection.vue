@@ -57,14 +57,15 @@ export default {
       type: Boolean,
       default: false
     },
-    onSelectedInventoryLots: {
-      type: Function,
-      required: false
-    },
+    // onSelectedInventoryLots: {
+    //   type: Function,
+    //   required: false
+    // },
     itemsPerPage: {
       type: Number,
       default: 100
-    }
+    },
+    value: Array
   },
   methods: {
     inventoryLotSelected (inventoryLot) {
@@ -102,7 +103,8 @@ export default {
 },
   watch: {
     selectedInventoryLots () {
-      if (this.onSelectedInventoryLots) this.onSelectedInventoryLots(this.selectedInventoryLots)
+      // if (this.onSelectedInventoryLots) this.onSelectedInventoryLots(this.selectedInventoryLots)
+      this.$emit('input', this.selectedInventoryLots)
     }
   },
   computed: {

@@ -14,11 +14,15 @@
       :sort-desc="true"
     >
       <template v-slot:item.sourcedQuantity="{item}">
-        <v-text-field
-          v-model="itemSourcedQuantities[item.id]"
-          label="Sourced Quantity"
-        >
-        </v-text-field>
+        <v-container>
+          <v-text-field
+            v-if="!item.isSingleLotted"
+            v-model="itemSourcedQuantities[item.id]"
+            label="Sourced Quantity"
+          >
+          </v-text-field>
+          <h3 v-else>{{itemSourcedQuantities[item.id]}}</h3>
+        </v-container>
       </template>
     </v-data-table>
   </v-container>
@@ -30,10 +34,6 @@ export default {
   components: {
   },
   props: {
-    inventoryType: {
-      type: Object,
-      required: true
-    },
     conversionRule: {
       type: Object,
       required: true
@@ -50,17 +50,12 @@ export default {
       type: Boolean,
       default: false
     },
-    onItemSourcedQuantitiesChanged: {
-      type: Function,
-      required: true
+    value: {
+      type: Object,
+      default: ()=>{}
     }
   },
   methods: {
-    captureItemSourcedQuantity (item) {
-      console.log(item)
-      const ref = this.$refs[item.id]
-      console.log('ref', ref)
-    },
     inventoryLotSelected (inventoryLot) {
       if (this.onSelectInventoryLot) this.onSelectInventoryLot(inventoryLot)
     },
@@ -68,12 +63,14 @@ export default {
       const date = new Date(il.updatedAt)
       const updatedAtDisplay = `${date.getFullYear()}-${date.getDate().toString().padStart(2,'0')}-${(date.getMonth()+1).toString().padStart(2,'0')} @ ${date.getHours().toString().padStart(2,'0')}:${date.getMinutes().toString().padStart(2,'0')}:${date.getSeconds().toString().padStart(2,'0')}`
       const descriptionDisplay = il.description ? `${il.description.slice(0,50)}...` : ''
+      const isSingleLotted = il.inventoryType.isSingleLotted
 
       return {
         ...il,
         units: il.inventoryType.units,
         updatedAtDisplay: updatedAtDisplay,
         descriptionDisplay: descriptionDisplay,
+        isSingleLotted: isSingleLotted,
         histInventoryLots: {
           nodes: il.histInventoryLots.nodes
           .map(
@@ -93,9 +90,6 @@ export default {
     },
 },
   watch: {
-    selectedItems () {
-      console.log('selected', this.selectedItems)
-    },
     inventoryLots: {
       deep: true,
       handler () {
@@ -112,7 +106,7 @@ export default {
     itemSourcedQuantities: {
       deep: true,
       handler () {
-        this.onItemSourcedQuantitiesChanged(this.itemSourcedQuantities)
+        this.$emit('input', this.itemSourcedQuantities)
       }
     }
   },
@@ -167,5 +161,8 @@ export default {
       selectedItems: [],
     }
   },
+  mounted () {
+    this.itemSourcedQuantities = this.value
+  }
 }
 </script>

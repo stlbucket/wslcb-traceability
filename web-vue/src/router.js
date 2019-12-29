@@ -36,8 +36,8 @@ import RetailSalesReporting from '@/apps/traceability/retail/RetailSalesReportin
 // import Curing from '@/apps/traceability/grow/Curing'
 // import FlowerLotting from '@/apps/traceability/grow/FlowerLotting'
 // import FlowerProcessing from '@/apps/traceability/grow/FlowerProcessing'
-import ProductProcessing from '@/apps/traceability/grow/ProductProcessing'
-import ProductPackaging from '@/apps/traceability/grow/ProductPackaging'
+// import ProductProcessing from '@/apps/traceability/grow/ProductProcessing'
+// import ProductPackaging from '@/apps/traceability/grow/ProductPackaging'
 import BatchConversion from '@/apps/traceability/grow/BatchConversion'
 
 Vue.use(Router)
@@ -175,12 +175,12 @@ export default new Router({
     {
       path: '/trc-product-processing',
       name: 'trc-product-processing',
-      component: ProductProcessing
+      component: BatchConversion
     },
     {
       path: '/trc-product-packaging',
       name: 'trc-product-packaging',
-      component: ProductPackaging
+      component: BatchConversion
     },
     {
       path: '/about',

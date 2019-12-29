@@ -21,18 +21,18 @@ ALTER TABLE ONLY lcb_ref.inventory_type
 
 INSERT INTO lcb_ref.inventory_type(id, name, units, is_single_lotted, is_strain_mixable, is_strain_optional)
 values
-  ('SD', 'Seeds', 'ct', false, false, false),
-  ('CL', 'Clones', 'ct', true, false, false),
-  ('SL', 'Seedlings', 'ct', true, false, false),
-  ('PL', 'Plants', 'ct', true, false, false),
+  ('SD', 'Seed', 'ct', false, false, false),
+  ('CL', 'Clone', 'ct', true, false, false),
+  ('SL', 'Seedling', 'ct', true, false, false),
+  ('PL', 'Plant', 'ct', true, false, false),
   ('WF', 'Wet Flower', 'g', false, false, false),
   ('BF', 'Bulk Flower', 'g', false, false, false),
   ('LF', 'Lot Flower', 'g', false, false, false),
   ('UM', 'Usable Marijuana', 'g', false, true, false),
   ('PM', 'Packaged Marijuana', 'g', false, true, false),
-  ('PR', 'Pre-roll Joints', 'ct', false, true, false),
-  ('IS', 'Infused Solid Edibles', 'ct', false, true, true),
-  ('IL', 'Infused Liquid Edibles', 'ct', false, true, true),
+  ('PR', 'Pre-roll Joint', 'ct', false, true, false),
+  ('IS', 'Infused Solid Edible', 'ct', false, true, true),
+  ('IL', 'Infused Liquid Edible', 'ct', false, true, true),
   ('WW', 'Waste', 'g', false, true, true)
 ;
 
@@ -69,13 +69,28 @@ insert into lcb_ref.conversion_rule (
   secondary_resultants,
   is_non_destructive
 )
-select
-  id,
-  name,
-  case when id not in ('SD', 'WW') then '{"WW"}' else '{}'::text[] end,
-  case when id not in ('SD', 'CL', 'WF') then false else true end
-from lcb_ref.inventory_type
+values
+  ('SD', 'Seed Collection', '{}'::text[], true),
+  ('CL', 'Cloning', '{"WW"}'::text[], true),
+  ('SL', 'Planting', '{"WW"}'::text[], false),
+  ('PL', 'Growing', '{"WW"}'::text[], false),
+  ('WF', 'Harvesting', '{"WW"}'::text[], true),
+  ('BF', 'Curing', '{"WW"}'::text[], false),
+  ('LF', 'Flower Lotting', '{"WW"}'::text[], false),
+  ('UM', 'Usable Marijuana', '{"WW"}'::text[], false),
+  ('PM', 'Packaged Marijuana', '{"WW"}'::text[], false),
+  ('PR', 'Pre-roll Joints', '{"WW"}'::text[], false),
+  ('IS', 'Infused Solid Edibles', '{"WW"}'::text[], false),
+  ('IL', 'Infused Liquid Edibles', '{"WW"}'::text[], false),
+  ('WW', 'Waste', '{}'::text[], false)
 ;
+-- select
+--   id,
+--   name,
+--   case when id not in ('SD', 'WW') then '{"WW"}' else '{}'::text[] end,
+--   case when id not in ('SD', 'CL', 'WF') then false else true end
+-- from lcb_ref.inventory_type
+-- ;
 
 insert into lcb_ref.conversion_rule_source(
   inventory_type_id,

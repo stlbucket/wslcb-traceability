@@ -1,13 +1,10 @@
 <template>
   <v-container>
     <h1>{{titleDisplay}}</h1>
-    <h2 v-if="conversionRule && conversionRule.isNonDestructive">non-destructive</h2>
+    <h2>{{ruleInfoDisplay}}</h2>
     <v-row>
       <v-col :cols="3" v-if="allStrains.length > 0">
         <h2>Strain</h2>
-        <!-- <div v-if="allStrains.length === 1">
-          <h3>{{selectedStrain.name}}</h3>
-        </div> -->
         <v-combobox
           placeholder="select strain"
           :items="allStrains"
@@ -36,10 +33,11 @@
     </v-row>
 
     <v-stepper v-model="currentStep" non-linear v-if="allInventoryLots.length > 0">
+      <!-- step 1 - select inventory -->      
       <v-stepper-step
         :key="`select-inventory-step`"
         :step="1"
-        :complete="selectedInventoryLots.length > 0"
+        :complete="selectInventoryComplete"
       >
         Select Source Inventory
       </v-stepper-step>
@@ -48,119 +46,67 @@
         :key="`select-inventory-content`"
         :step="1"
       >
-        <v-card
-          class="mb-12"
-          color="green"
+        <select-source-inventory
+          :conversionRule="conversionRule"
+          :inventoryLots="allInventoryLots"
+          v-model="selectedInventoryLots"
+          @nextStep="nextStep"
         >
-          <inventory-lot-collection
-            :inventoryLots="allInventoryLots"
-            :onSelectedInventoryLots="onSelectedInventoryLots"
-            :showSelect="true"
-          >
-          </inventory-lot-collection>
-        </v-card>
-
-        <v-btn
-          color="primary"
-          @click="nextStep()"
-          :disabled="continueDisabledSelectLots"
-        >
-          Continue
-        </v-btn>
-
+        </select-source-inventory>
       </v-stepper-content>
 
+      <!-- step 2 - source quantities-->      
       <v-stepper-step
         :key="`source-quantity-step`"
         :step="2"
+        :complete="sourceQuantitiesComplete"
       >
-        Specify Sourced Quantities
+        Review Sourced Quantities
       </v-stepper-step>
 
       <v-stepper-content
         :key="`source-quantity-content`"
         :step="2"
       >
-        <v-card
-          class="mb-12"
-          color="green"
+        <review-sourced-quantities
+          :inventoryLots="selectedInventoryLots"
+          v-model="itemSourcedQuantities"
+          :conversionRule="conversionRule"
+          @nextStep="nextStep"
+          @previousStep="previousStep"
         >
-          <inventory-conversion-source-collection
-            :inventoryLots="selectedInventoryLots"
-            :onItemSourcedQuantitiesChanged="onItemSourcedQuantitiesChanged"
-            :inventoryType="selectedSourceInventoryType"
-            :conversionRule="conversionRule"
-          >
-          </inventory-conversion-source-collection>
-        </v-card>
-
-        <v-btn
-          color="primary"
-          @click="currentStep += 1"
-          :disabled="continueDisabledSourceQuantities"
-        >
-          Continue
-        </v-btn>
-
-        <v-btn
-          color="primary"
-          @click="currentStep -= 1"
-        >
-          Back
-        </v-btn>
+        </review-sourced-quantities>
       </v-stepper-content>
 
+      <!-- step 3 - target lots -->      
       <v-stepper-step
         :key="`target-lots-step`"
         :step="3"
+        :complete="currentStep === 4"
       >
-        Describe New Inventory Lots
+        Describe New Inventory Lots and Perform Conversion
       </v-stepper-step>
 
       <v-stepper-content
         :key="`target-lots-content`"
         :step="3"
       >
-        <v-card
-          class="mb-12"
-          color="green"
+        <describe-target-lots
+          :conversionRule="conversionRule"
+          :totalSourcedQuantity="totalSourcedQuantity"
+          :strain="selectedStrain"
+          v-model="targetLotInfos"
+          :sourcesInfo="sourcesInfoVerbose"
+          @performConversion="performConversion"
+          @previousStep="previousStep"
         >
-          <h2>total sourced quantity: {{ totalSourcedQuantity }}</h2>
-          <v-container v-for="tli in targetLotInfos" :key="tli.index">
-            <v-text-field
-              label="quantity"
-            ></v-text-field>
-          </v-container>
-          <v-btn
-            @click="addTargetLotInfo"
-          >Add Lot</v-btn>
-        </v-card>
-
-        <v-btn
-          color="primary"
-          @click="currentStep += 1"
-          :disabled="continueDisabledDescribeNewLots"
-        >
-          Continue
-        </v-btn>
-
-        <v-btn
-          color="primary"
-          @click="currentStep -= 1"
-        >
-          Back
-        </v-btn>
-        <v-btn
-          @click="convert"
-          :disabled="convertDisabled"
-        >
-          Plant Seeds
-        </v-btn>
+        </describe-target-lots>
       </v-stepper-content>
 
       <v-stepper-step
         :key="`review-results-step`"
         :step="4"
+        :complete="currentStep === 4"
       >
         Review Newly Created Inventory Lots
       </v-stepper-step>
@@ -169,53 +115,36 @@
         :key="`review-results-content`"
         :step="4"
       >
-        <v-card
-          class="mb-12"
-          color="green"
+        <inventory-lot-collection
+          :inventoryLots="newInventoryLots"
         >
-          <!-- <h2>pizza</h2>
-          <h2>New Seedlings</h2>
-          <inventory-conversion-source-collection
-            :inventoryLots="newSeedlings"
-            :onItemSourcedQuantitiesChanged="onItemSourcedQuantitiesChanged"
-          >
-          </inventory-conversion-source-collection> -->
-        </v-card>
-
+        </inventory-lot-collection>
         <v-btn
-          color="primary"
-          @click="currentStep += 1"
-          :disabled="continueDisabledReviewCreatedLots"
-        >
-          Continue
-        </v-btn>
-
-        <v-btn
-          color="primary"
-          @click="currentStep -= 1"
-        >
-          Back
-        </v-btn>
+          @click="reset"
+        >{{resetButtonDisplay}}</v-btn>
       </v-stepper-content>
     </v-stepper>
   </v-container>
 </template>
 
 <script>
-import conversionRuleByInventoryTypeId from '@/graphql/query/conversionRuleByInventoryTypeId.graphql'
-// import strainCountsForInventoryTypes from '@/graphql/query/strainCountsForInventoryTypes.graphql'
+import convertInventory from '@/graphql/mutation/convertInventory.graphql'
 import strainInventoryTypeLotCounts from '@/graphql/mutation/strainInventoryTypeLotCounts.graphql'
+import conversionRuleByInventoryTypeId from '@/graphql/query/conversionRuleByInventoryTypeId.graphql'
 import inventoryLotsForConversion from '@/graphql/query/inventoryLotsForConversion.graphql'
-// import inventoryTypeLotCountsForStrain from '@/graphql/query/inventoryTypeLotCountsForStrain.graphql'
 
-import InventoryConversionSourceCollection from '../inventory/InventoryConversionSourceCollection'
 import InventoryLotCollection from '../inventory/InventoryLotCollection'
+import SelectSourceInventory from './SelectSourceInventory'
+import ReviewSourcedQuantities from './ReviewSourcedQuantities'
+import DescribeTargetLots from './DescribeTargetLots'
 
 export default {
   name: 'BatchConversion',
   components: {
-    InventoryLotCollection,
-    InventoryConversionSourceCollection
+    SelectSourceInventory,
+    ReviewSourcedQuantities,
+    DescribeTargetLots,
+    InventoryLotCollection
   },
   props: {
     toInventoryType: {
@@ -229,22 +158,34 @@ export default {
   },
   computed: {
     titleDisplay () {
-      return `Batch Conversion ${this.selectedSourceInventoryType ? `${this.selectedSourceInventoryType.name}` : ''} ${this.conversionRule ? `to ${this.conversionRule.name}` : ''}`
+      if (!this.conversionRule) return 'Batch Conversion - No Rule Specified'
+      return `${this.conversionRule.name}`
     },
-    inventoryTypes () {
-      return this.$store.state.inventoryTypes
+    ruleInfoDisplay () {
+      if (!this.conversionRule) return
+      return [
+        this.conversionRule.isNonDestructive ? 'non-destructive' : 'destructive',
+        this.conversionRule.toInventoryType.isSingleLotted ? 'single-lotted' : 'multi-lotted',
+        this.conversionRule.toInventoryType.isStrainMixable ? 'strain-mixable' : 'strain-specific',
+        this.conversionRule.toInventoryType.isStrainOptional ? 'strain-optional' : 'strain-required',
+      ]
+      .join(" :: ")
     },
     sourceTypesDisplay () {
       if (!this.conversionRule) return []
 
       return this.conversionRule.conversionRuleSources.nodes
-        .map(crs => `${crs.inventoryType.id}: ${crs.inventoryType.name}`)
+        .map(crs => `${crs.inventoryType.id}: ${crs.inventoryType.name} (${crs.inventoryType.isSingleLotted ? 'single-lotted' : 'multi-lotted'})`)
     },
     targetTypeDisplay () {
       if (!this.conversionRule) return []
 
       const it = this.conversionRule.toInventoryType
       return `${it.id}: ${it.name}`
+    },
+    resetButtonDisplay () {
+      if (!this.conversionRule) return 'Reset'
+      return `Do some more ${this.conversionRule.name}`
     },
     totalSourcedQuantity () {
       return Object.values(this.itemSourcedQuantities).reduce(
@@ -254,81 +195,78 @@ export default {
       )
 
     },
-    continueDisabledSelectLots () {
+    convertDisabled () {
       return this.selectedInventoryLots.length === 0
     },
-    continueDisabledSourceQuantities () {
-      return Object.values(this.itemSourcedQuantities).map(
+    selectInventoryComplete () {
+      return this.selectedInventoryLots.length > 0
+    },
+    sourceQuantitiesComplete () {
+      return this.currentStep > 1 && Object.values(this.itemSourcedQuantities).map(
         item => {
           return parseFloat(item)
         }
       )
       .filter(v => isNaN(v))
-      .length > 0
+      .length ===0
     },
-    continueDisabledDescribeNewLots () {
-      return this.selectedInventoryLots.length === 0
+    sourcesInfo () {
+      return Object.keys(this.itemSourcedQuantities).map(
+        id => {
+          return {
+            id: id,
+            quantity: this.itemSourcedQuantities[id]            
+          }
+        }
+      )
     },
-    continueDisabledReviewCreatedLots () {
-      return false
-    },
-    convertDisabled () {
-      return this.selectedInventoryLots.length === 0
-    }
+    // sourcesInfoVerbose () {
+    //   return Object.keys(this.itemSourcedQuantities).map(
+    //     id => {
+    //       return {
+    //         id: id,
+    //         quantity: this.itemSourcedQuantities[id],
+    //         area: this.selectedInventoryLots.find(il => il.id === id).area
+    //       }
+    //     }
+    //   )
+    // }
   },
   methods: {
     nextStep () {
       this.currentStep = this.currentStep + 1
     },
-    onSelectedInventoryLots (lots) {
-      this.selectedInventoryLots = lots
+    previousStep () {
+      this.currentStep = this.currentStep - 1
     },
-    onItemSourcedQuantitiesChanged (itemSourcedQuantities) {
-      this.itemSourcedQuantities = itemSourcedQuantities
-    },
-    convert () {
-      const sourcesInfo = Object.keys(this.itemSourcedQuantities).map(
-        id => {
-          return {
-            id: id,
-            quantity: this.itemSourcedQuantities[id]
-          }
+    performConversion () {
+      this.$apollo.mutate({
+        mutation: convertInventory,
+        variables: {
+          toInventoryTypeId: this.conversionRule.toInventoryType.id,
+          sourcesInfo: this.sourcesInfo,
+          newLotsInfo: this.targetLotInfos
         }
-      )
-      // const newLotsInfo = [
-      //   {
-      //     description: 'conversion result',
-      //     quantity: this.quantity,
-      //     inventoryType: this.conversionConfig.parentLot.inventoryType.id
-      //   }
-      // ]
-
-      console.log('sources', sourcesInfo)
-      // console.log('newLots', newLotsInfo)
-
-      // this.$apollo.mutate({
-      //   mutation: conversionInventory,
-      //   variables: {
-      //     sourcesInfo: sourcesInfo,
-      //     newLotsInfo: newLotsInfo
-      //   }
-      // })
-      // .then(result => {
-      //   this.$store.commit('addRecentInventoryLotChange', { newChanges: result.data.convertInventory.inventoryLots})
-      //   this.dialog = false
-      // })
-      // .catch(error => {
-      //   alert(error.toString())
-      //   console.error(error)
-      // })
+      })
+      .then(result => {
+        this.$store.commit('addRecentInventoryLotChange', { newChanges: result.data.convertInventory.inventoryLots})
+        this.newInventoryLots = result.data.convertInventory.inventoryLots
+        this.nextStep()
+      })
+      .catch(error => {
+        alert(error.toString())
+        console.error(error)
+      })
     },
     queryInventoryLots () {
+      if (!this.selectedStrain) return;
+
       this.$apollo.query({
         query: inventoryLotsForConversion,
         fetchPolicy: 'network-only',
         variables: {
           strainId: this.selectedStrain.strain_id,
-          inventoryTypeIds: this.inventoryTypes.map(it => it.id)
+          inventoryTypeIds: this.sourceInventoryTypes.map(it => it.id)
         }
       })
       .then(result => {
@@ -345,7 +283,6 @@ export default {
       })
     },
     queryStrainCounts () {
-      // const inventoryTypeIds = this.conversionRule.conversionRuleSources.nodes.map(csr => csr.inventoryType.id)
       this.$apollo.mutate({
         mutation: strainInventoryTypeLotCounts,
         fetchPolicy: 'no-cache',
@@ -361,30 +298,47 @@ export default {
         console.error(e)
       })
     },
-    addTargetLotInfo () {
-      this.targetLotInfos = [...this.targetLotInfos, {quantity: 0}]
-    },
+    reset (exceptStrain) {
+      this.currentStep = 1
+      this.selectedInventoryLots = []
+      this.allInventoryLots = []
+      this.selectedSourceInventoryType = null;
+      if (!exceptStrain) {
+        this.selectedStrain = exceptStrain ? this.selectedStrain : null;
+        this.queryStrainCounts()
+      }
+    }
   },
    watch: {
     selectedStrain () {
       if (!this.selectedStrain) { return }
-      // this.availableSourceInventoryTypes = this.sourceInventoryTypes.filter(
-      //   it => {
-      //     const sitlc = this.strainInventoryTypeLotCounts.filter(sitlc => sitlc.strain_id === this.selectedStrain.id && sitlc.inventory_type === it.id)
-      //     return sitlc ? true : false
-      //   }
-      // )
+      this.reset(true)
       this.queryInventoryLots()
     },
     selectedSourceInventoryType () {
       if (!this.selectedSourceInventoryType) { return }
-      // this.queryInventoryLots()
     },
     conversionRule () {
       if (!this.conversionRule) { return }
       this.sourceInventoryTypes = this.conversionRule.conversionRuleSources.nodes.map(crs => crs.inventoryType)
       this.selectedSourceInventoryType = this.sourceInventoryTypes[0]
       this.queryStrainCounts()
+    },
+    selectedInventoryLots () {
+      this.itemSourcedQuantities = {}
+    },
+    itemSourcedQuantities () {
+      this.sourcesInfoVerbose = Object.keys(this.itemSourcedQuantities)
+      .filter(ilid => this.selectedInventoryLots.find(il => il.id === ilid) !== undefined)
+      .map(
+        id => {
+          return {
+            id: id,
+            quantity: this.itemSourcedQuantities[id],
+            area: this.selectedInventoryLots.find(il => il.id === id).area
+          }
+        }
+      )
     }
   },
   apollo: {
@@ -405,25 +359,22 @@ export default {
     return {
       currentStep: 1,
       allInventoryLots: [],
+      selectedInventoryLots: [],
+      newInventoryLots: [],
       allStrains: [],
       selectedStrain: null,
       allAreas: [],
       sourceInventoryTypes: [],
-      availableSourceInventoryTypes: [],
-      selectedSourceInventoryType: null,
-      selectedInventoryLots: [],
       itemSourcedQuantities: {},
       conversionRule: null,
       targetLotInfos: [],
-      strainInventoryTypeLotCounts: []
+      strainInventoryTypeLotCounts: [],
+      sourcesInfoVerbose: []
     }
   },
   beforeRouteUpdate (to, from, next) {
     this.selectedStrain = null
-    this.selectedInventoryLots = []
-    this.allInventoryLots = []
-    this.selectedSourceInventoryType = null;
-    this.$apollo.queries.initConversionRule.refetch()
+    this.reset()
     next()
   }
 }
