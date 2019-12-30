@@ -8,8 +8,8 @@
         <v-combobox
           placeholder="select strain"
           :items="allStrains"
-          :item-text="'strain_name'"
-          :item-value="'strain_id'"
+          :item-text="'strainName'"
+          :item-value="'strainId'"
           v-model="selectedStrain"
         >
         </v-combobox>
@@ -129,7 +129,7 @@
 
 <script>
 import convertInventory from '@/graphql/mutation/convertInventory.graphql'
-import strainInventoryTypeLotCounts from '@/graphql/mutation/strainInventoryTypeLotCounts.graphql'
+import strainInventoryTypeLotCounts from '@/graphql/query/strainInventoryTypeLotCounts.graphql'
 import conversionRuleByInventoryTypeId from '@/graphql/query/conversionRuleByInventoryTypeId.graphql'
 import inventoryLotsForConversion from '@/graphql/query/inventoryLotsForConversion.graphql'
 
@@ -165,6 +165,7 @@ export default {
       if (!this.conversionRule) return
       return [
         this.conversionRule.isNonDestructive ? 'non-destructive' : 'destructive',
+        this.conversionRule.isZeroSum ? 'zero-sum' : 'not-zero-sum',
         this.conversionRule.toInventoryType.isSingleLotted ? 'single-lotted' : 'multi-lotted',
         this.conversionRule.toInventoryType.isStrainMixable ? 'strain-mixable' : 'strain-specific',
         this.conversionRule.toInventoryType.isStrainOptional ? 'strain-optional' : 'strain-required',
@@ -240,12 +241,24 @@ export default {
       this.currentStep = this.currentStep - 1
     },
     performConversion () {
+      const newLotsInfo = this.targetLotInfos.map(
+        tli => {
+          const {
+              index,
+              units,
+              ...newTli
+          } = tli;
+          index;units;
+          return newTli
+        }
+      )
+
       this.$apollo.mutate({
         mutation: convertInventory,
         variables: {
           toInventoryTypeId: this.conversionRule.toInventoryType.id,
           sourcesInfo: this.sourcesInfo,
-          newLotsInfo: this.targetLotInfos
+          newLotsInfo: newLotsInfo
         }
       })
       .then(result => {
@@ -265,7 +278,7 @@ export default {
         query: inventoryLotsForConversion,
         fetchPolicy: 'network-only',
         variables: {
-          strainId: this.selectedStrain.strain_id,
+          strainId: this.selectedStrain.strainId,
           inventoryTypeIds: this.sourceInventoryTypes.map(it => it.id)
         }
       })
@@ -283,15 +296,15 @@ export default {
       })
     },
     queryStrainCounts () {
-      this.$apollo.mutate({
-        mutation: strainInventoryTypeLotCounts,
-        fetchPolicy: 'no-cache',
+      this.$apollo.query({
+        query: strainInventoryTypeLotCounts,
+        fetchPolicy: 'network-only',
       })
       .then(result => {
         const crsInventoryTypeIds = this.conversionRule.conversionRuleSources.nodes.map(crs => crs.inventoryType.id)
-        this.strainInventoryTypeLotCounts = result.data.strainInventoryTypeLotCounts.json
+        this.strainInventoryTypeLotCounts = result.data.strainInventoryTypeLotCounts.nodes
         this.allStrains = this.strainInventoryTypeLotCounts
-          .filter(sitlc => sitlc.count > 0 && crsInventoryTypeIds.indexOf(sitlc.inventory_type) > -1)
+          .filter(sitlc => parseFloat(sitlc.count) > 0 && crsInventoryTypeIds.indexOf(sitlc.inventoryType) > -1)
         this.selectedStrain = this.allStrains.length === 1 ? this.allStrains[0] : null
       })
       .catch(e => {
@@ -315,9 +328,6 @@ export default {
       this.reset(true)
       this.queryInventoryLots()
     },
-    selectedSourceInventoryType () {
-      if (!this.selectedSourceInventoryType) { return }
-    },
     conversionRule () {
       if (!this.conversionRule) { return }
       this.sourceInventoryTypes = this.conversionRule.conversionRuleSources.nodes.map(crs => crs.inventoryType)
@@ -327,19 +337,28 @@ export default {
     selectedInventoryLots () {
       this.itemSourcedQuantities = {}
     },
-    itemSourcedQuantities () {
-      this.sourcesInfoVerbose = Object.keys(this.itemSourcedQuantities)
-      .filter(ilid => this.selectedInventoryLots.find(il => il.id === ilid) !== undefined)
-      .map(
-        id => {
-          return {
-            id: id,
-            quantity: this.itemSourcedQuantities[id],
-            area: this.selectedInventoryLots.find(il => il.id === id).area
+    itemSourcedQuantities: {
+      deep: true,
+      handler () {
+        this.sourcesInfoVerbose = Object.keys(this.itemSourcedQuantities)
+        .filter(ilid => this.selectedInventoryLots.find(il => il.id === ilid) !== undefined)
+        .map(
+          id => {
+            return {
+              id: id,
+              quantity: this.itemSourcedQuantities[id],
+              area: this.selectedInventoryLots.find(il => il.id === id).area
+            }
           }
-        }
-      )
-    }
+        )
+      }
+    },
+    // targetLotInfos:{
+    //   deep: true,
+    //   handler () {
+    //     console.log('this.tlis', JSON.stringify(this.targetLotInfos,false,2))
+    //   }
+    // }
   },
   apollo: {
     initConversionRule: {

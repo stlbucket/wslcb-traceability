@@ -105,6 +105,9 @@ export default {
     selectedInventoryLots () {
       // if (this.onSelectedInventoryLots) this.onSelectedInventoryLots(this.selectedInventoryLots)
       this.$emit('input', this.selectedInventoryLots)
+    },
+    value () {
+      this.selectedInventoryLots = this.value
     }
   },
   computed: {

@@ -473,6 +473,15 @@ const demoDataVariables = [
     "id": null,
     "inventoryType": "PL",
     "licenseeIdentifier": null,
+    "strainName": "yoda",
+    "description": null,
+    "areaName": "hoth",
+    "quantity": "1"
+  },
+  {
+    "id": null,
+    "inventoryType": "PL",
+    "licenseeIdentifier": null,
     "strainName": "boba fett",
     "description": null,
     "areaName": "hoth",

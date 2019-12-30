@@ -4,6 +4,7 @@ query ConversionRuleByToInventoryTypeId (
   conversionRuleByToInventoryTypeId(toInventoryTypeId: $toInventoryTypeId) {
     name
     isNonDestructive
+    isZeroSum
     toInventoryType: inventoryTypeByToInventoryTypeId {
       id
       name

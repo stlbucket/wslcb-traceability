@@ -6,53 +6,37 @@
     >
       <h2>total sourced quantity: {{ totalSourcedQuantity }}</h2>
       <h2 v-if="isSingleLotted">{{singleLottedMessage}}</h2>
-      <v-container v-for="tli in targetLotInfos" :key="tli.index">
-        <v-row>
-          <v-col cols="1">
-            <h3>Quantity</h3>
-          </v-col>
-          <v-col cols="2">
-            <h3>Description</h3>
-          </v-col>
-          <v-col cols="1">
-          </v-col>
-          <v-col cols="2">
-            <h3>Area</h3>
-          </v-col>
-          <v-col cols="1">
-          </v-col>
-          <v-col cols="2">
-          </v-col>
-        </v-row>
-        <v-row>
-          <v-col cols="1">
+      <h3 v-if="conversionRule.isZeroSum">{{this.conversionRule.name}} is zero-sum: total of target quantities must equal source quantities</h3>
+      <h3 v-else>{{this.conversionRule.name}} is not zero-sum:  target quantities are not checked against source quantites.</h3>
+      <v-data-table
+        :headers="headers"
+        :items="targetLotInfos"
+        class="elevation-1"
+        dense
+        item-key="index"
+        hide-default-footer
+        :items-per-page="100"
+      >
+        <template v-slot:item.quantity="{item}">
+          <v-container>
             <v-text-field
-              v-if="!isSingleLotted"
+              v-model="item.quantity"
               label="quantity"
-              :value="tli.quantity"
-              :disabled="isSingleLotted"
-            ></v-text-field>
-            <h3 v-else>{{tli.quantity}}</h3>
-          </v-col>
-          <v-col cols="2">
-            <h3>{{tli.description}}</h3>
-          </v-col>
-          <v-col cols="1">
-          </v-col>
-          <v-col cols="2">
-            <h3>{{tli.areaName}}</h3>
-          </v-col>
-          <v-col cols="1">
-          </v-col>
-          <v-col cols="2">
-            <v-btn
-              v-if="!isSingleLotted"
-              @click="addTargetLotInfo"
-            >Add Lot</v-btn>
-          </v-col>
-        </v-row>
+            >
+            </v-text-field>
+          </v-container>
+        </template>
 
-      </v-container>
+        <template v-slot:item.areaName="{item}">
+          <v-container>
+            <v-text-field
+              v-model="item.areaName"
+              label="area"
+            >
+            </v-text-field>
+          </v-container>
+        </template>
+      </v-data-table>
     </v-card>
 
     <v-row>
@@ -75,13 +59,18 @@
           Back
         </v-btn>
       </v-col>
+      <v-col cols="1">
+      </v-col>
+      <v-col cols="3">
+        <h2>{{totalTargetQuantity}}</h2>
+      </v-col>
     </v-row>
   </v-container>
 </template>
 
 <script>
 export default {
-  name: 'SelectSourceInventory',
+  name: 'DescribeTargetLots',
   components: {
   },
   props: {
@@ -112,7 +101,12 @@ export default {
   },
   computed: {
     disabled () {
-      return false // this.value.length === 0
+      return this.targetLotInfos.filter(
+        tli => {
+          const quantity = parseFloat(tli.quantity)
+          return(isNaN(quantity) || quantity <= 0)
+        }
+      ).length > 0
     },
     singleLottedMessage () {
       return `${this.conversionRule.name} is single-lotted.  This action will result in ${this.totalSourcedQuantity} tagged ${this.totalSourcedQuantity > 1 ? 'lots, each' : 'lot'} containing one ${this.conversionRule.toInventoryType.name}`
@@ -125,43 +119,86 @@ export default {
     addTargetLotInfo () {
       this.targetLotInfos = [...this.targetLotInfos, {quantity: 0}]
     },
-  },
-  watch: {
-    totalSourcedQuantity () {
-      const defaultDescription = `${this.conversionRule.toInventoryType.name} ${this.strain ? `- ${this.strain.strain_name}` : ''}`
+    resetTargetLotInfos () {
+      const defaultDescription = `${this.conversionRule.toInventoryType.name} ${this.strain ? `- ${this.strain.strainName}` : ''}`
 
+console.log('sourcesInfo', JSON.stringify(this.sourcesInfo,false,2))
       const areaCounts = this.sourcesInfo.reduce(
         (all, il) => {
+          const quantity = (all[il.area.id] ? (parseFloat(all[il.area.id].quantity) + parseFloat(il.quantity)) : parseFloat(il.quantity))
+
           return {
             ...all,
             [il.area.id]: {
               name: il.area.name,
-              quantity: (all[il.area.id] ? (parseFloat(all[il.area.id].quantity) + parseFloat(il.quantity)) : parseFloat(il.quantity))
+              quantity: quantity
             }
           }
         }, {}
       )
 
       this.targetLotInfos = Object.keys(areaCounts).map(
-        areaId => {
-          return {
+        (areaId, index) => {
+          const areaSourceQuantity = areaCounts[areaId].quantity
+          const quantity = this.conversionRule.isZeroSum ? areaSourceQuantity : null
+
+        return {
+            index: index,
             description: this.recipe ? this.recipe.name : defaultDescription,
-            quantity: areaCounts[areaId].quantity,
             inventoryType: this.conversionRule.toInventoryType.id,
-            areaName: areaCounts[areaId].name
+            units: this.conversionRule.toInventoryType.units,
+            areaName: areaCounts[areaId].name,
+            quantity: quantity,
           }
         }
       )
-      this.$emit('input', this.targetLotInfos)
+    }
+  },
+  watch: {
+    totalSourcedQuantity () {
+      this.resetTargetLotInfos()
     },
-    targetLotInfos () {
-      this.$emit('input', this.targetLotInfos)
+    targetLotInfos: {
+      deep: true,
+      handler () {
+        this.totalTargetQuantity = this.targetLotInfos
+          .map(tli => tli.quantity)
+          .reduce(
+            (sum, q) => {
+              const quantity = parseFloat(q)
+              return !isNaN(quantity) ? sum + quantity : sum
+            }, 0
+          )
+        this.$emit('input', this.targetLotInfos)
+      }
     }
   },
   data () {
     return {
-      targetLotInfos: []
+      targetLotInfos: [],
+      totalTargetQuantity: 0,
+      headers: [
+        {
+          text: 'target quantity',
+          value: 'quantity'
+        },
+        {
+          text: 'units',
+          value: 'units'
+        },
+        {
+          text: 'area',
+          value: 'areaName'
+        },
+        {
+          text: 'inventory type',
+          value: 'inventoryType'
+        },
+      ]
     }
+  },
+  mounted () {
+    this.resetTargetLotInfos()
   }
 }
 </script>

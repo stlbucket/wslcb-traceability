@@ -13,6 +13,7 @@ CREATE TABLE lcb.lcb_license (
     id text DEFAULT util_fn.generate_ulid() NOT NULL,
     created_at timestamptz DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at timestamptz NOT NULL,
+    lcb_license_type_id text NOT NULL,
     code text not null check (code != '') unique,
     CONSTRAINT ck_lcb_license_code CHECK ((code <> ''::text))
 );
@@ -20,6 +21,8 @@ CREATE TABLE lcb.lcb_license (
 ALTER TABLE lcb.lcb_license OWNER TO app;
 ALTER TABLE ONLY lcb.lcb_license
     ADD CONSTRAINT pk_lcb_license PRIMARY KEY (id);
+ALTER TABLE ONLY lcb.lcb_license
+    ADD CONSTRAINT fk_lcb_license_type FOREIGN KEY (lcb_license_type_id) REFERENCES lcb_ref.lcb_license_type(id);
 
 
 CREATE TABLE lcb.lcb_license_holder (

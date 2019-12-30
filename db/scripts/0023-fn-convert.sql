@@ -286,7 +286,7 @@ RETURNS setof lcb.inventory_lot
       end if;
     end loop;
 
-    if _total_converted_quantity != _total_sourced_quantity AND _conversion_rule.is_non_destructive = false then
+    if _total_converted_quantity != _total_sourced_quantity AND _conversion_rule.is_zero_sum = true then
       raise exception 'illegal operation - batch cancelled:  total converted quantity (%) must equal total sourced quantity (%).', _total_converted_quantity, _total_sourced_quantity;
     end if;
 

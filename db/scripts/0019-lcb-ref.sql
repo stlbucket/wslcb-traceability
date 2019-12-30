@@ -5,6 +5,34 @@ grant usage on schema lcb_ref to app_user;
 grant usage on schema lcb_ref to app;
 
 
+-- lcb_license_type
+CREATE TABLE lcb_ref.lcb_license_type (
+    id text NOT NULL UNIQUE,
+    name text NOT NULL UNIQUE,
+    prefix text NOT NULL UNIQUE,
+    CONSTRAINT ck_lcb_license_type_id CHECK ((id <> ''::text))
+);
+ALTER TABLE lcb_ref.lcb_license_type OWNER TO app;
+ALTER TABLE ONLY lcb_ref.lcb_license_type
+    ADD CONSTRAINT pk_lcb_license_type PRIMARY KEY (id);
+
+INSERT INTO lcb_ref.lcb_license_type(
+  id
+  ,name
+  ,prefix
+)
+values
+  ('PRODUCER', 'Producer', 'G')
+  ,('PROCESSOR', 'Processor', 'M')
+  ,('PRODUCER_PROCESSOR', 'Producer/Processor', 'J')
+  ,('RETAILER', 'Retailer','R')
+  ,('LAB', 'QA Testing Lab','L')
+  ,('TRIBE', 'Tribe','T')
+  ,('CO_OP', 'Co-op','E')
+  ,('TRANSPORTER', 'Licensed Transporter Service','Z')
+;
+
+-- inventory_type
 CREATE TABLE lcb_ref.inventory_type (
     id text NOT NULL UNIQUE,
     name text NOT NULL UNIQUE,
@@ -37,12 +65,13 @@ values
 ;
 
 
-
+-- conversion_rule
 CREATE TABLE lcb_ref.conversion_rule (
     to_inventory_type_id text NOT NULL UNIQUE,
     name text NOT NULL,
-    secondary_resultants text[],
-    is_non_destructive boolean NOT NULL
+    secondary_resultants text[] NOT NULL,
+    is_non_destructive boolean NOT NULL,
+    is_zero_sum boolean NOT NULL
 );
 ALTER TABLE lcb_ref.conversion_rule OWNER TO app;
 ALTER TABLE ONLY lcb_ref.conversion_rule
@@ -50,6 +79,31 @@ ALTER TABLE ONLY lcb_ref.conversion_rule
 ALTER TABLE ONLY lcb_ref.conversion_rule
     ADD CONSTRAINT fk_conversion_rule_to_type FOREIGN KEY (to_inventory_type_id) REFERENCES lcb_ref.inventory_type (id);
 
+insert into lcb_ref.conversion_rule (
+  to_inventory_type_id,
+  name,
+  secondary_resultants,
+  is_non_destructive,
+  is_zero_sum
+)
+values
+  ('SD', 'Seed Collection', '{}'::text[], true, false),
+  ('CL', 'Cloning', '{"WW"}'::text[], true, false),
+  ('SL', 'Planting', '{"WW"}'::text[], false, true),
+  ('PL', 'Growing', '{"WW"}'::text[], false, true),
+  ('WF', 'Harvesting', '{"WW"}'::text[], true, false),
+  ('BF', 'Curing', '{"WW"}'::text[], false, true),
+  ('LF', 'Flower Lotting', '{"WW"}'::text[], false, true),
+  ('UM', 'Usable Marijuana', '{"WW"}'::text[], false, true),
+  ('PM', 'Packaged Marijuana', '{"WW"}'::text[], false, true),
+  ('PR', 'Pre-roll Joints', '{"WW"}'::text[], false, false),
+  ('IS', 'Infused Solid Edibles', '{"WW"}'::text[], false, false),
+  ('IL', 'Infused Liquid Edibles', '{"WW"}'::text[], false, false),
+  ('WW', 'Waste', '{}'::text[], false, true)
+;
+
+
+-- conversion_rule_source
 CREATE TABLE lcb_ref.conversion_rule_source (
   id text NOT NULL UNIQUE default util_fn.generate_ulid(),
   to_inventory_type_id text NOT NULL,
@@ -62,35 +116,6 @@ ALTER TABLE ONLY lcb_ref.conversion_rule_source
     ADD CONSTRAINT fk_conversion_rule_source_inventory_type FOREIGN KEY (inventory_type_id) REFERENCES lcb_ref.inventory_type (id);
 ALTER TABLE ONLY lcb_ref.conversion_rule_source
     ADD CONSTRAINT uq_conversion_rule_source UNIQUE (to_inventory_type_id, inventory_type_id);    
-
-insert into lcb_ref.conversion_rule (
-  to_inventory_type_id,
-  name,
-  secondary_resultants,
-  is_non_destructive
-)
-values
-  ('SD', 'Seed Collection', '{}'::text[], true),
-  ('CL', 'Cloning', '{"WW"}'::text[], true),
-  ('SL', 'Planting', '{"WW"}'::text[], false),
-  ('PL', 'Growing', '{"WW"}'::text[], false),
-  ('WF', 'Harvesting', '{"WW"}'::text[], true),
-  ('BF', 'Curing', '{"WW"}'::text[], false),
-  ('LF', 'Flower Lotting', '{"WW"}'::text[], false),
-  ('UM', 'Usable Marijuana', '{"WW"}'::text[], false),
-  ('PM', 'Packaged Marijuana', '{"WW"}'::text[], false),
-  ('PR', 'Pre-roll Joints', '{"WW"}'::text[], false),
-  ('IS', 'Infused Solid Edibles', '{"WW"}'::text[], false),
-  ('IL', 'Infused Liquid Edibles', '{"WW"}'::text[], false),
-  ('WW', 'Waste', '{}'::text[], false)
-;
--- select
---   id,
---   name,
---   case when id not in ('SD', 'WW') then '{"WW"}' else '{}'::text[] end,
---   case when id not in ('SD', 'CL', 'WF') then false else true end
--- from lcb_ref.inventory_type
--- ;
 
 insert into lcb_ref.conversion_rule_source(
   inventory_type_id,
@@ -113,22 +138,8 @@ values
 on conflict do nothing
 ;
 
--- insert into lcb_ref.conversion_rule (
---   name,
---   to_inventory_type_id
--- )
--- values
---   ('SD', 'CL'),
---   ('CL', 'PL'),
---   ('PL', 'WF'),
---   ('WF', 'BF'),
---   ('BF', 'LF'),
---   ('LF', 'UM'),
---   ('LF', 'PM'),
---   ('LF', 'PR'),
---   ('LF', 'UM')
--- ;
 
+-- inventory_lot_reporting_status
 CREATE TABLE lcb_ref.inventory_lot_reporting_status (
     id text NOT NULL UNIQUE,
     CONSTRAINT ck_inventory_lot_reporting_status_id CHECK ((id <> ''::text))
@@ -148,6 +159,8 @@ values
   ('TRANSFERRED')
 ;
 
+
+-- manifest_status
 CREATE TABLE lcb_ref.manifest_status (
     id text NOT NULL UNIQUE,
     CONSTRAINT ck_manifest_status_id CHECK ((id <> ''::text))
@@ -168,6 +181,7 @@ values
 ;
 
 
+--inventory_lot_type
 CREATE TABLE lcb_ref.inventory_lot_type (
     id text NOT NULL UNIQUE,
     CONSTRAINT ck_inventory_lot_type_id CHECK ((id <> ''::text))

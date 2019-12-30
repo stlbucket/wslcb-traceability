@@ -1,11 +1,10 @@
 BEGIN;
     -- create test tenants
     insert into auth.app_tenant(name, identifier)
-    values
-      ('Producer-1', 'G11111')
-      ,('Processor-1', 'M11111')
-      ,('Retail-1', 'R11111')
-      ,('QA-Lab-1', 'Q11111')
+    select
+      lower(id) || '_1'
+      ,prefix || '11111'
+    from lcb_ref.lcb_license_type
     on conflict (identifier)
     do nothing
     ;
@@ -23,66 +22,93 @@ BEGIN;
       ,password_hash
       ,permission_key
     )
-    values 
-    (
-      (select id from auth.app_tenant where identifier = 'G11111')
-      ,'lcb_producer_admin'
-      ,'lcb_producer_admin@blah.blah'
+    select 
+      id
+      ,lower(name) || '_admin'
+      ,lower(name) || '_admin@blah.blah'
       ,public.crypt('badpassword', public.gen_salt('bf'))
       ,'Admin'
-    )
-    ,(
-      (select id from auth.app_tenant where identifier = 'G11111')
-      ,'lcb_producer_user'
-      ,'lcb_producer_user@blah.blah'
-      ,public.crypt('badpassword', public.gen_salt('bf'))
-      ,'User'
-    )
-    ,(
-      (select id from auth.app_tenant where identifier = 'M11111')
-      ,'lcb_processor_admin'
-      ,'lcb_processor_admin@blah.blah'
-      ,public.crypt('badpassword', public.gen_salt('bf'))
-      ,'Admin'
-    )
-    ,(
-      (select id from auth.app_tenant where identifier = 'M11111')
-      ,'lcb_processor_user'
-      ,'lcb_processor_user@blah.blah'
-      ,public.crypt('badpassword', public.gen_salt('bf'))
-      ,'User'
-    )
-    ,(
-      (select id from auth.app_tenant where identifier = 'R11111')
-      ,'lcb_retail_admin'
-      ,'lcb_retail_admin003@blah.blah'
-      ,public.crypt('badpassword', public.gen_salt('bf'))
-      ,'Admin'
-    )
-    ,(
-      (select id from auth.app_tenant where identifier = 'R11111')
-      ,'lcb_retail_user'
-      ,'lcb_retail_user@blah.blah'
-      ,public.crypt('badpassword', public.gen_salt('bf'))
-      ,'User'
-    )
-    ,(
-      (select id from auth.app_tenant where identifier = 'Q11111')
-      ,'lcb_qa_lab_admin'
-      ,'lcb_qa_lab_admin003@blah.blah'
-      ,public.crypt('badpassword', public.gen_salt('bf'))
-      ,'Admin'
-    )
-    ,(
-      (select id from auth.app_tenant where identifier = 'Q11111')
-      ,'lcb_qa_lab_user'
-      ,'lcb_qa_lab_user@blah.blah'
-      ,public.crypt('badpassword', public.gen_salt('bf'))
-      ,'User'
-    )
-    on conflict (username)
-    do nothing
+    from auth.app_tenant apt
+    where identifier != 'anchor'
     ;
+
+    insert into auth.app_user(
+      app_tenant_id
+      ,username
+      ,recovery_email
+      ,password_hash
+      ,permission_key
+    )
+    select 
+      id
+      ,lower(name) || '_user'
+      ,lower(name) || '_user@blah.blah'
+      ,public.crypt('badpassword', public.gen_salt('bf'))
+      ,'User'
+    from auth.app_tenant apt
+    where identifier != 'anchor'
+    ;
+
+    -- values 
+    -- (
+    --   (select id from auth.app_tenant where identifier = 'G11111')
+    --   ,'lcb_producer_admin'
+    --   ,'lcb_producer_admin@blah.blah'
+    --   ,public.crypt('badpassword', public.gen_salt('bf'))
+    --   ,'Admin'
+    -- )
+    -- ,(
+    --   (select id from auth.app_tenant where identifier = 'G11111')
+    --   ,'lcb_producer_user'
+    --   ,'lcb_producer_user@blah.blah'
+    --   ,public.crypt('badpassword', public.gen_salt('bf'))
+    --   ,'User'
+    -- )
+    -- ,(
+    --   (select id from auth.app_tenant where identifier = 'M11111')
+    --   ,'lcb_processor_admin'
+    --   ,'lcb_processor_admin@blah.blah'
+    --   ,public.crypt('badpassword', public.gen_salt('bf'))
+    --   ,'Admin'
+    -- )
+    -- ,(
+    --   (select id from auth.app_tenant where identifier = 'M11111')
+    --   ,'lcb_processor_user'
+    --   ,'lcb_processor_user@blah.blah'
+    --   ,public.crypt('badpassword', public.gen_salt('bf'))
+    --   ,'User'
+    -- )
+    -- ,(
+    --   (select id from auth.app_tenant where identifier = 'R11111')
+    --   ,'lcb_retail_admin'
+    --   ,'lcb_retail_admin003@blah.blah'
+    --   ,public.crypt('badpassword', public.gen_salt('bf'))
+    --   ,'Admin'
+    -- )
+    -- ,(
+    --   (select id from auth.app_tenant where identifier = 'R11111')
+    --   ,'lcb_retail_user'
+    --   ,'lcb_retail_user@blah.blah'
+    --   ,public.crypt('badpassword', public.gen_salt('bf'))
+    --   ,'User'
+    -- )
+    -- ,(
+    --   (select id from auth.app_tenant where identifier = 'Q11111')
+    --   ,'lcb_qa_lab_admin'
+    --   ,'lcb_qa_lab_admin003@blah.blah'
+    --   ,public.crypt('badpassword', public.gen_salt('bf'))
+    --   ,'Admin'
+    -- )
+    -- ,(
+    --   (select id from auth.app_tenant where identifier = 'Q11111')
+    --   ,'lcb_qa_lab_user'
+    --   ,'lcb_qa_lab_user@blah.blah'
+    --   ,public.crypt('badpassword', public.gen_salt('bf'))
+    --   ,'User'
+    -- )
+    -- on conflict (username)
+    -- do nothing
+    -- ;
 
     insert into org.organization(
       app_tenant_id

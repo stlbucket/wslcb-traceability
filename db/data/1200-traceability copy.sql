@@ -1,10 +1,11 @@
 BEGIN;
 
-  insert into lcb.lcb_license(code, lcb_license_type_id)
-  select apt.identifier, llt.id
-  from auth.app_tenant apt
-  join lcb_ref.lcb_license_type llt on llt.prefix = substring(apt.identifier from 1 for 1)
-  where apt.identifier != 'anchor'
+  insert into lcb.lcb_license(code)
+  values
+    ('G11111'),
+    ('M11111'),
+    ('R11111'),
+    ('Q11111')
   on conflict do nothing
   ;
 

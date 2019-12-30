@@ -77,14 +77,22 @@ export default {
       password: 'badpassword',
       users: [
         'appsuperadmin',
-        'lcb_producer_admin',
-        'lcb_processor_admin',
-        'lcb_retail_admin',
-        'lcb_qa_lab_admin',
-        'lcb_producer_user',
-        'lcb_processor_user',
-        'lcb_retail_user',
-        'lcb_qa_lab_user'
+        'producer_1_admin',
+        'processor_1_admin',
+        'producer_processor_1_admin',
+        'retailer_1_admin',
+        'lab_1_admin',
+        'tribe_1_admin',
+        'co_op_1_admin',
+        'transporter_1_admin',
+        'producer_1_user',
+        'processor_1_user',
+        'producer_processor_1_user',
+        'retailer_1_user',
+        'lab_1_user',
+        'tribe_1_user',
+        'co_op_1_user',
+        'transporter_1_user'   
       ]
     }
   },
