@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-psql -U postgres -h 0.0.0.0 -d lcb -f data/1000-tenants.sql
-psql -U postgres -h 0.0.0.0 -d lcb -f data/1100-address-book.sql
-psql -U postgres -h 0.0.0.0 -d lcb -f data/1200-traceability.sql
-psql -U postgres -h 0.0.0.0 -d lcb -f data/1500-applications.sql
+set -e
+source config.sh
 
-# pg_dump -U postgres -h 0.0.0.0 lcb > lcb_setup_with_data.sql
+psql -U $DB_USER -h $DB_HOST -d $DB_NAME -f data/1000-tenants.sql
+psql -U $DB_USER -h $DB_HOST -d $DB_NAME -f data/1100-address-book.sql
+psql -U $DB_USER -h $DB_HOST -d $DB_NAME -f data/1200-traceability.sql
+psql -U $DB_USER -h $DB_HOST -d $DB_NAME -f data/1500-applications.sql

@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-dropdb -U postgres -h 0.0.0.0 lcb
-createdb -U postgres -h 0.0.0.0 lcb
+set -e
+source config.sh
+
+dropdb -U $DB_USER -h $DB_HOST $DB_NAME
+createdb -U $DB_USER -h $DB_HOST $DB_NAME
 ./scripts/structure/build-db-structure.sh
 ./scripts/functions/build-db-functions.sh
