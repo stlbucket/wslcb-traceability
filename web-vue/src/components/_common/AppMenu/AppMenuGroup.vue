@@ -25,6 +25,7 @@ export default {
   },
   methods: {
     appSelected (app) {
+      console.log('app', app)
       this.$router.push({
         path: app.path,
         params: app.params

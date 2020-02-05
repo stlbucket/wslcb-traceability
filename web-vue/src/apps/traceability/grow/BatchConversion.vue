@@ -353,12 +353,12 @@ export default {
         )
       }
     },
-    // targetLotInfos:{
-    //   deep: true,
-    //   handler () {
-    //     console.log('this.tlis', JSON.stringify(this.targetLotInfos,false,2))
-    //   }
-    // }
+    targetLotInfos:{
+      deep: true,
+      handler () {
+        console.log('this.tlis', JSON.stringify(this.targetLotInfos,false,2))
+      }
+    }
   },
   apollo: {
     initConversionRule: {

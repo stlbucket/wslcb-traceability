@@ -26,7 +26,7 @@
         :clipped="true"
         app
         right
-        :width="hover ? 500 : 300"
+        :width="300"
         disable-route-watcher
       >
         <app-menu></app-menu>
@@ -37,8 +37,8 @@
     >
       <v-container
         justify-start
-        ma-0
-        pa-0
+        ma-2
+        pa-2
       >
         <router-view></router-view>
       </v-container>

@@ -21,7 +21,7 @@
               <template v-slot:item.sourcedQuantity="{item}">
                 <v-container>
                   <v-text-field
-                    v-if="!item.isSingleLotted"
+                    v-if="!conversionRule.isNonDestructive"
                     v-model="itemSourcedQuantities[item.id]"
                     label="Sourced Quantity"
                   >

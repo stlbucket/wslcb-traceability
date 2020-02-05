@@ -73,7 +73,7 @@ export default {
   },
   data () {
     return {
-      username: 'lcb_producer_admin',
+      username: 'producer_1_admin',
       password: 'badpassword',
       users: [
         'appsuperadmin',

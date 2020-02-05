@@ -8,14 +8,17 @@
       <h2 v-if="isSingleLotted">{{singleLottedMessage}}</h2>
       <h3 v-if="conversionRule.isZeroSum">{{this.conversionRule.name}} is zero-sum: total of target quantities must equal source quantities</h3>
       <h3 v-else>{{this.conversionRule.name}} is not zero-sum:  target quantities are not checked against source quantites.</h3>
+      <v-btn @click="removeTargetLotInfo" :disabled="selectedTargetLotInfos.length === 0">Remove</v-btn>
       <v-data-table
         :headers="headers"
         :items="targetLotInfos"
+        v-model="selectedTargetLotInfos"
         class="elevation-1"
         dense
         item-key="index"
         hide-default-footer
         :items-per-page="100"
+        show-select
       >
         <template v-slot:item.quantity="{item}">
           <v-container>
@@ -40,7 +43,7 @@
     </v-card>
 
     <v-row>
-      <v-col cols="3">
+      <v-col cols="">
         <v-btn
           color="primary"
           @click="$emit('performConversion')"
@@ -51,7 +54,7 @@
       </v-col>
       <v-col cols="1">
       </v-col>
-      <v-col cols="3">
+      <v-col cols="2">
         <v-btn
           color="primary"
           @click="$emit('previousStep')"
@@ -61,8 +64,18 @@
       </v-col>
       <v-col cols="1">
       </v-col>
-      <v-col cols="3">
+      <v-col cols="2">
         <h2>{{totalTargetQuantity}}</h2>
+      </v-col>
+      <v-col cols="1">
+      </v-col>
+      <v-col cols="2">
+        <v-btn
+          color="primary"
+          @click="addTargetLotInfo"
+        >
+          Add Lot
+        </v-btn>
       </v-col>
     </v-row>
   </v-container>
@@ -116,13 +129,29 @@ export default {
     }
   },
   methods: {
+    removeTargetLotInfo () {
+      const indexesToRemove = this.selectedTargetLotInfos.map(tli => tli.index)
+      this.targetLotInfos = this.targetLotInfos.filter(tli => indexesToRemove.indexOf(tli.index) === -1).map(
+        (tli, index) => {
+          return {
+            ...tli,
+            index: index
+          }
+        }
+      )
+      this.selectedTargetLotInfos = []
+    },
     addTargetLotInfo () {
-      this.targetLotInfos = [...this.targetLotInfos, {quantity: 0}]
+      this.targetLotInfos = [...this.targetLotInfos, {
+        index: this.targetLotInfos.length,
+        inventoryType: this.conversionRule.toInventoryType.id,
+        units: this.conversionRule.toInventoryType.units,
+        quantity: 0
+      }]
     },
     resetTargetLotInfos () {
       const defaultDescription = `${this.conversionRule.toInventoryType.name} ${this.strain ? `- ${this.strain.strainName}` : ''}`
 
-console.log('sourcesInfo', JSON.stringify(this.sourcesInfo,false,2))
       const areaCounts = this.sourcesInfo.reduce(
         (all, il) => {
           const quantity = (all[il.area.id] ? (parseFloat(all[il.area.id].quantity) + parseFloat(il.quantity)) : parseFloat(il.quantity))
@@ -140,7 +169,8 @@ console.log('sourcesInfo', JSON.stringify(this.sourcesInfo,false,2))
       this.targetLotInfos = Object.keys(areaCounts).map(
         (areaId, index) => {
           const areaSourceQuantity = areaCounts[areaId].quantity
-          const quantity = this.conversionRule.isZeroSum ? areaSourceQuantity : null
+          // const quantity = this.conversionRule.isZeroSum ? areaSourceQuantity : null
+          const quantity = areaSourceQuantity
 
         return {
             index: index,
@@ -176,6 +206,7 @@ console.log('sourcesInfo', JSON.stringify(this.sourcesInfo,false,2))
   data () {
     return {
       targetLotInfos: [],
+      selectedTargetLotInfos: [],
       totalTargetQuantity: 0,
       headers: [
         {

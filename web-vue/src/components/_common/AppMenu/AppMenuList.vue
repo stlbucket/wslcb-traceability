@@ -192,18 +192,21 @@ export default {
               key: 'address-book',
               name: 'Address Book',
               routeName: 'address-book',
+              path: '/address-book',
               iconKey: 'people'
             },
             {
               key: 'license-manager',
               name: 'License Manager',
               routeName: 'license-manager',
+              path: '/license-manager',
               iconKey: 'domain'
             },
             {
               key: 'tenant-manager',
               name: 'Tenant Manager',
               routeName: 'tenant-manager',
+              path: '/tenant-manager',
               iconKey: 'location_city'
             },
           ]
