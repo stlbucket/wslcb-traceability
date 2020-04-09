@@ -90,4 +90,3 @@ RETURNS setof lcb.inventory_lot
 
   end;
   $$;
-ALTER FUNCTION lcb_fn.provision_inventory_lot_ids(text,integer) OWNER TO app;

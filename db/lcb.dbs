@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<project name="lcb" id="Project_5e8ccf1" template="Default" database="PostgreSQL" >
+<project name="lcb" id="Project_5e8ccf1" database="PostgreSQL" >
 	<schema name="app" catalogname="lcb" >
 		<table name="application" >
 			<column name="created_at" type="timestamptz" length="35" decimal="6" jt="93" mandatory="y" >

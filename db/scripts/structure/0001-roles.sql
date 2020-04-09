@@ -78,15 +78,27 @@ BEGIN;
 
     DO $$
     BEGIN
+        PERFORM true FROM pg_roles WHERE rolname = 'app_authenticator';
+        IF NOT FOUND THEN
+            CREATE ROLE app_authenticator with noinherit login;
+            GRANT app_super_admin to app_authenticator;
+            GRANT app_tenant_admin to app_authenticator;
+            GRANT app_admin TO app_authenticator;
+            GRANT app_demon TO app_authenticator;
+            GRANT app_anonymous TO app_authenticator;
+            GRANT app_user TO app_authenticator;
+            ALTER ROLE app_authenticator with password '1234';
+        END IF;
+    END;
+    $$;
+
+    DO $$
+    BEGIN
         PERFORM true FROM pg_roles WHERE rolname = 'app';
         IF NOT FOUND THEN
-            CREATE ROLE app with noinherit;
-            GRANT app_super_admin to app;
-            GRANT app_tenant_admin to app;
-            GRANT app_admin TO app;
-            GRANT app_demon TO app;
-            GRANT app_anonymous TO app;
-            GRANT app_user TO app;
+            CREATE ROLE app with createdb login;
+            ALTER ROLE app with password '1234';
+            GRANT app TO postgres;
         END IF;
     END;
     $$;

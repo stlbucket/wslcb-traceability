@@ -1,6 +1,8 @@
 drop schema if exists lcb_ref cascade;
 
 create schema if not exists lcb_ref;
+alter schema lcb_ref owner to app;
+
 grant usage on schema lcb_ref to app_user;
 grant usage on schema lcb_ref to app;
 
