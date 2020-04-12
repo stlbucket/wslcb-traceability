@@ -1,0 +1,11 @@
+runtime: nodejs
+env: flex
+
+env_variables:
+  PGUSER: "app_authenticator"
+  PGHOST: "/cloudsql/your-cloudsql-instance-connection-string"
+  PGPASSWORD: "your-password"
+  PGDATABASE: "your-database-name"
+
+beta_settings:
+  cloud_sql_instances: your-cloudsql-instance-connection-string
