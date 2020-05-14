@@ -14,7 +14,7 @@
       @click:row="inventoryLotSelected"
       :sort-by="'updatedAt'"
       :sort-desc="true"
-      :show-select="showSelect"
+      show-select=true
       v-model="selectedInventoryLots"
     >
       <template slot="expanded-item" slot-scope="props">
