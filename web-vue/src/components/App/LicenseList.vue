@@ -4,6 +4,7 @@
       :headers="headers"
       :items="items"
       hide-default-footer
+      items-per-page=100
     >
 
       <template v-slot:item.name="{item}">
