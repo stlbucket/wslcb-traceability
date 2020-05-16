@@ -62,7 +62,7 @@ export default {
       })
       .then(result => {
         this.$store.commit('login', { currentAppUser: result.data.currentAppUser.appUser })
-        this.$router.push({name: 'home'})
+        this.$router.push({name: 'trc-inv'})
       })
       .catch(error => {
         console.log('ERROR', error)

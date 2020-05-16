@@ -31,16 +31,16 @@ resource "google_sql_database_instance" "db_dev" {
   }
 }
 
-# resource "random_password" "password_dev" {
-#   length = 16
-# }
+resource "random_password" "password_dev" {
+  length = 16
+}
 
 
 resource "google_sql_user" "db_user_dev" {
   name     = "postgres"
   instance = google_sql_database_instance.db_dev.name
-  # password = random_password.password_dev.result
-  password = "tacos"
+  password = random_password.password_dev.result
+  # password = "tacos"
 }
 
 # gcloud auth application-default login 
@@ -65,5 +65,6 @@ resource "google_secret_manager_secret_version" "postgres_pwd_version" {
 
   secret = google_secret_manager_secret.postgres_pwd.id
 
-  secret_data = "tacos"
+  # secret_data = "tacos"
+  secret_data = random_password.password_dev.result
 }

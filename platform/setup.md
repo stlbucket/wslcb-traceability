@@ -7,6 +7,7 @@ gcloud app create --region=$APP_ENGINE_REGION
 ```
 
 # - give cloud build service account deploy permission to app engine
+https://cloud.google.com/cloud-build/docs/securing-builds/set-service-account-permissions
 
 # - enable app engine
 # - enable sql
@@ -17,7 +18,6 @@ gcloud app create --region=$APP_ENGINE_REGION
 # - create vm instance
 # - ansible that bitch up
 # - create build pipeline hooked to proper branch (dev-ccrm to dev, [feature]-ccrm to [feature], etc)buckfactor@infinite-tacos:~/work/soro/ccrm (dev)$
-
 
 
 

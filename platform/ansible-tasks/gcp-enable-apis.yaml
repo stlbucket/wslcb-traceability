@@ -9,3 +9,4 @@
     - vpcaccess.googleapis.com
     - cloudapis.googleapis.com
     - appengine.googleapis.com
+    - cloudbuild.googleapis.com
