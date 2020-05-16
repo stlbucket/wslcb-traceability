@@ -1,27 +1,34 @@
 provider "google" {
-  credentials = file("~/lcb-key.json")
-  project     = "lcb-1122"
+  credentials = file("~/.keys/sa-traceability-277402-key.json")
+  project     = "traceability-277402"
   region      = "us-central1"
   zone        = "us-central1-a"
 }
 
 locals {
-  project_id     = "lcb-1122"
+  project_id     = "traceability-277402"
   location_id = "us-central"
-}
-
-# module "app-engine"  {
-#   source = "./modules/app-engine"
-#   project_id = local.project_id
-#   location_id = local.location_id
-# }
-
-module "ui"  {
-  source  = "./modules/ui"
-  # bucket_name = "lcb.fn-bucket.org"
 }
 
 module "db"  {
   source  = "./modules/db"
+  # private_network = module.vpc.private_network
+  project_id = local.project_id
 }
 
+module "ctl-vm"  {
+  source  = "./modules/ctl-vm"
+  # private_network = module.vpc.private_network
+  project_id = local.project_id
+}
+
+# module "vpc"  {
+#   source = "./modules/vpc"
+#   project_id = local.project_id
+# }
+
+# module "firewall"  {
+#   source = "./modules/firewall"
+#   private_network = module.vpc.private_network
+#   project_id = local.project_id
+# }

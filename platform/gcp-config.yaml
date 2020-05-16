@@ -1,0 +1,9 @@
+# create a new project and configure these values
+PROJECT_ID: traceability-277402
+APP_ENGINE_REGION: us-central
+
+# you will need to create this service account with project editor permission
+PROJECT_SERVICE_ACCOUNT_EMAIL: "sa-traceability-277402@traceability-277402.iam.gserviceaccount.com"
+
+# specify a directory outside of the project structure that will not be included in source repository
+PROJECT_SERVICE_ACCOUNT_KEY_PATH: ~/.keys/sa-traceability-277402-key.json

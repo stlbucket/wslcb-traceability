@@ -1,0 +1,14 @@
+- name: which node
+  command: "which node"
+  register: WHICH_NODE
+- set_fact:
+    NODE_PATH: "{{WHICH_NODE.stdout_lines[0]}}"
+- debug:
+    msg: "{{NODE_PATH}}"
+- name: node version
+  command: "{{NODE_PATH}} -v"
+  register: NODE_VERSION_RESULT
+- set_fact:
+    NODE_VERSION: "{{NODE_VERSION_RESULT.stdout_lines[0]}}"
+- debug:
+    msg: "{{NODE_VERSION}}"

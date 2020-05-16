@@ -1,0 +1,11 @@
+- name: create app engine
+  command: "gcloud app create --region={{APP_ENGINE_REGION}}"
+  register: APP_ENGINE_RESULT
+  ignore_errors: true
+- set_fact:
+    APP_ENGINE_ERROR: "{{APP_ENGINE_RESULT.stderr_lines|length > 0 and APP_ENGINE_RESULT.stderr_lines[-1]}}"
+    APP_ENGINE_EXISTS: "{{'already contains an App Engine application. You can deploy your application using' in APP_ENGINE_RESULT.stderr_lines[-1]}}"
+- name: fail the play if the previous command did not succeed
+  fail:
+    msg: "UNEXPECTED ERROR CREATING APP ENGINE+++++>  {{APP_ENGINE_ERROR}}"
+  when: "APP_ENGINE_ERROR != false and APP_ENGINE_EXISTS != true"

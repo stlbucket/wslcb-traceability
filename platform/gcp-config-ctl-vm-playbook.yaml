@@ -1,0 +1,15 @@
+- name: Config ctl-vm
+  hosts: localhost
+  gather_facts: no
+  # user should be soro
+
+  vars:
+    service_account_file: /Users/buckfactor/.keys/sa-PROJECT-ID.json
+    project: PROJECT-ID
+    auth_kind: serviceaccount
+    scopes:
+      - https://www.googleapis.com/auth/compute
+# add postgres-client
+# create .pgpass file for soro acct
+# create .bash_profile
+# install nvm/node https://www.digitalocean.com/community/tutorials/how-to-install-node-js-on-ubuntu-18-04#installing-using-nvm

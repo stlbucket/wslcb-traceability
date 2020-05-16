@@ -1,0 +1,11 @@
+- hosts: localhost
+  tasks:
+  - name: Include vars
+    include_vars:
+      file: gcp-config.yaml
+  - name: check project service account
+    include: ansible-tasks/gcp-check-project-service-account.yaml
+  - name: create app engine
+    include: ansible-tasks/gcp-create-app-engine.yaml
+  - name: enable compute engine apis
+    include: ansible-tasks/gcp-enable-apis.yaml

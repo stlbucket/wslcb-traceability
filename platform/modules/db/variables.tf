@@ -13,3 +13,9 @@
 # limitations under the License.
 
 
+# variable "private_network"  {
+# }
+
+variable "project_id" {
+  
+}
