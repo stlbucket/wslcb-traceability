@@ -1,0 +1,6 @@
+steps:
+# deploy
+- name: "gcr.io/cloud-builders/gcloud"
+  dir: default
+  args: ["app", "deploy"]
+timeout: "1600s"

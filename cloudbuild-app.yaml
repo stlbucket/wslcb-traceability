@@ -1,0 +1,31 @@
+steps:
+# build ui
+- name: node
+  entrypoint: npm
+  dir: web-vue
+  args: ['install']
+- name: node
+  entrypoint: npm
+  dir: web-vue
+  args: ['run', build]
+
+# build api
+- name: node
+  entrypoint: npm
+  dir: api
+  args: ['install']
+
+# copy ui to api dir
+- name: 'ubuntu'
+  args: ['cp', '-R', 'web-vue/dist', 'api/.']
+
+# run unit tests
+# - name: node
+#   entrypoint: npm
+#   args: ['test']
+
+# deploy
+- name: "gcr.io/cloud-builders/gcloud"
+  dir: api
+  args: ["app", "deploy"]
+timeout: "1600s"
