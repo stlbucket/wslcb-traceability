@@ -5,6 +5,9 @@
 		},
 		{
 			"path": "/Users/buckfactor/learn/terraform/gcp-function"
+		},
+		{
+			"path": "../../soro/ccrm"
 		}
 	],
 	"settings": {}

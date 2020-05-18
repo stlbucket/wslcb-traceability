@@ -1,11 +1,52 @@
-runtime: nodejs
-env: flex
+# Copyright 2017, Google, Inc.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+service: app-dev
+runtime: nodejs10
+handlers:
+  # Serve all static files with urls ending with a file extension
+- url: /(.*\..+)$ 
+  secure: always
+  static_files: dist/\1
+  upload: dist/(.*\..+)$
+  # catch all handler to index.html
+- url: /
+  secure: always
+  static_files: dist/index.html
+  upload: dist/index.html
+# network:
+#   name: PROJECT-ID-private-network
+# env: flex
 
+# [START gae_flex_postgres_env]
+# The following env variables may contain sensitive information that grants
+# anyone access to your database. Do not add this file to your source control.
 env_variables:
-  PGUSER: "app_authenticator"
-  PGHOST: "/cloudsql/your-cloudsql-instance-connection-string"
-  PGPASSWORD: "your-password"
-  PGDATABASE: "your-database-name"
-
-beta_settings:
-  cloud_sql_instances: your-cloudsql-instance-connection-string
+  DBUSER: postgres
+  DBPASSWORD: 7}+Y5HS8cL$*}i9t
+  DBNAME: lcb
+  DBHOST: /cloudsql/ccrm-dev:us-central1:ccrm-dev
+  # e.g. my-awesome-project:us-central1:my-cloud-sql-instance
+  # INSTANCE_CONNECTION_NAME: ccrm-dev:us-central1:ccrm-dev
+# [END gae_flex_postgres_env]
+  APOLLO_ENGINE_API_KEY: YOUR_API_KEY
+  SCHEMATA_TO_GRAPHQL: auth,auth_fn,org,org_fn,app,gm_ref,gm,gm_fn
+  DEFAULT_ROLE: gph_anonymous  JWT_SECRET: SUPERSECRET-SUPERSECRET-SUPERSECRET
+  JWT_PG_TYPE_IDENTIFIER: auth.jwt_token
+  EXTENDED_ERRORS: hint, detail, errcode
+  DISABLE_DEFAULT_MUTATIONS: true
+  DYNAMIC_JSON: true
+  ENABLE_APOLLO_ENGINE: false
+  WATCH_PG: true
+  GRAPHIQL: true
+  ENHANCE_GRAPHIQL: true,
+  ENABLE_CORS: true

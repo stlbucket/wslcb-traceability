@@ -11,7 +11,7 @@ locals {
 # }
 
 resource "google_sql_database_instance" "db_dev" {
-  name             = "${var.project_id}-pg-db-${formatdate("YYMMDDhhmm", timestamp())}"
+  name             = "${var.env}-${var.project_id}-pg-db-${formatdate("YYMMDDhhmm", timestamp())}"
   # name             = "${var.project_id}-pg-db-dev"
   database_version = "POSTGRES_11"
   region = "us-central1"
@@ -31,15 +31,15 @@ resource "google_sql_database_instance" "db_dev" {
   }
 }
 
-resource "random_password" "password_dev" {
+resource "random_password" "pg_password" {
   length = 16
 }
 
 
-resource "google_sql_user" "db_user_dev" {
+resource "google_sql_user" "db_user" {
   name     = "postgres"
   instance = google_sql_database_instance.db_dev.name
-  password = random_password.password_dev.result
+  password = random_password.pg_password.result
   # password = "tacos"
 }
 
@@ -48,10 +48,10 @@ resource "google_secret_manager_secret" "postgres_pwd" {
   provider = google-beta
   project = var.project_id
 
-  secret_id = "pg_pwd_dev"
+  secret_id = "${var.env}-pg-pwd"
 
   labels = {
-    label = "pg_pwd_dev"
+    label = "${var.env}-pg-pwd"
   }
 
   replication {
@@ -66,5 +66,5 @@ resource "google_secret_manager_secret_version" "postgres_pwd_version" {
   secret = google_secret_manager_secret.postgres_pwd.id
 
   # secret_data = "tacos"
-  secret_data = random_password.password_dev.result
+  secret_data = random_password.pg_password.result
 }

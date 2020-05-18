@@ -9,6 +9,9 @@
     auth_kind: serviceaccount
     scopes:
       - https://www.googleapis.com/auth/compute
+
+# apt-get update
+# apt-get install postgresql-client
 # add postgres-client
 # create .pgpass file for soro acct
 # create .bash_profile

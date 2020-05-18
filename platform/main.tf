@@ -1,21 +1,3 @@
-provider "google" {
-  credentials = file("~/.keys/sa-traceability-277402-key.json")
-  project     = "traceability-277402"
-  region      = "us-central1"
-  zone        = "us-central1-a"
-}
-
-locals {
-  project_id     = "traceability-277402"
-  location_id = "us-central"
-}
-
-module "db"  {
-  source  = "./modules/db"
-  # private_network = module.vpc.private_network
-  project_id = local.project_id
-}
-
 module "ctl-vm"  {
   source  = "./modules/ctl-vm"
   # private_network = module.vpc.private_network
